@@ -1,2 +1,3 @@
 psycopg2-binary
 docopt
+-e git://github.com/kiudee/bayes-skopt.git#egg=bayes-skopt
