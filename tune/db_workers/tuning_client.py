@@ -4,10 +4,13 @@ import logging
 import os
 import re
 import subprocess
+import sys
 import numpy as np
 from collections import namedtuple
 from time import sleep
 from psycopg2.extras import DictCursor
+
+from ..utils import parse_timecontrol
 
 CLIENT_VERSION = 1
 
@@ -19,6 +22,8 @@ TimeControl = namedtuple("TimeControl", ["engine1", "engine2"])
 class TuningClient(object):
     def __init__(self, dbconfig_path, **kwargs):
         self.logger = logging.getLogger("TuningClient")
+        self.lc0_benchmark = None
+        self.sf_benchmark = None
         if os.path.isfile(dbconfig_path):
             with open(dbconfig_path, "r") as config_file:
                 config = config_file.read().replace("\n", "")
@@ -31,9 +36,10 @@ class TuningClient(object):
         pass
 
     def run_experiment(self, time_control, cutechess_options):
-        sleep(5)
-        return MatchResult(wins=1, losses=0, draws=0)
-        subprocess.run(["rm", "out.pgn"])
+        try:
+            os.remove("out.pgn")
+        except OSError:
+            pass
 
         # TODO: For now we assume we always tune against stockfish here
         st = [
@@ -60,22 +66,53 @@ class TuningClient(object):
             "-rounds",
             f"{cutechess_options['rounds']}",
             # "-repeat",
+            "-debug",
             "-games",
             "1",  # TODO: Paired openings
             # "-tb", "/path/to/tb",  # TODO: Support tablebases
             "-pgnout",
             "out.pgn",
         ]
+        # TODO: Make sure that each engine is working:
         out = subprocess.run(st, capture_output=True)
+        self.logger.debug(out.stdout.decode("utf-8"))
         return self.parse_experiment(out)
 
-    @staticmethod
-    def parse_experiment(results):
-        lines = results.stdout.decode("utf-8").split("\n")
+    def parse_experiment(self, results):
+        string = results.stdout.decode("utf-8")
+        if re.search("connection stalls", string):
+            self.logger.error("Connection stalled during match. Aborting client.")
+            sys.exit(1)
+        lines = string.split("\n")
+
         last_output = lines[-4]
         result = re.findall(r"[0-9]\s-\s[0-9]\s-\s[0-9]", last_output)[0]
         w, l, d = [float(x) for x in re.findall("[0-9]", result)]
         return MatchResult(wins=w, losses=l, draws=d)
+
+    def run_benchmark(self):
+        path = os.path.join(os.path.curdir, 'lc0')
+        out = subprocess.run([path, "benchmark"], capture_output=True)
+        s = out.stdout.decode("utf-8")
+        result = float(re.findall(r"([0-9]+\.[0-9]+)\snodes per second", s)[0])
+        self.lc0_benchmark = result
+
+        path = os.path.join(os.path.curdir, 'sf')
+        out = subprocess.run([path, "bench"], capture_output=True)
+        # Stockfish outputs results as stderr:
+        s = out.stderr.decode("utf-8")
+        result = float(re.findall(r"Nodes/second\s+:\s([0-9]+)", s)[0])
+        self.sf_benchmark = result
+
+    def adjust_time_control(self, time_control, lc0_nodes, sf_nodes):
+        lc0_ratio = lc0_nodes / self.lc0_benchmark
+        sf_ratio = sf_nodes / self.sf_benchmark
+        tc_lc0 = parse_timecontrol(time_control.engine1)
+        tc_sf = parse_timecontrol(time_control.engine2)
+        tc_lc0 = [x * lc0_ratio for x in tc_lc0]
+        tc_sf = [x * sf_ratio for x in tc_sf]
+        return TimeControl(engine1=f"{tc_lc0[0]}+{tc_lc0[1]}",
+                           engine2=f"{tc_sf[0]}+{tc_sf[1]}")
 
     def run(self):
         while True:
@@ -116,10 +153,20 @@ class TuningClient(object):
                     with open("engines.json", "w") as file:
                         json.dump(engine_config, file, sort_keys=True, indent=4)
                     sleep(2)
+                    # a2) TODO: Make sure network file is present!
                     # b) Adjust time control:
                     # TODO: run benchmark (if necessary) and adjust time control
+                    if self.lc0_benchmark is None:
+                        self.run_benchmark()
+                    self.logger.debug(f"Benchmark results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps")
+                    time_control = self.adjust_time_control(
+                        TimeControl(engine1=config["time_control"][0], engine2=config["time_control"][1]),
+                        float(job['lc0_nodes']),
+                        float(job['sf_nodes'])
+                    )
+                    self.logger.debug(f"Adjusted time control from {config['time_control']} to {time_control}")
+
                     # 3. Run experiment (and block)
-                    time_control = TimeControl(engine1=config["time_control"][0], engine2=config["time_control"][1])
                     result = self.run_experiment(time_control=time_control, cutechess_options=config["cutechess"])
                     self.logger.info(f"Match result: {result.wins} - {result.losses} - {result.draws}")
                     # 5. Send results to database and lock it during access
