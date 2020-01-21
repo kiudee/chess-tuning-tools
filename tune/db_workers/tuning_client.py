@@ -66,14 +66,12 @@ class TuningClient(object):
             "-rounds",
             f"{cutechess_options['rounds']}",
             # "-repeat",
-            "-debug",
             "-games",
             "1",  # TODO: Paired openings
             # "-tb", "/path/to/tb",  # TODO: Support tablebases
             "-pgnout",
             "out.pgn",
         ]
-        # TODO: Make sure that each engine is working:
         out = subprocess.run(st, capture_output=True)
         self.logger.debug(out.stdout.decode("utf-8"))
         return self.parse_experiment(out)
@@ -114,6 +112,15 @@ class TuningClient(object):
         return TimeControl(engine1=f"{tc_lc0[0]}+{tc_lc0[1]}",
                            engine2=f"{tc_sf[0]}+{tc_sf[1]}")
 
+    @staticmethod
+    def set_working_directories(engine_config):
+        path = os.getcwd()
+        engine_config[0]['workingDirectory'] = path
+        engine_config[1]['workingDirectory'] = path
+        if os.name == 'nt':  # Windows needs .exe files to work correctly
+            engine_config[0]['cmd'] = 'lc0.exe'
+            engine_config[1]['cmd'] = 'sf.exe'
+
     def run(self):
         while True:
             # 1. Check db for new job
@@ -150,12 +157,11 @@ class TuningClient(object):
                     config = job["config"]
                     self.logger.debug(f"Received config:\n{config}")
                     engine_config = config["engine"]
+                    self.set_working_directories(engine_config)
                     with open("engines.json", "w") as file:
                         json.dump(engine_config, file, sort_keys=True, indent=4)
                     sleep(2)
-                    # a2) TODO: Make sure network file is present!
                     # b) Adjust time control:
-                    # TODO: run benchmark (if necessary) and adjust time control
                     if self.lc0_benchmark is None:
                         self.run_benchmark()
                     self.logger.debug(f"Benchmark results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps")
@@ -170,6 +176,7 @@ class TuningClient(object):
                     result = self.run_experiment(time_control=time_control, cutechess_options=config["cutechess"])
                     self.logger.info(f"Match result: {result.wins} - {result.losses} - {result.draws}")
                     # 5. Send results to database and lock it during access
+                    # TODO: Check if job_id is actually present and warn if necessary
                     update_job = """
                     UPDATE tuning_results SET wins = wins + %(wins)s, losses = losses + %(losses)s, draws = draws + %(draws)s
                     WHERE job_id = %(job_id)s;
