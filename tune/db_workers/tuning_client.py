@@ -6,17 +6,12 @@ import re
 import subprocess
 import sys
 import numpy as np
-from collections import namedtuple
 from time import sleep
 from psycopg2.extras import DictCursor
 
-from ..utils import parse_timecontrol
+from .utils import parse_timecontrol, MatchResult, TimeControl
 
 CLIENT_VERSION = 1
-
-
-MatchResult = namedtuple("MatchResult", ["wins", "losses", "draws"])
-TimeControl = namedtuple("TimeControl", ["engine1", "engine2"])
 
 
 class TuningClient(object):
@@ -27,7 +22,7 @@ class TuningClient(object):
         if os.path.isfile(dbconfig_path):
             with open(dbconfig_path, "r") as config_file:
                 config = config_file.read().replace("\n", "")
-                self.logger.info(f"Reading DB config:\n{config}")
+                self.logger.debug(f"Reading DB config:\n{config}")
                 self.connect_params = json.loads(config)
         else:
             raise ValueError("No config file found at provided path")
