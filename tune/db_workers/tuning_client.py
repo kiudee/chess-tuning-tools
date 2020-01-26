@@ -27,9 +27,6 @@ class TuningClient(object):
         else:
             raise ValueError("No config file found at provided path")
 
-    def setup_experiment(self):
-        pass
-
     def run_experiment(self, time_control, cutechess_options):
         try:
             os.remove("out.pgn")
