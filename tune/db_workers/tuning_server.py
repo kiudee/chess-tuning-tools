@@ -152,22 +152,30 @@ class TuningServer(object):
             random_state=self.rng.randint(0, np.iinfo(np.int32).max)
         )
 
-    def query_data(self, cursor, tune_id, include_active=False, minimum_samplesize=10):
+    def query_data(self, cursor, tune_id, include_active=False):
         # TODO: These scores are linear in the W/L difference, maybe use something proper like (regularized) Elo
         # TODO: Support shrinking of ranges, by filtering X, y here
         # TODO: Read minimum_samplesize from experiment file
         if include_active:
             query = """
-            select X, avg((wins::decimal - losses) / (wins + losses + draws + 1.5)) as y
-            from tuning_jobs natural inner join tuning_results
-            where tune_id=%(tune_id)s
+            select X, avg((w-l) / (w + l - power(w-l, 2))) as y from
+            (
+                select X, (wins::decimal+0.5) / (wins + draws + losses + 1.5) as w, (losses::decimal+0.5) / (wins + draws + losses + 1.5) as l
+                from tuning_jobs
+                natural inner join tuning_results
+                where tune_id = %(tune_id)s
+            ) as xyz
             group by X;
             """
         else:
             query = """
-            select X, avg((wins::decimal - losses) / (wins + losses + draws + 1.5)) as y
-            from tuning_jobs natural inner join tuning_results
-            where tune_id=%(tune_id)s and not active
+            select X, avg((w-l) / (w + l - power(w-l, 2))) as y from
+            (
+                select X, (wins::decimal+0.5) / (wins + draws + losses + 1.5) as w, (losses::decimal+0.5) / (wins + draws + losses + 1.5) as l
+                from tuning_jobs
+                natural inner join tuning_results
+                where tune_id = %(tune_id)s and not active
+            ) as xyz
             group by X;
             """
         cursor.execute(query, {"tune_id": tune_id})
@@ -182,7 +190,7 @@ class TuningServer(object):
         where tune_id=%(tune_id)s and active;
         """
         cursor.execute(query, {"tune_id": tune_id})
-        samplesize_reached = np.all(np.array(cursor.fetchall()) >= minimum_samplesize)
+        samplesize_reached = np.all(np.array(cursor.fetchall()) >= self.experiment.get("minimum_samplesize", 16))
         return X, y, samplesize_reached
 
     @staticmethod
