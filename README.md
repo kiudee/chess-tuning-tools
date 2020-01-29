@@ -9,6 +9,9 @@ Using anaconda this could be done by typing:
 conda create -n tuning -c conda-forge numpy psycopg2
 ```
 
+Furthermore, you need to have [`cutechess-cli`](https://github.com/cutechess/cutechess)
+in the path. The tuning client will use it to run matches.
+
 Then after extracting the current `.zip` package into the folder
 `chess-tuning-tools`, make sure that you have the following directory
 structure:
