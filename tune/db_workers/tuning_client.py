@@ -65,16 +65,24 @@ class TuningClient(object):
             "out.pgn",
         ]
         out = subprocess.run(st, capture_output=True)
-        self.logger.debug(out.stdout.decode("utf-8"))
         return self.parse_experiment(out)
 
     def parse_experiment(self, results):
         string = results.stdout.decode("utf-8")
+        err_string = results.stderr.decode("utf-8")
+        error_occured = False
         if re.search("connection stalls", string):
             self.logger.error("Connection stalled during match. Aborting client.")
+            error_occured = True
+        elif re.search("Terminating process", string):
+            self.logger.error("Engine was terminated. Aborting client.")
+            error_occured = True
+        if error_occured:
+            self.logger.error(string)
+            self.logger.error(err_string)
             sys.exit(1)
         lines = string.split("\n")
-
+        self.logger.debug(f"Cutechess result string:\n{string}")
         last_output = lines[-4]
         result = re.findall(r"[0-9]\s-\s[0-9]\s-\s[0-9]", last_output)[0]
         w, l, d = [float(x) for x in re.findall("[0-9]", result)]
@@ -111,8 +119,11 @@ class TuningClient(object):
         engine_config[0]['workingDirectory'] = path
         engine_config[1]['workingDirectory'] = path
         if os.name == 'nt':  # Windows needs .exe files to work correctly
-            engine_config[0]['cmd'] = 'lc0.exe'
-            engine_config[1]['cmd'] = 'sf.exe'
+            engine_config[0]['command'] = 'lc0.exe'
+            engine_config[1]['command'] = 'sf.exe'
+        else:
+            engine_config[0]['command'] = './lc0'
+            engine_config[1]['command'] = './sf'
 
     def run(self):
         while True:

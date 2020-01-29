@@ -155,7 +155,6 @@ class TuningServer(object):
     def query_data(self, cursor, tune_id, include_active=False):
         # TODO: These scores are linear in the W/L difference, maybe use something proper like (regularized) Elo
         # TODO: Support shrinking of ranges, by filtering X, y here
-        # TODO: Read minimum_samplesize from experiment file
         if include_active:
             query = """
             select X, avg((w-l) / (w + l - power(w-l, 2))) as y from
