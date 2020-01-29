@@ -157,7 +157,7 @@ class TuningServer(object):
         # TODO: Support shrinking of ranges, by filtering X, y here
         if include_active:
             query = """
-            select X, avg((w-l) / (w + l - power(w-l, 2))) as y from
+            select X, -avg((w-l) / (w + l - power(w-l, 2))) as y from
             (
                 select X, (wins::decimal+0.5) / (wins + draws + losses + 1.5) as w, (losses::decimal+0.5) / (wins + draws + losses + 1.5) as l
                 from tuning_jobs
@@ -168,7 +168,7 @@ class TuningServer(object):
             """
         else:
             query = """
-            select X, avg((w-l) / (w + l - power(w-l, 2))) as y from
+            select X, -avg((w-l) / (w + l - power(w-l, 2))) as y from
             (
                 select X, (wins::decimal+0.5) / (wins + draws + losses + 1.5) as w, (losses::decimal+0.5) / (wins + draws + losses + 1.5) as l
                 from tuning_jobs
