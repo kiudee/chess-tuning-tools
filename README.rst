@@ -35,7 +35,8 @@ In order to be able to start the tuning client, first create a python
 environment with the packages ``psycopg2`` and ``numpy``.
 Using anaconda this could be done by typing::
 
-   conda create -n tuning -c conda-forge numpy psycopg2
+   conda create -n tuning -c conda-forge numpy psycopg2 pytz click emcee
+   pip install git+https://github.com/kiudee/bayes-skopt
 
 Furthermore, you need to have `cutechess-cli <https://github.com/cutechess/cutechess>`_
 in the path. The tuning client will use it to run matches.
