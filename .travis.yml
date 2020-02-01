@@ -18,9 +18,9 @@ script: tox
 deploy:
   provider: pypi
   distributions: sdist bdist_wheel
-  user: kiudee
+  user: "__token__"
   password:
-    secure: PLEASE_REPLACE_ME
+    secure: "7d9ylBxzYHEQRmtVw34Ihsa6cLVvi7xNFtNgUQ1nRl9AQa0HwZmpIIdQV4Q8cc1CltvSzLnt2iQpfFpSyMzPldOnp3uFzZJpNzavC+N2tLsJ1uN/yMbIDwQlb5FIVMFe1WcnA/llimiPsldAFxjDr7HLKc2XIjQ2h/uG4Bt6ZmEtfieJDpSf0Pww8rwIAB+OyGyTmkqvm8M0MV3qaxZtA2yvqS/0LjgWoDrRnz1zmyqkbePyDGgoe/UMTE13GI0N0nboKn8YeoEolDLgt4OWOHO0NIGigyQV9AQf/BWU7kOWMAHrTAi8a3G2+MwsYMIXnCMm6Syld4pN+WAYb9431bP8lGdVhwmbMJPAD3QOVSMF0ULKgIHzHHr5cgrk8vzrfpgZ0QWvDi664+34wLi37pvMFkaLSWha5jHOVw1POb4U720/HgZ3prFRhDdUa34lojJRxgjAUKHGDpy9NeJhtAc8LpsQ87RGcMFPZjxZvgGNN1DzDuTBvObFFP8lXSOLniPC/hEqt/oiKYNpR5/UpProcARoBl/BkfcVAf/AJ1/EQMYKUONyaBgerBX0bfjgyECqF8TMfjd8f3aL7eL1ii2vq3beAwZYKYqeTRpttDXg76FerTg9T415yg14hW4HF+eM089F+9Zqtc/gqJPwdywGFDVkG4ID1WI5avDKfYE="
   on:
     tags: true
     repo: kiudee/chess-tuning-tools
