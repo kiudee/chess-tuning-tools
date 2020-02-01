@@ -13,6 +13,8 @@ from .utils import parse_timecontrol, MatchResult, TimeControl
 
 CLIENT_VERSION = 1
 
+__all__ = ["TuningClient"]
+
 
 class TuningClient(object):
     def __init__(self, dbconfig_path, **kwargs):
@@ -190,9 +192,3 @@ class TuningClient(object):
                         {"wins": result.wins, "losses": result.losses, "draws": result.draws, "job_id": job_id},
                     )
                     self.logger.info("Uploaded match result to database.")
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    tc = TuningClient("dbconfig.json")
-    tc.run()

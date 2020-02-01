@@ -10,7 +10,6 @@ Options:
   --logfile=<path>  Path to where the log is output to
 
 """
-from docopt import docopt
 import joblib
 import json
 import logging
@@ -32,6 +31,8 @@ from skopt.utils import normalize_dimensions
 
 from .utils import parse_timecontrol, MatchResult, TimeControl
 from ..io import InitStrings
+
+__all__ = ["TuningServer"]
 
 
 class TuningServer(object):
@@ -320,19 +321,3 @@ class TuningServer(object):
 
     def reactivate(self):
         raise NotImplementedError
-
-
-if __name__ == "__main__":
-    arguments = docopt(__doc__)
-    log_level = logging.DEBUG if arguments['--verbose'] else logging.INFO
-    logging.basicConfig(level=log_level, filename=arguments['--logfile'])
-    tc = TuningServer(
-        experiment_path=arguments['<experiment_file>'],
-        dbconfig_path=arguments['<dbconfig>']
-    )
-    if arguments['run']:
-        tc.run()
-    elif arguments['deactivate']:
-        tc.deactivate()
-    elif arguments['reactivate']:
-        tc.reactivate()
