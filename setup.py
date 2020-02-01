@@ -19,7 +19,7 @@ requirements = [
     "scikit-optimize",
     "emcee>=3.0.2",
     "psycopg2",
-    "bask>=0.1.0",
+    "bask>=version='0.1.1'",
 ]
 
 setup_requirements = ["pytest-runner"]
@@ -54,6 +54,6 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/kiudee/chess-tuning-tools",
-    version="0.1.0",
+    version="version='0.1.1'",
     zip_safe=False,
 )
