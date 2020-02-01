@@ -10,9 +10,17 @@ with open("README.rst") as readme_file:
 with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
-requirements = ["Click>=7.0", "numpy>=1.18", "scipy>=1.3.2", "pytz", "joblib", "scikit-optimize",
-                "emcee>=3.0.2", "psycopg2",
-                "bayes-skopt @ https://api.github.com/repos/kiudee/bayes-skopt/tarball/master"]
+requirements = [
+    "Click>=7.0",
+    "numpy>=1.18",
+    "scipy>=1.3.2",
+    "pytz",
+    "joblib",
+    "scikit-optimize",
+    "emcee>=3.0.2",
+    "psycopg2",
+    "bask>=0.1.0",
+]
 
 setup_requirements = ["pytest-runner"]
 
