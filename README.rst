@@ -32,20 +32,17 @@ Features
 Starting the tuning client
 --------------------------
 In order to be able to start the tuning client, first create a python
-environment with the packages ``psycopg2`` and ``numpy``.
-Using anaconda this could be done by typing::
+environment and install chess-tuning-tools by typing::
 
-   conda create -n tuning -c conda-forge numpy psycopg2 pytz click emcee
-   pip install git+https://github.com/kiudee/bayes-skopt
+   pip install chess-tuning-tools
 
 Furthermore, you need to have `cutechess-cli <https://github.com/cutechess/cutechess>`_
 in the path. The tuning client will use it to run matches.
 
-Then after extracting the current .zip package into the folder
-``chess-tuning-tools``, make sure that you have the following directory
+Then after extracting the current .zip package into another folder, make sure that you have the following directory
 structure::
 
-   chess-tuning-tools/
+   folder/
    |---- networks/
    |     |---- 58613
    |     |---- other networks
@@ -53,23 +50,14 @@ structure::
    |     |---- ...
    |     |---- openings-6ply-1000.pgn
    |     |---- ...
-   |---- tune/
-   |     |---- db_workers/
-   |     |     |---- __init__.py
-   |     |     |---- tuning_client.py
-   |     |     |---- tuning_server.py
-   |     |     |---- utils.py
-   |     |---- __init__.py
-   |     |---- io.py
    |---- dbconfig.json
    |---- lc0[.exe]
    |---- sf[.exe]
 
 Finally, the tuning client can be started as follows::
 
-   cd path/to/chess-tuning-tools
-   conda activate tuning
-   python -m tune.cli run_client dbconfig.json
+   cd path/to/folder
+   tune run-client dbconfig.json
 
 
 Credits
