@@ -131,9 +131,12 @@ class TuningClient(object):
     def pick_job(self, jobs, mix=0.25):
         """Pick a job based on weight and current load."""
         weights = np.array([x["job_weight"] for x in jobs])
+        self.logger.debug(f"Job weights: {weights}")
         sample_size = np.array([x["wins"] + x["losses"] + x["draws"] for x in jobs])
+        self.logger.debug(f"Sample sizes: {sample_size}")
         minimum_ss = np.array([x.get("minimum_samplesize", 16.0) for x in jobs])
         missing = np.maximum(minimum_ss - sample_size, 0.0)
+        self.logger.debug(f"Missing samples: {missing}")
         if np.all(missing == 0.0):
             p = np.ones_like(weights) * weights
             p /= p.sum()
@@ -142,7 +145,9 @@ class TuningClient(object):
             p = missing * weights
             p /= p.sum()
             p = mix * uniform + (1 - mix) * p
+        self.logger.debug(f"Resulting p={p}")
         rand_i = np.random.choice(len(jobs), p=p)
+        self.logger.debug(f"Picked job {rand_i} (job_id={jobs[rand_i]['job_id']})")
         return jobs[rand_i]
 
     def run(self):
