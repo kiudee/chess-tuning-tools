@@ -91,13 +91,13 @@ class TuningClient(object):
         return MatchResult(wins=w, losses=l, draws=d)
 
     def run_benchmark(self):
-        path = os.path.join(os.path.curdir, 'lc0')
+        path = os.path.join(os.path.curdir, "lc0")
         out = subprocess.run([path, "benchmark"], capture_output=True)
         s = out.stdout.decode("utf-8")
         result = float(re.findall(r"([0-9]+\.[0-9]+)\snodes per second", s)[0])
         self.lc0_benchmark = result
 
-        path = os.path.join(os.path.curdir, 'sf')
+        path = os.path.join(os.path.curdir, "sf")
         out = subprocess.run([path, "bench"], capture_output=True)
         # Stockfish outputs results as stderr:
         s = out.stderr.decode("utf-8")
@@ -112,20 +112,19 @@ class TuningClient(object):
         tc_lc0 = [x * lc0_ratio for x in tc_lc0]
         tc_sf = [x * sf_ratio for x in tc_sf]
         # TODO: support non-increment time-control
-        return TimeControl(engine1=f"{tc_lc0[0]}+{tc_lc0[1]}",
-                           engine2=f"{tc_sf[0]}+{tc_sf[1]}")
+        return TimeControl(engine1=f"{tc_lc0[0]}+{tc_lc0[1]}", engine2=f"{tc_sf[0]}+{tc_sf[1]}")
 
     @staticmethod
     def set_working_directories(engine_config):
         path = os.getcwd()
-        engine_config[0]['workingDirectory'] = path
-        engine_config[1]['workingDirectory'] = path
-        if os.name == 'nt':  # Windows needs .exe files to work correctly
-            engine_config[0]['command'] = 'lc0.exe'
-            engine_config[1]['command'] = 'sf.exe'
+        engine_config[0]["workingDirectory"] = path
+        engine_config[1]["workingDirectory"] = path
+        if os.name == "nt":  # Windows needs .exe files to work correctly
+            engine_config[0]["command"] = "lc0.exe"
+            engine_config[1]["command"] = "sf.exe"
         else:
-            engine_config[0]['command'] = './lc0'
-            engine_config[1]['command'] = './sf'
+            engine_config[0]["command"] = "./lc0"
+            engine_config[1]["command"] = "./sf"
 
     def run(self):
         while True:
@@ -168,15 +167,19 @@ class TuningClient(object):
                     sleep(2)
                     # b) Adjust time control:
                     if self.lc0_benchmark is None:
-                        self.logger.info('Running initial nodes/second benchmark to calibrate time controls...')
+                        self.logger.info("Running initial nodes/second benchmark to calibrate time controls...")
                         self.run_benchmark()
-                        self.logger.info(f"Benchmark complete. Results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps")
+                        self.logger.info(
+                            f"Benchmark complete. Results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps"
+                        )
                     else:
-                        self.logger.debug(f"Initial benchmark results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps")
+                        self.logger.debug(
+                            f"Initial benchmark results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps"
+                        )
                     time_control = self.adjust_time_control(
                         TimeControl(engine1=config["time_control"][0], engine2=config["time_control"][1]),
-                        float(job['lc0_nodes']),
-                        float(job['sf_nodes'])
+                        float(job["lc0_nodes"]),
+                        float(job["sf_nodes"]),
                     )
                     self.logger.debug(f"Adjusted time control from {config['time_control']} to {time_control}")
 
