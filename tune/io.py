@@ -4,7 +4,7 @@ from collections.abc import MutableMapping
 
 # TODO: Backup file to restore it, should there be an error
 def uci_tuple(uci_string):
-    name, value = re.findall("name (\w+) value (-?[0-9.]+)", uci_string)[0]
+    name, value = re.findall(r"name (\w+) value (-?[0-9.]+)", uci_string)[0]
     value = float(value)
     return name, value
 
