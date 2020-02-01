@@ -155,7 +155,6 @@ class TuningClient(object):
                     weights = np.array([x["job_weight"] for x in applicable_jobs])
                     rand_i = np.random.choice(len(applicable_jobs), p=weights / weights.sum())
                     job = applicable_jobs[rand_i]
-                    print(job)
 
                     # 2. Set up experiment
                     # a) write engines.json
@@ -169,8 +168,11 @@ class TuningClient(object):
                     sleep(2)
                     # b) Adjust time control:
                     if self.lc0_benchmark is None:
+                        self.logger.info('Running initial nodes/second benchmark to calibrate time controls...')
                         self.run_benchmark()
-                    self.logger.debug(f"Benchmark results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps")
+                        self.logger.info(f"Benchmark complete. Results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps")
+                    else:
+                        self.logger.debug(f"Initial benchmark results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps")
                     time_control = self.adjust_time_control(
                         TimeControl(engine1=config["time_control"][0], engine2=config["time_control"][1]),
                         float(job['lc0_nodes']),
@@ -179,8 +181,9 @@ class TuningClient(object):
                     self.logger.debug(f"Adjusted time control from {config['time_control']} to {time_control}")
 
                     # 3. Run experiment (and block)
+                    self.logger.info(f"Running match with time control\n{time_control}")
                     result = self.run_experiment(time_control=time_control, cutechess_options=config["cutechess"])
-                    self.logger.info(f"Match result: {result.wins} - {result.losses} - {result.draws}")
+                    self.logger.info(f"Match result (WLD): {result.wins} - {result.losses} - {result.draws}")
                     # 5. Send results to database and lock it during access
                     # TODO: Check if job_id is actually present and warn if necessary
                     update_job = """
@@ -191,4 +194,4 @@ class TuningClient(object):
                         update_job,
                         {"wins": result.wins, "losses": result.losses, "draws": result.draws, "job_id": job_id},
                     )
-                    self.logger.info("Uploaded match result to database.")
+                    self.logger.info("Uploaded match result to database.\n")

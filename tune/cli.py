@@ -12,7 +12,7 @@ def cli():
 
 
 @cli.command()
-@click.option('--verbose', '-v', is_flag=True, help='Turn on debug output.')
+@click.option('--verbose', '-v', is_flag=True, default=False, help='Turn on debug output.')
 @click.option('--logfile', default=None, help='Path to where the log is saved to.')
 @click.argument('dbconfig')
 def run_client(verbose, logfile, dbconfig):
@@ -23,13 +23,18 @@ def run_client(verbose, logfile, dbconfig):
     where it can fetch jobs and store results.
     """
     log_level = logging.DEBUG if verbose else logging.INFO
-    logging.basicConfig(level=log_level, filename=logfile)
+    logging.basicConfig(
+        level=log_level,
+        filename=logfile,
+        format='%(asctime)s %(levelname)-8s %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
     tc = TuningClient(dbconfig_path=dbconfig)
     tc.run()
 
 
 @cli.command()
-@click.option('--verbose', '-v', is_flag=True, help='Turn on debug output.')
+@click.option('--verbose', '-v', is_flag=True, default=False, help='Turn on debug output.')
 @click.option('--logfile', default=None, help='Path to where the log is saved to.')
 @click.argument('command')
 @click.argument('experiment_file')
@@ -46,7 +51,12 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
      * reactivate: Reactivates all recent jobs for which sample size is not reached yet.
     """
     log_level = logging.DEBUG if verbose else logging.INFO
-    logging.basicConfig(level=log_level, filename=logfile)
+    logging.basicConfig(
+        level=log_level,
+        filename=logfile,
+        format='%(asctime)s %(levelname)-8s %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
     tc = TuningServer(
         experiment_path=experiment_file,
         dbconfig_path=dbconfig
