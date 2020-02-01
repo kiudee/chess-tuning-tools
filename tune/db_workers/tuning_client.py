@@ -112,7 +112,9 @@ class TuningClient(object):
         tc_lc0 = [x * lc0_ratio for x in tc_lc0]
         tc_sf = [x * sf_ratio for x in tc_sf]
         # TODO: support non-increment time-control
-        return TimeControl(engine1=f"{tc_lc0[0]}+{tc_lc0[1]}", engine2=f"{tc_sf[0]}+{tc_sf[1]}")
+        return TimeControl(
+            engine1=f"{tc_lc0[0]}+{tc_lc0[1]}", engine2=f"{tc_sf[0]}+{tc_sf[1]}"
+        )
 
     @staticmethod
     def set_working_directories(engine_config):
@@ -126,6 +128,23 @@ class TuningClient(object):
             engine_config[0]["command"] = "./lc0"
             engine_config[1]["command"] = "./sf"
 
+    def pick_job(self, jobs, mix=0.25):
+        """Pick a job based on weight and current load."""
+        weights = np.array([x["job_weight"] for x in jobs])
+        sample_size = np.array([x["wins"] + x["losses"] + x["draws"] for x in jobs])
+        minimum_ss = np.array([x.get("minimum_samplesize", 16.0) for x in jobs])
+        missing = np.maximum(minimum_ss - sample_size, 0.0)
+        if np.all(missing == 0.0):
+            p = np.ones_like(weights) * weights
+            p /= p.sum()
+        else:
+            uniform = np.ones_like(weights) / len(weights)
+            p = missing * weights
+            p /= p.sum()
+            p = mix * uniform + (1 - mix) * p
+        rand_i = np.random.choice(len(jobs), p=p)
+        return jobs[rand_i]
+
     def run(self):
         while True:
             # 1. Check db for new job
@@ -133,7 +152,7 @@ class TuningClient(object):
             with psycopg2.connect(**self.connect_params) as conn:
                 with conn.cursor(cursor_factory=DictCursor) as curs:
                     job_string = """
-                    SELECT * FROM tuning_jobs WHERE active;
+                    SELECT * FROM tuning_jobs NATURAL INNER JOIN tuning_results WHERE active;
                     """
                     curs.execute(job_string)
                     result = curs.fetchall()
@@ -141,7 +160,9 @@ class TuningClient(object):
                         sleep(30)  # TODO: maybe some sort of decay here
                         continue
 
-                    applicable_jobs = [x for x in result if x["minimum_version"] <= CLIENT_VERSION]
+                    applicable_jobs = [
+                        x for x in result if x["minimum_version"] <= CLIENT_VERSION
+                    ]
                     if len(applicable_jobs) < len(result):
                         self.logger.warning(
                             "There are jobs which require a higher client version. Please update "
@@ -151,9 +172,7 @@ class TuningClient(object):
                             sleep(30)
                             continue
 
-                    weights = np.array([x["job_weight"] for x in applicable_jobs])
-                    rand_i = np.random.choice(len(applicable_jobs), p=weights / weights.sum())
-                    job = applicable_jobs[rand_i]
+                    job = self.pick_job(applicable_jobs)
 
                     # 2. Set up experiment
                     # a) write engines.json
@@ -167,7 +186,9 @@ class TuningClient(object):
                     sleep(2)
                     # b) Adjust time control:
                     if self.lc0_benchmark is None:
-                        self.logger.info("Running initial nodes/second benchmark to calibrate time controls...")
+                        self.logger.info(
+                            "Running initial nodes/second benchmark to calibrate time controls..."
+                        )
                         self.run_benchmark()
                         self.logger.info(
                             f"Benchmark complete. Results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps"
@@ -177,16 +198,25 @@ class TuningClient(object):
                             f"Initial benchmark results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps"
                         )
                     time_control = self.adjust_time_control(
-                        TimeControl(engine1=config["time_control"][0], engine2=config["time_control"][1]),
+                        TimeControl(
+                            engine1=config["time_control"][0],
+                            engine2=config["time_control"][1],
+                        ),
                         float(job["lc0_nodes"]),
                         float(job["sf_nodes"]),
                     )
-                    self.logger.debug(f"Adjusted time control from {config['time_control']} to {time_control}")
+                    self.logger.debug(
+                        f"Adjusted time control from {config['time_control']} to {time_control}"
+                    )
 
                     # 3. Run experiment (and block)
                     self.logger.info(f"Running match with time control\n{time_control}")
-                    result = self.run_experiment(time_control=time_control, cutechess_options=config["cutechess"])
-                    self.logger.info(f"Match result (WLD): {result.wins} - {result.losses} - {result.draws}")
+                    result = self.run_experiment(
+                        time_control=time_control, cutechess_options=config["cutechess"]
+                    )
+                    self.logger.info(
+                        f"Match result (WLD): {result.wins} - {result.losses} - {result.draws}"
+                    )
                     # 5. Send results to database and lock it during access
                     # TODO: Check if job_id is actually present and warn if necessary
                     update_job = """
@@ -195,6 +225,11 @@ class TuningClient(object):
                     """
                     curs.execute(
                         update_job,
-                        {"wins": result.wins, "losses": result.losses, "draws": result.draws, "job_id": job_id},
+                        {
+                            "wins": result.wins,
+                            "losses": result.losses,
+                            "draws": result.draws,
+                            "job_id": job_id,
+                        },
                     )
                     self.logger.info("Uploaded match result to database.\n")
