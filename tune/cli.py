@@ -12,9 +12,9 @@ def cli():
 
 
 @cli.command()
-@click.option('--verbose', '-v', is_flag=True, default=False, help='Turn on debug output.')
-@click.option('--logfile', default=None, help='Path to where the log is saved to.')
-@click.argument('dbconfig')
+@click.option("--verbose", "-v", is_flag=True, default=False, help="Turn on debug output.")
+@click.option("--logfile", default=None, help="Path to where the log is saved to.")
+@click.argument("dbconfig")
 def run_client(verbose, logfile, dbconfig):
     """ Run the client to generate games for distributed tuning.
 
@@ -24,21 +24,18 @@ def run_client(verbose, logfile, dbconfig):
     """
     log_level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(
-        level=log_level,
-        filename=logfile,
-        format='%(asctime)s %(levelname)-8s %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        level=log_level, filename=logfile, format="%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
     tc = TuningClient(dbconfig_path=dbconfig)
     tc.run()
 
 
 @cli.command()
-@click.option('--verbose', '-v', is_flag=True, default=False, help='Turn on debug output.')
-@click.option('--logfile', default=None, help='Path to where the log is saved to.')
-@click.argument('command')
-@click.argument('experiment_file')
-@click.argument('dbconfig')
+@click.option("--verbose", "-v", is_flag=True, default=False, help="Turn on debug output.")
+@click.option("--logfile", default=None, help="Path to where the log is saved to.")
+@click.argument("command")
+@click.argument("experiment_file")
+@click.argument("dbconfig")
 def run_server(verbose, logfile, command, experiment_file, dbconfig):
     """Run the tuning server for a given EXPERIMENT_FILE (json).
 
@@ -52,20 +49,14 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     """
     log_level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(
-        level=log_level,
-        filename=logfile,
-        format='%(asctime)s %(levelname)-8s %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        level=log_level, filename=logfile, format="%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
-    tc = TuningServer(
-        experiment_path=experiment_file,
-        dbconfig_path=dbconfig
-    )
-    if command == 'run':
+    tc = TuningServer(experiment_path=experiment_file, dbconfig_path=dbconfig)
+    if command == "run":
         tc.run()
-    elif command == 'deactivate':
+    elif command == "deactivate":
         tc.deactivate()
-    elif command == 'reactivate':
+    elif command == "reactivate":
         tc.reactivate()
     else:
         raise ValueError(f"Command {command} is not recognized. Terminating...")
