@@ -16,6 +16,12 @@ def cli():
 @click.option('--logfile', default=None, help='Path to where the log is saved to.')
 @click.argument('dbconfig')
 def run_client(verbose, logfile, dbconfig):
+    """ Run the client to generate games for distributed tuning.
+
+    In order to connect to the database you need to provide a valid DBCONFIG
+    json file. It contains the necessary parameters to connect to the database
+    where it can fetch jobs and store results.
+    """
     log_level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(level=log_level, filename=logfile)
     tc = TuningClient(dbconfig_path=dbconfig)
@@ -29,6 +35,16 @@ def run_client(verbose, logfile, dbconfig):
 @click.argument('experiment_file')
 @click.argument('dbconfig')
 def run_server(verbose, logfile, command, experiment_file, dbconfig):
+    """Run the tuning server for a given EXPERIMENT_FILE (json).
+
+    To connect to the database you also need to provide a DBCONFIG json file.
+
+    \b
+    You can choose from these COMMANDs:
+     * run: Starts the server.
+     * deactivate: Deactivates all active jobs of the given experiment.
+     * reactivate: Reactivates all recent jobs for which sample size is not reached yet.
+    """
     log_level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(level=log_level, filename=logfile)
     tc = TuningServer(
