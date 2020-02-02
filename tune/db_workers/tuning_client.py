@@ -120,9 +120,30 @@ class TuningClient(object):
         w, l, d = [float(x) for x in re.findall("[0-9]", result)]
         return MatchResult(wins=w, losses=l, draws=d)
 
-    def run_benchmark(self):
+    def run_benchmark(self, config):
+        def uci_to_cl(k, v):
+            mapping = {"Threads": "--threads",
+                       "NNCacheSize": "--nncache",
+                       "Backend": "--backend",
+                       "BackendOptions": "--backend-opts",
+                       "MinibatchSize": "--minibatch-size",
+                       "MaxPrefetch": "--max-prefetch"}
+            if k in mapping:
+                return f"{mapping[k]}={v}"
+            return None
+
+        def cl_arguments(init_strings):
+            cl_args = []
+            for k, v in init_strings.items():
+                arg = uci_to_cl(k, v)
+                if arg is not None:
+                    cl_args.append(arg)
+            return cl_args
+
+        self.logger.debug(f"Before benchmark engine 1:\n{config['engine'][0]['initStrings']}")
+        args = cl_arguments(InitStrings(config["engine"][0]["initStrings"]))
         path = os.path.join(os.path.curdir, "lc0")
-        out = subprocess.run([path, "benchmark"], capture_output=True)
+        out = subprocess.run([path, "benchmark"] + args, capture_output=True)
         s = out.stdout.decode("utf-8")
         try:
             result = float(re.findall(r"([0-9]+\.[0-9]+)\snodes per second", s)[0])
@@ -131,8 +152,10 @@ class TuningClient(object):
             sys.exit(1)
         self.lc0_benchmark = result
 
+        self.logger.debug(f"Before benchmark engine 2:\n{config['engine'][1]['initStrings']}")
+        num_threads = InitStrings(config["engine"][1]["initStrings"])["Threads"]
         path = os.path.join(os.path.curdir, "sf")
-        out = subprocess.run([path, "bench"], capture_output=True)
+        out = subprocess.run([path, "bench", "16", str(int(num_threads))], capture_output=True)
         # Stockfish outputs results as stderr:
         s = out.stderr.decode("utf-8")
         try:
@@ -267,7 +290,7 @@ class TuningClient(object):
                             "Running initial nodes/second benchmark to calibrate time controls."
                             "Ensure that your pc is idle to get a good reading."
                         )
-                        self.run_benchmark()
+                        self.run_benchmark(config)
                         self.logger.info(
                             f"Benchmark complete. Results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps"
                         )
