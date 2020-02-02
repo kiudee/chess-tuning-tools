@@ -14,7 +14,7 @@ def uci_tuple(uci_string):
         tmp = float(value)
     except ValueError:
         tmp = value
-    return name, value
+    return name, tmp
 
 
 def set_option(name, value):
