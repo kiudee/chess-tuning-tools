@@ -1,15 +1,4 @@
-"""The server worker, which reads results and schedules new jobs.
-
-Usage:
-  tuning_server.py (run | deactivate | reactivate) [options] <experiment_file> <dbconfig>
-  tuning_server.py -h | --help
-
-Options:
-  -h --help         Show this screen.
-  -v --verbose      Set log level to debug.
-  --logfile=<path>  Path to where the log is output to
-
-"""
+"""The server worker, which reads results and schedules new jobs."""
 import joblib
 import json
 import logging

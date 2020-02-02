@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+import signal
 import subprocess
 import sys
 import numpy as np
@@ -21,6 +22,8 @@ class TuningClient(object):
         self.logger = logging.getLogger("TuningClient")
         self.lc0_benchmark = None
         self.sf_benchmark = None
+        signal.signal(signal.SIGINT, self.interrupt_handler)
+        self.interrupt_pressed = False
         if os.path.isfile(dbconfig_path):
             with open(dbconfig_path, "r") as config_file:
                 config = config_file.read().replace("\n", "")
@@ -28,6 +31,15 @@ class TuningClient(object):
                 self.connect_params = json.loads(config)
         else:
             raise ValueError("No config file found at provided path")
+
+    def interrupt_handler(self, sig, frame):
+        if self.interrupt_pressed:
+            self.logger.info("Shutting down immediately.")
+            sys.exit(0)
+        self.interrupt_pressed = True
+        self.logger.info(
+            "Signal received. Shutting down after next match.\nPress a second time to terminate immediately."
+        )
 
     def run_experiment(self, time_control, cutechess_options):
         try:
@@ -152,8 +164,10 @@ class TuningClient(object):
 
     def run(self):
         while True:
+            if self.interrupt_pressed:
+                self.logger.info('Shutting down after receiving shutdown signal.')
+                sys.exit(0)
             # 1. Check db for new job
-
             with psycopg2.connect(**self.connect_params) as conn:
                 with conn.cursor(cursor_factory=DictCursor) as curs:
                     job_string = """
