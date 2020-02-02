@@ -14,8 +14,9 @@ def cli():
 @cli.command()
 @click.option("--verbose", "-v", is_flag=True, default=False, help="Turn on debug output.")
 @click.option("--logfile", default=None, help="Path to where the log is saved to.")
+@click.option("--terminate-after", default=0, help="Terminate the client after x minutes.")
 @click.argument("dbconfig")
-def run_client(verbose, logfile, dbconfig):
+def run_client(verbose, logfile, terminate_after, dbconfig):
     """ Run the client to generate games for distributed tuning.
 
     In order to connect to the database you need to provide a valid DBCONFIG
@@ -26,7 +27,7 @@ def run_client(verbose, logfile, dbconfig):
     logging.basicConfig(
         level=log_level, filename=logfile, format="%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
-    tc = TuningClient(dbconfig_path=dbconfig)
+    tc = TuningClient(dbconfig_path=dbconfig, terminate_after=terminate_after)
     tc.run()
 
 

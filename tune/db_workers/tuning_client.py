@@ -7,7 +7,7 @@ import signal
 import subprocess
 import sys
 import numpy as np
-from time import sleep
+from time import sleep, time
 from psycopg2.extras import DictCursor
 
 from .utils import parse_timecontrol, MatchResult, TimeControl
@@ -18,7 +18,11 @@ __all__ = ["TuningClient"]
 
 
 class TuningClient(object):
-    def __init__(self, dbconfig_path, **kwargs):
+    def __init__(self, dbconfig_path, terminate_after=0, **kwargs):
+        self.end_time = None
+        if terminate_after != 0:
+            start_time = time()
+            self.end_time = start_time + terminate_after * 60
         self.logger = logging.getLogger("TuningClient")
         self.lc0_benchmark = None
         self.sf_benchmark = None
@@ -169,6 +173,9 @@ class TuningClient(object):
         while True:
             if self.interrupt_pressed:
                 self.logger.info('Shutting down after receiving shutdown signal.')
+                sys.exit(0)
+            if self.end_time is not None and self.end_time < time():
+                self.logger.info("Shutdown timer triggered. Closing")
                 sys.exit(0)
             # 1. Check db for new job
             with psycopg2.connect(**self.connect_params) as conn:
