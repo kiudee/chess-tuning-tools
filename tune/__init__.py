@@ -2,4 +2,4 @@
 
 __author__ = """Karlson Pfannschmidt"""
 __email__ = "kiudee@mail.upb.de"
-__version__ = "0.1.3"
+__version__ = "0.1.4"
