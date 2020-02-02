@@ -123,7 +123,10 @@ class TuningClient(object):
         tc_sf = parse_timecontrol(time_control.engine2)
         tc_lc0 = [x * lc0_ratio for x in tc_lc0]
         tc_sf = [x * sf_ratio for x in tc_sf]
-        # TODO: support non-increment time-control
+        if len(tc_lc0) == 1:
+            return TimeControl(
+                engine1=f"{tc_lc0[0]}", engine2=f"{tc_sf[0]}"
+            )
         return TimeControl(
             engine1=f"{tc_lc0[0]}+{tc_lc0[1]}", engine2=f"{tc_sf[0]}+{tc_sf[1]}"
         )
