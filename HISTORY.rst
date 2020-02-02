@@ -2,6 +2,11 @@
 History
 =======
 
+0.1.6 (2020-02-02)
+------------------
+
+* Allow timed termination of the client by the option ``--terminate-after``
+
 0.1.5 (2020-02-02)
 ------------------
 
