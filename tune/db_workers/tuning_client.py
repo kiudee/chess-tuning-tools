@@ -10,6 +10,7 @@ import numpy as np
 from time import sleep, time
 from psycopg2.extras import DictCursor
 
+from ..io import InitStrings
 from .utils import parse_timecontrol, MatchResult, TimeControl
 
 CLIENT_VERSION = 1
@@ -18,7 +19,7 @@ __all__ = ["TuningClient"]
 
 
 class TuningClient(object):
-    def __init__(self, dbconfig_path, terminate_after=0, **kwargs):
+    def __init__(self, dbconfig_path, terminate_after=0, clientconfig=None, **kwargs):
         self.end_time = None
         if terminate_after != 0:
             start_time = time()
@@ -34,7 +35,18 @@ class TuningClient(object):
                 self.logger.debug(f"Reading DB config:\n{config}")
                 self.connect_params = json.loads(config)
         else:
-            raise ValueError("No config file found at provided path")
+            raise ValueError(f"No config file found at provided path:\n{dbconfig_path}")
+
+        self.client_config = None
+        if clientconfig is not None:
+            if os.path.isfile(clientconfig):
+                with open(clientconfig, "r") as ccfile:
+                    config = ccfile.read().replace("\n", "")
+                    self.client_config = json.loads(config)
+            else:
+                raise ValueError(
+                    f"Client configuration file not found:\n{clientconfig}"
+                )
 
     def interrupt_handler(self, sig, frame):
         if self.interrupt_pressed:
@@ -78,10 +90,12 @@ class TuningClient(object):
             "-repeat",
             "-games",
             "2",
-            # "-tb", "/path/to/tb",  # TODO: Support tablebases
             "-pgnout",
             "out.pgn",
         ]
+        if "syzygy_path" in cutechess_options:
+            st.insert(-2, "-tb")
+            st.insert(-2, cutechess_options["syzygy_path"])
         out = subprocess.run(st, capture_output=True)
         return self.parse_experiment(out)
 
@@ -110,14 +124,22 @@ class TuningClient(object):
         path = os.path.join(os.path.curdir, "lc0")
         out = subprocess.run([path, "benchmark"], capture_output=True)
         s = out.stdout.decode("utf-8")
-        result = float(re.findall(r"([0-9]+\.[0-9]+)\snodes per second", s)[0])
+        try:
+            result = float(re.findall(r"([0-9]+\.[0-9]+)\snodes per second", s)[0])
+        except IndexError:
+            self.logger.error(f"Error while parsing engine1 benchmark:\n{s}")
+            sys.exit(1)
         self.lc0_benchmark = result
 
         path = os.path.join(os.path.curdir, "sf")
         out = subprocess.run([path, "bench"], capture_output=True)
         # Stockfish outputs results as stderr:
         s = out.stderr.decode("utf-8")
-        result = float(re.findall(r"Nodes/second\s+:\s([0-9]+)", s)[0])
+        try:
+            result = float(re.findall(r"Nodes/second\s+:\s([0-9]+)", s)[0])
+        except IndexError:
+            self.logger.error(f"Error while parsing engine2 benchmark:\n{s}")
+            sys.exit(1)
         self.sf_benchmark = result
 
     def adjust_time_control(self, time_control, lc0_nodes, sf_nodes):
@@ -169,10 +191,34 @@ class TuningClient(object):
         self.logger.debug(f"Picked job {rand_i} (job_id={jobs[rand_i]['job_id']})")
         return jobs[rand_i]
 
+    def incorporate_config(self, job):
+        admissible_uci = [
+            "Threads",
+            "Backend",
+            "BackendOptions",
+            "NNCacheSize",
+            "MinibatchSize",
+            "MaxPrefetch",
+        ]
+        engines = job["config"]["engine"]
+        for i, e in enumerate(engines):
+            engine_str = f"engine{i+1}"
+            if engine_str in self.client_config:
+                init_strings = InitStrings(e["initStrings"])
+                for k, v in self.client_config[engine_str].items():
+                    if k in admissible_uci:
+                        init_strings[k] = v
+        if "SyzygyPath" in self.client_config:
+            path = self.client_config["SyzygyPath"]
+            for e in engines:
+                init_strings = InitStrings(e["initStrings"])
+                init_strings["SyzygyPath"] = path
+            job["config"]["cutechess"]["syzygy_path"] = path
+
     def run(self):
         while True:
             if self.interrupt_pressed:
-                self.logger.info('Shutting down after receiving shutdown signal.')
+                self.logger.info("Shutting down after receiving shutdown signal.")
                 sys.exit(0)
             if self.end_time is not None and self.end_time < time():
                 self.logger.info("Shutdown timer triggered. Closing")
@@ -205,6 +251,8 @@ class TuningClient(object):
 
                     # 2. Set up experiment
                     # a) write engines.json
+                    if self.client_config is not None:
+                        self.incorporate_config(job)
                     job_id = job["job_id"]
                     config = job["config"]
                     self.logger.debug(f"Received config:\n{config}")
@@ -216,7 +264,8 @@ class TuningClient(object):
                     # b) Adjust time control:
                     if self.lc0_benchmark is None:
                         self.logger.info(
-                            "Running initial nodes/second benchmark to calibrate time controls..."
+                            "Running initial nodes/second benchmark to calibrate time controls."
+                            "Ensure that your pc is idle to get a good reading."
                         )
                         self.run_benchmark()
                         self.logger.info(
