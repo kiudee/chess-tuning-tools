@@ -59,6 +59,9 @@ Finally, the tuning client can be started as follows::
    cd path/to/folder
    tune run-client dbconfig.json
 
+The client can be terminated gracefully by inputting ctrl-c once or terminated
+immediately by sending it twice.
+
 
 Credits
 -------
