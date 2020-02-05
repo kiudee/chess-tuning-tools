@@ -55,7 +55,7 @@ class SqlUCIParam(Base):
     )
     key = Column(String(100))
     value = Column(String(250), nullable=False)
-    job_id = Column(Integer, ForeignKey="jobs.id")
+    job_id = Column(Integer, ForeignKey("jobs.id"))
     job = relationship("SqlJob", back_populates="params")
 
 
