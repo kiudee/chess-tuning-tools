@@ -85,5 +85,11 @@ class SqlTimeControlMatch(Base):
 class SqlResult(Base):
     __tablename__ = "results"
     __table_args__ = ({"schema": SCHEMA},)
-    job_id = Column(Integer, ForeignKey("jobs.id"))
-    tc_id = Column(Integer, ForeignKey("timecontrols.id"))
+    job_id = Column(Integer, ForeignKey("jobs.id"), primary_key=True)
+    tc_id = Column(Integer, ForeignKey("timecontrols.id"), primary_key=True)
+    ww_count = Column(Integer, default=0)
+    wl_count = Column(Integer, default=0)
+    wd_count = Column(Integer, default=0)
+    dd_count = Column(Integer, default=0)
+    dl_count = Column(Integer, default=0)
+    ll_count = Column(Integer, default=0)
