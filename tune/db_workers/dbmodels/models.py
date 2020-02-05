@@ -44,6 +44,7 @@ class SqlJob(Base):
     tune_id = Column(Integer, ForeignKey("tunes.id"))
     tune = relationship("SqlTune", back_populates="jobs")
     params = relationship("SqlUCIParam", back_populates="job", cascade="all")
+    time_controls = relationship("SqlTimeControlMatch")
 
 
 class SqlUCIParam(Base):
@@ -61,23 +62,24 @@ class SqlUCIParam(Base):
 class SqlTimeControl(Base):
     __tablename__ = "timecontrols"
     __table_args__ = (
-        PrimaryKeyConstraint(
-            "engine1_time",
-            "engine1_increment",
-            "engine2_time",
-            "engine2_increment",
-            "job_id",
-            name="timecontrol_pk",
-        ),
         {"schema": SCHEMA},
     )
+    id = Column(Integer, primary_key=True)
     engine1_time = Column(Numeric, nullable=False)
     engine1_increment = Column(Numeric, nullable=True, default=None)
     engine2_time = Column(Numeric, nullable=False)
     engine2_increment = Column(Numeric, nullable=True, default=None)
-    job_id = Column(Integer, ForeignKey("jobs.id"))
-    job = relationship("SqlJob", back_populates="timecontrols")
-    id = Column(Integer, autoincrement=True)
+    draw_rate = Column(Numeric, nullable=False, default=0.33)
+
+
+class SqlTimeControlMatch(Base):
+    __tablename__ = "jobstotimes"
+    __table_args__ = (
+        {"schema": SCHEMA},
+    )
+    job_id = Column(Integer, ForeignKey("jobs.id"), primary_key=True)
+    tc_id = Column(Integer, ForeignKey("timecontrols.id"), primary_key=True)
+    times = relationship("SqlTimeControl")
 
 
 class SqlResult(Base):
