@@ -2,15 +2,15 @@ from datetime import datetime
 import time
 
 from sqlalchemy import (
-    Column,
     Boolean,
-    Numeric,
-    String,
+    Column,
+    DateTime,
     ForeignKey,
     Integer,
-    DateTime,
-    BigInteger,
+    JSON,
+    Numeric,
     PrimaryKeyConstraint,
+    String,
 )
 from sqlalchemy.orm import relationship
 
@@ -38,7 +38,10 @@ class SqlJob(Base):
     weight = Column(Numeric, default=1.0, nullable=False)
     minimum_version = Column(Integer, default=1, nullable=False)
     maximum_version = Column(Integer, nullable=True, default=None)
+    config = Column(JSON)
+    engine1_exe = Column(String(100), nullable=False, default="lc0")
     engine1_nps = Column(Numeric, nullable=False)
+    engine2_exe = Column(String(100), nullable=False, default="sf")
     engine2_nps = Column(Numeric, nullable=False)
 
     tune_id = Column(Integer, ForeignKey("new.tunes.id"))
