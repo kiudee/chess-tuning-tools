@@ -1,12 +1,20 @@
 import re
+import sys
 from collections.abc import MutableMapping
 
 
 # TODO: Backup file to restore it, should there be an error
 def uci_tuple(uci_string):
-    name, value = re.findall(r"name (\w+) value (-?[0-9.]+)", uci_string)[0]
-    value = float(value)
-    return name, value
+    try:
+        name, value = re.findall(r"name (\w+) value (-?[0-9.]+|\w*)", uci_string)[0]
+    except IndexError:
+        print(f"Error parsing UCI tuples:\n{uci_string}")
+        sys.exit(1)
+    try:
+        tmp = float(value)
+    except ValueError:
+        tmp = value
+    return name, tmp
 
 
 def set_option(name, value):
