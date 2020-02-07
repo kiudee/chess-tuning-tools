@@ -69,11 +69,17 @@ class TuningServer(object):
             experiment_file.write(json.dumps(self.experiment, indent=2))
 
     def save_state(self):
-        path = os.path.join("experiments", f"data_tuneid_{self.experiment['tune_id']}.npz")
-        np.savez_compressed(path, np.array(self.opt.gp.pos_), np.array(self.opt.gp.chain_))
+        path = os.path.join(
+            "experiments", f"data_tuneid_{self.experiment['tune_id']}.npz"
+        )
+        np.savez_compressed(
+            path, np.array(self.opt.gp.pos_), np.array(self.opt.gp.chain_)
+        )
 
     def resume_tuning(self):
-        path = os.path.join("experiments", f"data_tuneid_{self.experiment['tune_id']}.npz")
+        path = os.path.join(
+            "experiments", f"data_tuneid_{self.experiment['tune_id']}.npz"
+        )
         if os.path.exists(path):
             data = np.load(path)
             self.opt.gp.pos_ = data["arr_0"]
@@ -101,7 +107,9 @@ class TuningServer(object):
             try:
                 result = joblib.load(priors)
             except IOError:
-                self.logger.error(f"Priors could not be loaded from path {priors}. Terminating...")
+                self.logger.error(
+                    f"Priors could not be loaded from path {priors}. Terminating..."
+                )
                 sys.exit(1)
         else:
             result = []
@@ -113,7 +121,11 @@ class TuningServer(object):
                 dist = getattr(scipy.stats, prior_str)(**dict(zip(keys, vals)))
                 if i == 0 or i == len(priors) - 1:
                     # The signal variance and the signal noise are in positive, sqrt domain
-                    prior = lambda x: dist.logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)
+                    prior = (
+                        lambda x: dist.logpdf(np.sqrt(np.exp(x)))
+                        + x / 2.0
+                        - np.log(2.0)
+                    )
                 else:
                     # The lengthscale(s) are in positive domain
                     prior = lambda x: dist.logpdf(np.exp(x)) + x
@@ -128,21 +140,29 @@ class TuningServer(object):
 
         self.kernel = ConstantKernel(
             constant_value=self.tunecfg.get("variance_value", 0.1 ** 2),
-            constant_value_bounds=tuple(self.tunecfg.get("variance_bounds", (0.01 ** 2, 0.5 ** 2))),
+            constant_value_bounds=tuple(
+                self.tunecfg.get("variance_bounds", (0.01 ** 2, 0.5 ** 2))
+            ),
         ) * Matern(
             length_scale=self.tunecfg.get("length_scale_value", 0.3),
-            length_scale_bounds=tuple(self.tunecfg.get("length_scale_bounds", (0.2, 0.8))),
+            length_scale_bounds=tuple(
+                self.tunecfg.get("length_scale_bounds", (0.2, 0.8))
+            ),
             nu=2.5,
         )
         self.opt = Optimizer(
             dimensions=self.dimensions,
             n_points=self.tunecfg.get("n_points", 1000),
-            n_initial_points=self.tunecfg.get("n_initial_points", 5 * len(self.dimensions)),
+            n_initial_points=self.tunecfg.get(
+                "n_initial_points", 5 * len(self.dimensions)
+            ),
             gp_kernel=self.kernel,
             gp_kwargs=dict(normalize_y=True),
             gp_priors=self.priors,
             acq_func=self.tunecfg.get("acq_func", "ts"),
-            acq_func_kwargs=self.tunecfg.get("acq_func_kwargs", None),  # TODO: Check if this works for all parameters
+            acq_func_kwargs=self.tunecfg.get(
+                "acq_func_kwargs", None
+            ),  # TODO: Check if this works for all parameters
             random_state=self.rng.randint(0, np.iinfo(np.int32).max),
         )
 
@@ -182,16 +202,16 @@ class TuningServer(object):
         where tune_id=%(tune_id)s and active;
         """
         cursor.execute(query, {"tune_id": tune_id})
-        samplesize_reached = np.all(np.array(cursor.fetchall()) >= self.experiment.get("minimum_samplesize", 16))
+        samplesize_reached = np.all(
+            np.array(cursor.fetchall()) >= self.experiment.get("minimum_samplesize", 16)
+        )
         return X, y, samplesize_reached
-
-    def query_data(self, session, tune_id, include_active=False):
-        if include_active:
-
 
     @staticmethod
     def change_engine_config(engine_config, params):
-        init_strings = InitStrings(engine_config[0]["initStrings"])  # TODO: allow tuning of different index
+        init_strings = InitStrings(
+            engine_config[0]["initStrings"]
+        )  # TODO: allow tuning of different index
         for k, v in params.items():
             init_strings[k] = v
 
@@ -206,7 +226,10 @@ class TuningServer(object):
             )
 
             # 3. Insert new jobs:
-            job_dict = {"engine": self.experiment["engine"], "cutechess": self.experiment["cutechess"]}
+            job_dict = {
+                "engine": self.experiment["engine"],
+                "cutechess": self.experiment["cutechess"],
+            }
             timestamp = datetime.utcnow().replace(tzinfo=pytz.utc)
             for i, tc in enumerate(self.experiment["time_controls"]):
                 job_dict["time_control"] = tc
@@ -243,7 +266,12 @@ class TuningServer(object):
                 (%(job_id)s, %(tune_id)s, %(time_control)s, 0, 0, 0);
                 """
                 cursor.execute(
-                    query, {"job_id": job_id, "tune_id": self.experiment["tune_id"], "time_control": str(tc)}
+                    query,
+                    {
+                        "job_id": job_id,
+                        "tune_id": self.experiment["tune_id"],
+                        "time_control": str(tc),
+                    },
                 )
             conn.commit()
         except BaseException:
@@ -262,7 +290,11 @@ class TuningServer(object):
                         """
                         insert into tunes (description) VALUES (%(desc)s) returning tune_id;
                         """,
-                        {"desc": self.experiment.get("description", "This job does not have a description")},
+                        {
+                            "desc": self.experiment.get(
+                                "description", "This job does not have a description"
+                            )
+                        },
                     )
                     self.experiment["tune_id"] = curs.fetchone()[0]
                     self.write_experiment_file()
@@ -272,13 +304,19 @@ class TuningServer(object):
             # 2. Check if minimum sample size and minimum wait time are reached, then query data and update model:
             with psycopg2.connect(**self.connect_params) as conn:
                 with conn.cursor(cursor_factory=DictCursor) as curs:
-                    X, y, samplesize_reached = self.query_data(curs, self.experiment["tune_id"], include_active=True)
-                    self.logger.debug(f"Queried the database for data and got (last 5):\n{X[-5:]}\n{y[-5:]}")
+                    X, y, samplesize_reached = self.query_data(
+                        curs, self.experiment["tune_id"], include_active=True
+                    )
+                    self.logger.debug(
+                        f"Queried the database for data and got (last 5):\n{X[-5:]}\n{y[-5:]}"
+                    )
                     if len(X) == 0:
                         self.logger.info("There are no datapoints yet, start first job")
                         new_x = self.opt.ask()
                         # Alter engine json using Initstrings
-                        params = dict(zip(self.experiment["tuner"]["parameters"].keys(), new_x))
+                        params = dict(
+                            zip(self.experiment["tuner"]["parameters"].keys(), new_x)
+                        )
                         self.change_engine_config(self.experiment["engine"], params)
                         with psycopg2.connect(**self.connect_params) as conn:
                             with conn.cursor(cursor_factory=DictCursor) as curs:
@@ -288,7 +326,9 @@ class TuningServer(object):
 
             if not samplesize_reached:
                 sleep_seconds = self.experiment.get("sleep_time")
-                self.logger.debug(f"Required sample size not yet reached. Sleeping {sleep_seconds} seconds.")
+                self.logger.debug(
+                    f"Required sample size not yet reached. Sleeping {sleep_seconds} seconds."
+                )
                 sleep(sleep_seconds)
                 continue
 
@@ -305,7 +345,9 @@ class TuningServer(object):
             )
             later = datetime.now()
             difference = (later - now).total_seconds()
-            self.logger.info(f"Calculating GP posterior and acquisition function finished in {difference}s")
+            self.logger.info(
+                f"Calculating GP posterior and acquisition function finished in {difference}s"
+            )
             self.logger.info(f"Current GP kernel:\n{self.opt.gp.kernel_}")
             if self.opt.gp.chain_ is not None:
                 self.logger.debug("Saving position and chain")
