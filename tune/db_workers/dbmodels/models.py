@@ -1,5 +1,4 @@
 from datetime import datetime
-import time
 
 from sqlalchemy import (
     Boolean,
@@ -11,10 +10,19 @@ from sqlalchemy import (
     Numeric,
     PrimaryKeyConstraint,
     String,
+    Table,
 )
 from sqlalchemy.orm import relationship
 
 from tune.db_workers.dbmodels import Base
+
+__all__ = [
+    "SqlTune",
+    "SqlJob",
+    "SqlUCIParam",
+    "SqlTimeControl",
+    "SqlResult",
+]
 
 SCHEMA = "new"
 
@@ -27,6 +35,19 @@ class SqlTune(Base):
     weight = Column(Numeric, default=1.0, nullable=False)
 
     jobs = relationship("SqlJob", back_populates="tune", cascade="all")
+
+    def __repr__(self):
+        return (
+            f"<Tune (id={self.id}, timestamp={self.timestamp}, weight={self.weight})>"
+        )
+
+
+job_tc_table = Table(
+    "jobstotimes",
+    Base.metadata,
+    Column("job_id", Integer, ForeignKey(f"{SCHEMA}.jobs.id")),
+    Column("tc_id", Integer, ForeignKey(f"{SCHEMA}.timecontrols.id")),
+)
 
 
 class SqlJob(Base):
@@ -47,7 +68,15 @@ class SqlJob(Base):
     tune_id = Column(Integer, ForeignKey("new.tunes.id"))
     tune = relationship("SqlTune", back_populates="jobs")
     params = relationship("SqlUCIParam", back_populates="job", cascade="all")
-    time_controls = relationship("SqlTimeControlMatch")
+    time_controls = relationship("SqlTimeControl", secondary=job_tc_table)
+    results = relationship("SqlResult", back_populates="job")
+
+    def __repr__(self):
+        return (
+            f"<Job (id={self.id}, timestamp={self.timestamp}, active={self.active},\n"
+            f"weight={self.weight}, engine1_exe={self.engine1_exe}, engine1_nps={self.engine1_nps},\n"
+            f"engine2_exe={self.engine2_exe}, engine2_nps={self.engine2_nps}, config={self.config})>"
+        )
 
 
 class SqlUCIParam(Base):
@@ -61,12 +90,13 @@ class SqlUCIParam(Base):
     job_id = Column(Integer, ForeignKey("new.jobs.id"))
     job = relationship("SqlJob", back_populates="params")
 
+    def __repr__(self):
+        return f"<UCI (key={self.key}, value={self.value}, job_id={self.job_id})>"
+
 
 class SqlTimeControl(Base):
     __tablename__ = "timecontrols"
-    __table_args__ = (
-        {"schema": SCHEMA},
-    )
+    __table_args__ = ({"schema": SCHEMA},)
     id = Column(Integer, primary_key=True)
     engine1_time = Column(Numeric, nullable=False)
     engine1_increment = Column(Numeric, nullable=True, default=None)
@@ -74,15 +104,26 @@ class SqlTimeControl(Base):
     engine2_increment = Column(Numeric, nullable=True, default=None)
     draw_rate = Column(Numeric, nullable=False, default=0.33)
 
+    def __repr__(self):
+        engine1_inc = (
+            "" if self.engine1_increment is None else f"+{self.engine1_increment}"
+        )
+        engine2_inc = (
+            "" if self.engine2_increment is None else f"+{self.engine2_increment}"
+        )
+        return (
+            f"<TC (id={self.id}, engine1={self.engine1_time}{engine1_inc},"
+            f" engine2={self.engine2_time}{engine2_inc}, draw_rate={self.draw_rate})>"
+        )
 
-class SqlTimeControlMatch(Base):
-    __tablename__ = "jobstotimes"
-    __table_args__ = (
-        {"schema": SCHEMA},
-    )
-    job_id = Column(Integer, ForeignKey("new.jobs.id"), primary_key=True)
-    tc_id = Column(Integer, ForeignKey("new.timecontrols.id"), primary_key=True)
-    times = relationship("SqlTimeControl")
+
+# TODO: use match table instead of association object
+# class SqlTimeControlMatch(Base):
+#     __tablename__ = "jobstotimes"
+#     __table_args__ = ({"schema": SCHEMA},)
+#     job_id = Column(Integer, ForeignKey("new.jobs.id"), primary_key=True)
+#     tc_id = Column(Integer, ForeignKey("new.timecontrols.id"), primary_key=True)
+#     times = relationship("SqlTimeControl")
 
 
 class SqlResult(Base):
@@ -96,3 +137,12 @@ class SqlResult(Base):
     dd_count = Column(Integer, default=0)
     dl_count = Column(Integer, default=0)
     ll_count = Column(Integer, default=0)
+    job = relationship("SqlJob", back_populates="results")
+
+    def __repr__(self):
+        return (
+            f"<Result (job_id={self.job_id}, tc_id={self.tc_id},"
+            f" ww={self.ww_count}, wd={self.wd_count},"
+            f" wl={self.wl_count}, dd={self.dd_count},"
+            f" dl={self.dl_count}, ll={self.ll_count})>"
+        )

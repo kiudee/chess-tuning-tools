@@ -3,23 +3,24 @@ import joblib
 import json
 import logging
 import os
-import psycopg2
 import re
 import sys
 import numpy as np
 import pytz
 import scipy.stats
+import sqlalchemy
 from datetime import datetime
+from sqlalchemy.orm import sessionmaker
 from time import sleep
-from psycopg2.extras import DictCursor
 
 from bask import Optimizer
 from skopt.space import space as skspace
 from skopt.learning.gaussian_process.kernels import Matern, ConstantKernel
 from skopt.utils import normalize_dimensions
 
-from .utils import parse_timecontrol, MatchResult, TimeControl
-from ..io import InitStrings
+from tune.db_workers.dbmodels import Base
+from tune.db_workers.utils import get_session_maker, create_sqlalchemy_engine
+from tune.io import InitStrings
 
 __all__ = ["TuningServer"]
 
@@ -35,6 +36,11 @@ class TuningServer(object):
                 self.connect_params = json.loads(config)
         else:
             raise ValueError("No dbconfig file found at provided path")
+
+        self.engine = create_sqlalchemy_engine(self.connect_params)
+        Base.metadata.create_all(self.engine)
+        sm = sessionmaker(bind=self.engine)
+        self.sessionmaker = get_session_maker(sm)
 
         if os.path.isfile(experiment_path):
             with open(experiment_path, "r+") as experiment_file:
@@ -141,7 +147,6 @@ class TuningServer(object):
         )
 
     def query_data(self, cursor, tune_id, include_active=False):
-        # TODO: These scores are linear in the W/L difference, maybe use something proper like (regularized) Elo
         # TODO: Support shrinking of ranges, by filtering X, y here
         if include_active:
             query = """
@@ -179,6 +184,10 @@ class TuningServer(object):
         cursor.execute(query, {"tune_id": tune_id})
         samplesize_reached = np.all(np.array(cursor.fetchall()) >= self.experiment.get("minimum_samplesize", 16))
         return X, y, samplesize_reached
+
+    def query_data(self, session, tune_id, include_active=False):
+        if include_active:
+
 
     @staticmethod
     def change_engine_config(engine_config, params):
