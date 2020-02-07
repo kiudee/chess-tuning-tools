@@ -73,9 +73,9 @@ class SqlJob(Base):
 
     def __repr__(self):
         return (
-            f"<Job (id={self.id}, timestamp={self.timestamp}, active={self.active},\n"
-            f"weight={self.weight}, engine1_exe={self.engine1_exe}, engine1_nps={self.engine1_nps},\n"
-            f"engine2_exe={self.engine2_exe}, engine2_nps={self.engine2_nps}, config={self.config})>"
+            f"<Job (id={self.id}, timestamp={self.timestamp}, active={self.active},"
+            f" weight={self.weight}, engine1_exe={self.engine1_exe}, engine1_nps={self.engine1_nps},"
+            f" engine2_exe={self.engine2_exe}, engine2_nps={self.engine2_nps}, config={self.config})>"
         )
 
 
@@ -138,6 +138,7 @@ class SqlResult(Base):
     dl_count = Column(Integer, default=0)
     ll_count = Column(Integer, default=0)
     job = relationship("SqlJob", back_populates="results")
+    time_control = relationship("SqlTimeControl")
 
     def __repr__(self):
         return (
