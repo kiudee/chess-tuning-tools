@@ -15,6 +15,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from tune.db_workers.dbmodels import Base
+from tune.db_workers.utils import TimeControl
 
 __all__ = [
     "SqlTune",
@@ -59,6 +60,7 @@ class SqlJob(Base):
     weight = Column(Numeric, default=1.0, nullable=False)
     minimum_version = Column(Integer, default=1, nullable=False)
     maximum_version = Column(Integer, nullable=True, default=None)
+    minimum_samplesize = Column(Integer, nullable=False, default=16)
     config = Column(JSON)
     engine1_exe = Column(String(100), nullable=False, default="lc0")
     engine1_nps = Column(Numeric, nullable=False)
@@ -116,14 +118,15 @@ class SqlTimeControl(Base):
             f" engine2={self.engine2_time}{engine2_inc}, draw_rate={self.draw_rate})>"
         )
 
-
-# TODO: use match table instead of association object
-# class SqlTimeControlMatch(Base):
-#     __tablename__ = "jobstotimes"
-#     __table_args__ = ({"schema": SCHEMA},)
-#     job_id = Column(Integer, ForeignKey("new.jobs.id"), primary_key=True)
-#     tc_id = Column(Integer, ForeignKey("new.timecontrols.id"), primary_key=True)
-#     times = relationship("SqlTimeControl")
+    def to_tuple(self):
+        engine1_inc = (
+            "" if self.engine1_increment is None else f"+{self.engine1_increment}"
+        )
+        engine2_inc = (
+            "" if self.engine2_increment is None else f"+{self.engine2_increment}"
+        )
+        return TimeControl(engine1=f"{self.engine1_time}{engine1_inc}",
+                           engine2=f"{self.engine2_time}{engine2_inc}")
 
 
 class SqlResult(Base):

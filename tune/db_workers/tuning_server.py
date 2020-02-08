@@ -18,8 +18,13 @@ from skopt.space import space as skspace
 from skopt.learning.gaussian_process.kernels import Matern, ConstantKernel
 from skopt.utils import normalize_dimensions
 
-from tune.db_workers.dbmodels import Base
-from tune.db_workers.utils import get_session_maker, create_sqlalchemy_engine
+from tune.db_workers.dbmodels import Base, SqlJob, SqlUCIParam, SqlResult
+from tune.db_workers.utils import (
+    get_session_maker,
+    create_sqlalchemy_engine,
+    TimeControl,
+    penta_to_score,
+)
 from tune.io import InitStrings
 
 __all__ = ["TuningServer"]
@@ -50,6 +55,7 @@ class TuningServer(object):
                 self.logger.debug(f"self.experiment = \n{self.experiment}")
         else:
             raise ValueError("No experiment config file found at provided path")
+        self.time_controls = [TimeControl(*x) for x in self.experiment["time_controls"]]
         self.rng = np.random.RandomState(self.experiment.get("random_seed", 123))
         self.setup_tuner()
 
@@ -134,6 +140,7 @@ class TuningServer(object):
 
     def setup_tuner(self):
         self.tunecfg = self.experiment["tuner"]
+        self.parameters = list(self.tunecfg["parameters"].keys())
         self.dimensions = self.parse_dimensions(self.tunecfg["parameters"])
         self.space = normalize_dimensions(self.dimensions)
         self.priors = self.parse_priors(self.tunecfg["priors"])
@@ -166,46 +173,61 @@ class TuningServer(object):
             random_state=self.rng.randint(0, np.iinfo(np.int32).max),
         )
 
-    def query_data(self, cursor, tune_id, include_active=False):
-        # TODO: Support shrinking of ranges, by filtering X, y here
-        if include_active:
-            query = """
-            select X, -avg((w-l) / (w + l - power(w-l, 2))) as y from
-            (
-                select X, (wins::decimal+0.5) / (wins + draws + losses + 1.5) as w, (losses::decimal+0.5) / (wins + draws + losses + 1.5) as l
-                from tuning_jobs
-                natural inner join tuning_results
-                where tune_id = %(tune_id)s
-            ) as xyz
-            group by X;
-            """
-        else:
-            query = """
-            select X, -avg((w-l) / (w + l - power(w-l, 2))) as y from
-            (
-                select X, (wins::decimal+0.5) / (wins + draws + losses + 1.5) as w, (losses::decimal+0.5) / (wins + draws + losses + 1.5) as l
-                from tuning_jobs
-                natural inner join tuning_results
-                where tune_id = %(tune_id)s and not active
-            ) as xyz
-            group by X;
-            """
-        cursor.execute(query, {"tune_id": tune_id})
-        result = cursor.fetchall()
-        X = np.array([x[0] for x in result], dtype=np.float64)
-        y = np.array([x[1] for x in result], dtype=np.float64)
-        self.logger.debug(f"Query yielded X, y =\n{X}\n{y}")
+    def query_data(self, session, tune_id, include_active=False):
+        # First check if samplesize was reached:
+        sample_sizes = np.array(
+            session.query(
+                SqlResult.ww_count
+                + SqlResult.wd_count
+                + SqlResult.wl_count
+                + SqlResult.dd_count
+                + SqlResult.dl_count
+                + SqlResult.ll_count
+            )
+            .join(SqlJob)
+            .filter(SqlJob.active, SqlJob.tune_id == tune_id)
+            .all()
+        ).squeeze()
+        samplesize_reached = False
+        if np.all(sample_sizes >= self.experiment.get("minimum_samplesize", 16)):
+            samplesize_reached = True
 
-        query = """
-        select wins+losses+draws as total
-        from tuning_jobs natural inner join tuning_results
-        where tune_id=%(tune_id)s and active;
-        """
-        cursor.execute(query, {"tune_id": tune_id})
-        samplesize_reached = np.all(
-            np.array(cursor.fetchall()) >= self.experiment.get("minimum_samplesize", 16)
-        )
-        return X, y, samplesize_reached
+        q = session.query(SqlJob).filter(SqlJob.tune_id == tune_id)
+        if not include_active:
+            q = q.filter(SqlJob.active == False)  # noqa
+        jobs = q.all()
+        X = []
+        y = {tc: [] for tc in self.time_controls}
+        for job in jobs:
+            x = {}
+            for p in self.parameters:
+                value = (
+                    session.query(SqlUCIParam.value)
+                    .filter(SqlUCIParam.job_id == job.id, SqlUCIParam.key == p)
+                    .one()
+                )
+                x[p] = float(value[0])
+            X.append(list(x.values()))
+            for result in job.results:
+                tc = result.time_control.to_tuple()
+                if tc not in self.time_controls:
+                    continue
+                draw_rate = float(result.time_control.draw_rate)
+                counts = np.array(
+                    [
+                        result.ll_count,
+                        result.dl_count,
+                        result.wl_count + result.dd_count,
+                        result.wd_count,
+                        result.ww_count,
+                    ]
+                )
+                score = penta_to_score(
+                    draw_rate=draw_rate, counts=counts, prior_games=10, prior_elo=0
+                )
+                y[tc].append(-score)
+        self.logger.debug(f"Query yielded X, y =\n{X}\n{y}")
+        return X, np.array(list(y.values())).mean(axis=0), samplesize_reached
 
     @staticmethod
     def change_engine_config(engine_config, params):
