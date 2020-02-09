@@ -18,7 +18,13 @@ from skopt.space import space as skspace
 from skopt.learning.gaussian_process.kernels import Matern, ConstantKernel
 from skopt.utils import normalize_dimensions
 
-from tune.db_workers.dbmodels import Base, SqlJob, SqlUCIParam, SqlResult
+from tune.db_workers.dbmodels import (
+    Base,
+    SqlJob,
+    SqlUCIParam,
+    SqlResult,
+    SqlTimeControl,
+)
 from tune.db_workers.utils import (
     get_session_maker,
     create_sqlalchemy_engine,
@@ -239,67 +245,52 @@ class TuningServer(object):
         for k, v in params.items():
             init_strings[k] = v
 
-    def insert_jobs(self, conn, cursor, new_x):
-        # 2. First set all active jobs to inactive:
-        try:
-            cursor.execute(
-                """
-            update tuning_jobs set active=false where tune_id=%(tune_id)s;
-            """,
-                {"tune_id": self.experiment["tune_id"]},
+    def insert_jobs(self, session, new_x):
+        # First set all active jobs to inactive:
+        session.query(SqlJob).filter(
+            SqlJob.active == True, SqlJob.tune_id == self.experiment["tune_id"]
+        ).update(
+            {"active": False}
+        )  # noqa
+
+        # Insert new job:
+        job_dict = {
+            "engine": self.experiment["engine"],
+            "cutechess": self.experiment["cutechess"],
+        }
+        job_json = json.dumps(job_dict)
+        job = SqlJob(
+            minimum_version=self.experiment.get("minimum_version", 1),
+            maximum_version=self.experiment.get("maximum_version", None),
+            minimum_samplesize=self.experiment.get("minimum_samplesize", 16),
+            config=job_json,
+            engine1_exe=self.experiment.get("engine1_exe", "lc0"),
+            engine1_nps=self.experiment["engine1_nps"],
+            engine2_exe=self.experiment.get("engine2_exe", "sf"),
+            engine2_nps=self.experiment["engine2_nps"],
+            tune_id=self.experiment["tune_id"],
+        )
+        session.add(job)
+        for i, tc in enumerate(self.time_controls):
+            sql_tc = (
+                session.query(SqlTimeControl)
+                .filter(
+                    SqlTimeControl.engine1_time == tc.engine1_time,
+                    SqlTimeControl.engine1_increment == tc.engine1_increment,
+                    SqlTimeControl.engine2_time == tc.engine2_time,
+                    SqlTimeControl.engine2_increment == tc.engine2_increment,
+                )
+                .one_or_none()
             )
+            if sql_tc is None:
+                sql_tc = SqlTimeControl(*tc)
+                session.add(sql_tc)
 
-            # 3. Insert new jobs:
-            job_dict = {
-                "engine": self.experiment["engine"],
-                "cutechess": self.experiment["cutechess"],
-            }
-            timestamp = datetime.utcnow().replace(tzinfo=pytz.utc)
-            for i, tc in enumerate(self.experiment["time_controls"]):
-                job_dict["time_control"] = tc
-                job_json = json.dumps(job_dict)
-
-                query = """
-                insert into tuning_jobs
-                    (timestamp, config, active, tune_id, job_weight, minimum_version, lc0_nodes, sf_nodes, x)
-                    values
-                    (%(timestamp)s, %(config)s, %(active)s, %(tune_id)s, %(job_weight)s, %(minimum_version)s,
-                    %(lc0_nodes)s, %(sf_nodes)s, %(new_x)s)
-                    returning job_id;
-                """
-                cursor.execute(
-                    query,
-                    {
-                        "timestamp": timestamp,
-                        "config": job_json,
-                        "active": True,
-                        "tune_id": self.experiment["tune_id"],
-                        "job_weight": self.experiment.get("job_weight", 1.0),
-                        "minimum_version": self.experiment.get("minimum_version", 1),
-                        "lc0_nodes": self.experiment["lc0_nodes"],
-                        "sf_nodes": self.experiment["sf_nodes"],
-                        "new_x": new_x,
-                    },
-                )
-                job_id = cursor.fetchone()[0]
-
-                query = """
-                insert into tuning_results
-                (job_id, tune_id, time_control, wins, losses, draws)
-                values
-                (%(job_id)s, %(tune_id)s, %(time_control)s, 0, 0, 0);
-                """
-                cursor.execute(
-                    query,
-                    {
-                        "job_id": job_id,
-                        "tune_id": self.experiment["tune_id"],
-                        "time_control": str(tc),
-                    },
-                )
-            conn.commit()
-        except BaseException:
-            conn.rollback()
+            result = SqlResult(job=job, time_control=sql_tc)
+            session.add(result)
+        for k, v in zip(self.parameters, new_x):
+            param = SqlUCIParam(key=k, value=str(v), job=job)
+            session.add(param)
 
     def run(self):
         # 0. Before we run the main loop, do we need to initialize or resume?
