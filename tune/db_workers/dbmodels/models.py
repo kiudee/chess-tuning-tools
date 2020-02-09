@@ -49,6 +49,7 @@ job_tc_table = Table(
     Base.metadata,
     Column("job_id", Integer, ForeignKey(f"{SCHEMA}.jobs.id")),
     Column("tc_id", Integer, ForeignKey(f"{SCHEMA}.timecontrols.id")),
+    schema=SCHEMA
 )
 
 
@@ -68,7 +69,7 @@ class SqlJob(Base):
     engine2_exe = Column(String(100), nullable=False, default="sf")
     engine2_nps = Column(Numeric, nullable=False)
 
-    tune_id = Column(Integer, ForeignKey("new.tunes.id"))
+    tune_id = Column(Integer, ForeignKey(f"{SCHEMA}.tunes.id"))
     tune = relationship("SqlTune", back_populates="jobs")
     params = relationship("SqlUCIParam", back_populates="job", cascade="all")
     time_controls = relationship("SqlTimeControl", secondary=job_tc_table)
@@ -90,7 +91,7 @@ class SqlUCIParam(Base):
     )
     key = Column(String(100))
     value = Column(String(250), nullable=False)
-    job_id = Column(Integer, ForeignKey("new.jobs.id"))
+    job_id = Column(Integer, ForeignKey(f"{SCHEMA}.jobs.id"))
     job = relationship("SqlJob", back_populates="params")
 
     def __repr__(self):
@@ -131,8 +132,8 @@ class SqlTimeControl(Base):
 class SqlResult(Base):
     __tablename__ = "results"
     __table_args__ = ({"schema": SCHEMA},)
-    job_id = Column(Integer, ForeignKey("new.jobs.id"), primary_key=True)
-    tc_id = Column(Integer, ForeignKey("new.timecontrols.id"), primary_key=True)
+    job_id = Column(Integer, ForeignKey(f"{SCHEMA}.jobs.id"), primary_key=True)
+    tc_id = Column(Integer, ForeignKey(f"{SCHEMA}.timecontrols.id"), primary_key=True)
     ww_count = Column(Integer, default=0)
     wl_count = Column(Integer, default=0)
     wd_count = Column(Integer, default=0)

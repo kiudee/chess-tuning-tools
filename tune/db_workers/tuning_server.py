@@ -282,7 +282,10 @@ class TuningServer(object):
                 .one_or_none()
             )
             if sql_tc is None:
-                sql_tc = SqlTimeControl(*tc)
+                sql_tc = SqlTimeControl(engine1_time=tc.engine1_time,
+                                        engine1_increment=tc.engine1_increment,
+                                        engine2_time=tc.engine2_time,
+                                        engine2_increment=tc.engine2_increment)
                 session.add(sql_tc)
 
             result = SqlResult(job=job, time_control=sql_tc)
