@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import pytest
+from decimal import Decimal
 
 import numpy as np
 from numpy.testing import assert_almost_equal
@@ -13,6 +13,7 @@ from tune.db_workers.utils import (
     compute_probabilities,
     elo_to_bayeselo,
     penta_to_score,
+    TimeControl,
 )
 
 
@@ -68,3 +69,12 @@ def test_penta_to_score():
     result = penta_to_score(draw_rate=0.5, counts=counts, prior_games=10, prior_elo=0)
     expected = 0.4016368226279837
     assert_almost_equal(result, expected)
+
+
+def test_timecontrol():
+    strings = ("3.0+0.03", "7.0+0.0")
+    result = TimeControl.from_strings(*strings)
+    expected = (Decimal("3.0"), Decimal("0.03"), Decimal(7), Decimal(0))
+    assert result == expected
+
+    assert result.to_strings() == strings

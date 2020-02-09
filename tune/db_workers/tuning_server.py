@@ -55,7 +55,9 @@ class TuningServer(object):
                 self.logger.debug(f"self.experiment = \n{self.experiment}")
         else:
             raise ValueError("No experiment config file found at provided path")
-        self.time_controls = [TimeControl(*x) for x in self.experiment["time_controls"]]
+        self.time_controls = [
+            TimeControl.from_strings(*x) for x in self.experiment["time_controls"]
+        ]
         self.rng = np.random.RandomState(self.experiment.get("random_seed", 123))
         self.setup_tuner()
 

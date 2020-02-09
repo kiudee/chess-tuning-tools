@@ -1,5 +1,6 @@
 from collections import namedtuple
 from contextlib import contextmanager
+from decimal import Decimal
 
 import numpy as np
 from sqlalchemy import create_engine
@@ -7,15 +8,41 @@ from scipy.optimize import root_scalar
 from scipy.special import expit
 
 MatchResult = namedtuple("MatchResult", ["wins", "losses", "draws"])
-TimeControl = namedtuple("TimeControl", ["engine1", "engine2"])
 
 ELO_CONSTANT = np.log(10) / 400.0
 
 
+TC = namedtuple(
+    "TimeControl",
+    ["engine1_time", "engine1_increment", "engine2_time", "engine2_increment"],
+)
+
+
+class TimeControl(TC):
+    @classmethod
+    def from_strings(cls, engine1, engine2):
+        tc1 = parse_timecontrol(engine1)
+        tc2 = parse_timecontrol(engine2)
+        inc1 = Decimal('0.0') if len(tc1) == 1 else tc1[1]
+        inc2 = Decimal('0.0') if len(tc2) == 1 else tc2[1]
+        return cls(
+            engine1_time=Decimal(tc1[0]),
+            engine1_increment=inc1,
+            engine2_time=Decimal(tc2[0]),
+            engine2_increment=inc2,
+        )
+
+    def to_strings(self):
+        return (
+            f"{self.engine1_time}+{self.engine1_increment}",
+            f"{self.engine2_time}+{self.engine2_increment}",
+        )
+
+
 def parse_timecontrol(tc_string):
     if "+" in tc_string:
-        return tuple([float(x) for x in tc_string.split("+")])
-    return (float(tc_string),)
+        return tuple([Decimal(x) for x in tc_string.split("+")])
+    return (Decimal(tc_string),)
 
 
 def get_session_maker(sessionmaker):

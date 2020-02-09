@@ -119,14 +119,12 @@ class SqlTimeControl(Base):
         )
 
     def to_tuple(self):
-        engine1_inc = (
-            "" if self.engine1_increment is None else f"+{self.engine1_increment}"
+        return TimeControl(
+            engine1_time=self.engine1_time,
+            engine1_increment=self.engine1_increment,
+            engine2_time=self.engine2_time,
+            engine2_increment=self.engine2_increment
         )
-        engine2_inc = (
-            "" if self.engine2_increment is None else f"+{self.engine2_increment}"
-        )
-        return TimeControl(engine1=f"{self.engine1_time}{engine1_inc}",
-                           engine2=f"{self.engine2_time}{engine2_inc}")
 
 
 class SqlResult(Base):
