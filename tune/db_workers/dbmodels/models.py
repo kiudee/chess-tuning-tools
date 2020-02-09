@@ -34,6 +34,7 @@ class SqlTune(Base):
     id = Column(Integer, primary_key=True)
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
     weight = Column(Numeric, default=1.0, nullable=False)
+    description = Column(String(250), nullable=True)
 
     jobs = relationship("SqlJob", back_populates="tune", cascade="all")
 

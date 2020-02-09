@@ -1,22 +1,20 @@
 """The server worker, which reads results and schedules new jobs."""
-import joblib
 import json
 import logging
 import os
 import re
 import sys
-import numpy as np
-import pytz
-import scipy.stats
-import sqlalchemy
 from datetime import datetime
-from sqlalchemy.orm import sessionmaker
 from time import sleep
 
+import joblib
+import numpy as np
+import scipy.stats
 from bask import Optimizer
-from skopt.space import space as skspace
 from skopt.learning.gaussian_process.kernels import Matern, ConstantKernel
+from skopt.space import space as skspace
 from skopt.utils import normalize_dimensions
+from sqlalchemy.orm import sessionmaker
 
 from tune.db_workers.dbmodels import (
     Base,
@@ -24,6 +22,7 @@ from tune.db_workers.dbmodels import (
     SqlUCIParam,
     SqlResult,
     SqlTimeControl,
+    SqlTune,
 )
 from tune.db_workers.utils import (
     get_session_maker,
@@ -181,7 +180,8 @@ class TuningServer(object):
             random_state=self.rng.randint(0, np.iinfo(np.int32).max),
         )
 
-    def query_data(self, session, tune_id, include_active=False):
+    def query_data(self, session, include_active=False):
+        tune_id = self.experiment["tune_id"]
         # First check if samplesize was reached:
         sample_sizes = np.array(
             session.query(
@@ -234,8 +234,7 @@ class TuningServer(object):
                     draw_rate=draw_rate, counts=counts, prior_games=10, prior_elo=0
                 )
                 y[tc].append(-score)
-        self.logger.debug(f"Query yielded X, y =\n{X}\n{y}")
-        return X, np.array(list(y.values())).mean(axis=0), samplesize_reached
+        return np.array(X), np.array(list(y.values())).mean(axis=0), samplesize_reached
 
     @staticmethod
     def change_engine_config(engine_config, params):
@@ -297,47 +296,32 @@ class TuningServer(object):
         #    * Resume from files (in experiment folder)
         #    * Create tune entry in db if it does not exist yet
 
-        with psycopg2.connect(**self.connect_params) as conn:
-            with conn.cursor(cursor_factory=DictCursor) as curs:
-                if "tune_id" not in self.experiment:
-                    # This appears to be a new tune, create entry in tunes database:
-                    curs.execute(
-                        """
-                        insert into tunes (description) VALUES (%(desc)s) returning tune_id;
-                        """,
-                        {
-                            "desc": self.experiment.get(
-                                "description", "This job does not have a description"
-                            )
-                        },
-                    )
-                    self.experiment["tune_id"] = curs.fetchone()[0]
-                    self.write_experiment_file()
+        if "tune_id" not in self.experiment:
+            with self.sessionmaker() as session:
+                tune = SqlTune(
+                    weight=self.experiment.get("weight", 1.0),
+                    description=self.experiment.get("description", None),
+                )
+                session.add(tune)
+                session.flush()
+                self.experiment["tune_id"] = tune.id
+                self.write_experiment_file()
         while True:
-            # 1. Check if there are currently running jobs
-            # TODO: Case when there are no jobs yet!
-            # 2. Check if minimum sample size and minimum wait time are reached, then query data and update model:
-            with psycopg2.connect(**self.connect_params) as conn:
-                with conn.cursor(cursor_factory=DictCursor) as curs:
-                    X, y, samplesize_reached = self.query_data(
-                        curs, self.experiment["tune_id"], include_active=True
-                    )
-                    self.logger.debug(
-                        f"Queried the database for data and got (last 5):\n{X[-5:]}\n{y[-5:]}"
-                    )
-                    if len(X) == 0:
-                        self.logger.info("There are no datapoints yet, start first job")
-                        new_x = self.opt.ask()
-                        # Alter engine json using Initstrings
-                        params = dict(
-                            zip(self.experiment["tuner"]["parameters"].keys(), new_x)
-                        )
-                        self.change_engine_config(self.experiment["engine"], params)
-                        with psycopg2.connect(**self.connect_params) as conn:
-                            with conn.cursor(cursor_factory=DictCursor) as curs:
-                                self.insert_jobs(conn=conn, cursor=curs, new_x=new_x)
-                        self.logger.info("New jobs committed to database.")
-                        samplesize_reached = False
+            # Check if minimum sample size and minimum wait time are reached, then query data and update model:
+            with self.sessionmaker() as session:
+                X, y, samplesize_reached = self.query_data(session, include_active=True)
+                self.logger.debug(
+                    f"Queried the database for data and got (last 5):\n{X[-5:]}\n{y[-5:]}"
+                )
+                if len(X) == 0:
+                    self.logger.info("There are no datapoints yet, start first job")
+                    new_x = self.opt.ask()
+                    # Alter engine json using Initstrings
+                    params = dict(zip(self.parameters, new_x))
+                    self.change_engine_config(self.experiment["engine"], params)
+                    self.insert_jobs(session, new_x)
+                    self.logger.info("New jobs committed to database.")
+                    samplesize_reached = False
 
             if not samplesize_reached:
                 sleep_seconds = self.experiment.get("sleep_time")
@@ -347,6 +331,7 @@ class TuningServer(object):
                 sleep(sleep_seconds)
                 continue
 
+            # Tell optimizer about the new results:
             now = datetime.now()
             self.opt.tell(
                 X.tolist(),
@@ -368,13 +353,13 @@ class TuningServer(object):
                 self.logger.debug("Saving position and chain")
                 self.save_state()
 
+            # Ask optimizer for new configuration and insert jobs:
             new_x = self.opt.ask()
             # Alter engine json using Initstrings
-            params = dict(zip(self.experiment["tuner"]["parameters"].keys(), new_x))
+            params = dict(zip(self.parameters, new_x))
             self.change_engine_config(self.experiment["engine"], params)
-            with psycopg2.connect(**self.connect_params) as conn:
-                with conn.cursor(cursor_factory=DictCursor) as curs:
-                    self.insert_jobs(conn=conn, cursor=curs, new_x=new_x)
+            with self.sessionmaker() as session:
+                self.insert_jobs(session, new_x)
             self.logger.info("New jobs committed to database.")
 
     def deactivate(self):
