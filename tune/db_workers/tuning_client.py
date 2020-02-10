@@ -1,4 +1,3 @@
-import psycopg2
 import json
 import logging
 import os
@@ -8,12 +7,27 @@ import subprocess
 import sys
 import numpy as np
 from time import sleep, time
-from psycopg2.extras import DictCursor
 
-from ..io import InitStrings
-from .utils import parse_timecontrol, MatchResult, TimeControl
+from sqlalchemy.orm import sessionmaker
 
-CLIENT_VERSION = 1
+from tune.db_workers.dbmodels import (
+    Base,
+    SqlJob,
+    SqlUCIParam,
+    SqlResult,
+    SqlTimeControl,
+    SqlTune,
+)
+from tune.io import InitStrings
+from tune.db_workers.utils import (
+    parse_timecontrol,
+    MatchResult,
+    TimeControl,
+    create_sqlalchemy_engine,
+    get_session_maker,
+)
+
+CLIENT_VERSION = 2
 
 __all__ = ["TuningClient"]
 
@@ -36,6 +50,11 @@ class TuningClient(object):
                 self.connect_params = json.loads(config)
         else:
             raise ValueError(f"No config file found at provided path:\n{dbconfig_path}")
+
+        self.engine = create_sqlalchemy_engine(self.connect_params)
+        Base.metadata.create_all(self.engine)
+        sm = sessionmaker(bind=self.engine)
+        self.sessionmaker = get_session_maker(sm)
 
         self.client_config = None
         if clientconfig is not None:
@@ -63,17 +82,16 @@ class TuningClient(object):
         except OSError:
             pass
 
-        # TODO: For now we assume we always tune against stockfish here
         st = [
             "cutechess-cli",
             "-concurrency",
             f"{cutechess_options['concurrency']}",
             "-engine",
-            "conf=lc0",
-            f"tc={time_control.engine1}",
+            f"conf=engine1",
+            f"tc={time_control.to_strings()[0]}",
             "-engine",
-            "conf=sf",
-            f"tc={time_control.engine2}",
+            "conf=engine2",
+            f"tc={time_control.to_strings()[1]}",
             "-openings",
             f"file={cutechess_options['opening_path']}",
             "format=pgn",
@@ -122,12 +140,14 @@ class TuningClient(object):
 
     def run_benchmark(self, config):
         def uci_to_cl(k, v):
-            mapping = {"Threads": "--threads",
-                       "NNCacheSize": "--nncache",
-                       "Backend": "--backend",
-                       "BackendOptions": "--backend-opts",
-                       "MinibatchSize": "--minibatch-size",
-                       "MaxPrefetch": "--max-prefetch"}
+            mapping = {
+                "Threads": "--threads",
+                "NNCacheSize": "--nncache",
+                "Backend": "--backend",
+                "BackendOptions": "--backend-opts",
+                "MinibatchSize": "--minibatch-size",
+                "MaxPrefetch": "--max-prefetch",
+            }
             if k in mapping:
                 return f"{mapping[k]}={v}"
             return None
@@ -140,8 +160,11 @@ class TuningClient(object):
                     cl_args.append(arg)
             return cl_args
 
-        self.logger.debug(f"Before benchmark engine 1:\n{config['engine'][0]['initStrings']}")
+        self.logger.debug(
+            f"Before benchmark engine 1:\n{config['engine'][0]['initStrings']}"
+        )
         args = cl_arguments(InitStrings(config["engine"][0]["initStrings"]))
+        self.logger.debug(f"Arguments for engine 1: {args}")
         path = os.path.join(os.path.curdir, "lc0")
         out = subprocess.run([path, "benchmark"] + args, capture_output=True)
         s = out.stdout.decode("utf-8")
@@ -152,10 +175,14 @@ class TuningClient(object):
             sys.exit(1)
         self.lc0_benchmark = result
 
-        self.logger.debug(f"Before benchmark engine 2:\n{config['engine'][1]['initStrings']}")
+        self.logger.debug(
+            f"Before benchmark engine 2:\n{config['engine'][1]['initStrings']}"
+        )
         num_threads = InitStrings(config["engine"][1]["initStrings"])["Threads"]
         path = os.path.join(os.path.curdir, "sf")
-        out = subprocess.run([path, "bench", "16", str(int(num_threads))], capture_output=True)
+        out = subprocess.run(
+            [path, "bench", "16", str(int(num_threads))], capture_output=True
+        )
         # Stockfish outputs results as stderr:
         s = out.stderr.decode("utf-8")
         try:
@@ -168,38 +195,53 @@ class TuningClient(object):
     def adjust_time_control(self, time_control, lc0_nodes, sf_nodes):
         lc0_ratio = lc0_nodes / self.lc0_benchmark
         sf_ratio = sf_nodes / self.sf_benchmark
-        tc_lc0 = parse_timecontrol(time_control.engine1)
-        tc_sf = parse_timecontrol(time_control.engine2)
-        tc_lc0 = [x * lc0_ratio for x in tc_lc0]
-        tc_sf = [x * sf_ratio for x in tc_sf]
-        if len(tc_lc0) == 1:
-            return TimeControl(
-                engine1=f"{tc_lc0[0]}", engine2=f"{tc_sf[0]}"
-            )
-        return TimeControl(
-            engine1=f"{tc_lc0[0]}+{tc_lc0[1]}", engine2=f"{tc_sf[0]}+{tc_sf[1]}"
+        new_tc = TimeControl(
+            engine1_time=float(time_control.engine1_time) * lc0_ratio,
+            engine1_increment=float(time_control.engine1_increment) * lc0_ratio,
+            engine2_time=float(time_control.engine2_time) * sf_ratio,
+            engine2_increment=float(time_control.engine2_increment) * sf_ratio,
         )
+        return new_tc
 
     @staticmethod
-    def set_working_directories(engine_config):
+    def set_working_directories(job, engine_config):
         path = os.getcwd()
         engine_config[0]["workingDirectory"] = path
         engine_config[1]["workingDirectory"] = path
+        exe1 = job.engine1_exe
+        exe2 = job.engine2_exe
         if os.name == "nt":  # Windows needs .exe files to work correctly
-            engine_config[0]["command"] = "lc0.exe"
-            engine_config[1]["command"] = "sf.exe"
+            engine_config[0]["command"] = f"{exe1}.exe"
+            engine_config[1]["command"] = f"{exe2}.exe"
         else:
-            engine_config[0]["command"] = "./lc0"
-            engine_config[1]["command"] = "./sf"
+            engine_config[0]["command"] = f"./{exe1}"
+            engine_config[1]["command"] = f"./{exe2}"
 
-    def pick_job(self, jobs, mix=0.25):
+    def pick_job(self, rows, mix=0.25):
+        weights = []
+        results = []
+        min_samples = []
+        for job, result in rows:
+            weights.append(float(job.weight))
+            results.append(result)
+            min_samples.append(job.minimum_samplesize)
         """Pick a job based on weight and current load."""
-        weights = np.array([x["job_weight"] for x in jobs])
+        weights = np.array(weights)
         self.logger.debug(f"Job weights: {weights}")
-        sample_size = np.array([x["wins"] + x["losses"] + x["draws"] for x in jobs])
+        sample_size = np.array(
+            [
+                x.ww_count
+                + x.wd_count
+                + x.wl_count
+                + x.dd_count
+                + x.dl_count
+                + x.ll_count
+                for x in results
+            ]
+        )
         self.logger.debug(f"Sample sizes: {sample_size}")
-        minimum_ss = np.array([x.get("minimum_samplesize", 16.0) for x in jobs])
-        missing = np.maximum(minimum_ss - sample_size, 0.0)
+        min_samples = np.array(min_samples)
+        missing = np.maximum(min_samples - sample_size, 0.0)
         self.logger.debug(f"Missing samples: {missing}")
         if np.all(missing == 0.0):
             p = np.ones_like(weights) * weights
@@ -210,11 +252,14 @@ class TuningClient(object):
             p /= p.sum()
             p = mix * uniform + (1 - mix) * p
         self.logger.debug(f"Resulting p={p}")
-        rand_i = np.random.choice(len(jobs), p=p)
-        self.logger.debug(f"Picked job {rand_i} (job_id={jobs[rand_i]['job_id']})")
-        return jobs[rand_i]
+        rand_i = np.random.choice(len(results), p=p)
+        result = results[rand_i]
+        self.logger.debug(
+            f"Picked result {rand_i} (job_id={result.job_id}, tc_id={result.tc_id})"
+        )
+        return rows[rand_i]
 
-    def incorporate_config(self, job):
+    def incorporate_config(self, config):
         admissible_uci = [
             "Threads",
             "Backend",
@@ -223,7 +268,7 @@ class TuningClient(object):
             "MinibatchSize",
             "MaxPrefetch",
         ]
-        engines = job["config"]["engine"]
+        engines = config["engine"]
         for i, e in enumerate(engines):
             engine_str = f"engine{i+1}"
             if engine_str in self.client_config:
@@ -236,7 +281,7 @@ class TuningClient(object):
             for e in engines:
                 init_strings = InitStrings(e["initStrings"])
                 init_strings["SyzygyPath"] = path
-            job["config"]["cutechess"]["syzygy_path"] = path
+            config["cutechess"]["syzygy_path"] = path
 
     def run(self):
         while True:
@@ -247,90 +292,84 @@ class TuningClient(object):
                 self.logger.info("Shutdown timer triggered. Closing")
                 sys.exit(0)
             # 1. Check db for new job
-            with psycopg2.connect(**self.connect_params) as conn:
-                with conn.cursor(cursor_factory=DictCursor) as curs:
-                    job_string = """
-                    SELECT * FROM tuning_jobs NATURAL INNER JOIN tuning_results WHERE active;
-                    """
-                    curs.execute(job_string)
-                    result = curs.fetchall()
-                    if len(result) == 0:
-                        sleep(30)  # TODO: maybe some sort of decay here
+            with self.sessionmaker() as session:
+                rows = (
+                    session.query(SqlJob, SqlResult)
+                    .filter(SqlJob.id == SqlResult.job_id, SqlJob.active == True)
+                    .all()
+                )
+                if len(rows) == 0:
+                    sleep(30)  # TODO: maybe some sort of decay here
+                    continue
+
+                applicable_jobs = [
+                    row for row in rows if row[0].minimum_version <= CLIENT_VERSION
+                ]
+                if len(applicable_jobs) < len(rows):
+                    self.logger.warning(
+                        "There are jobs which require a higher client version. Please update "
+                        "the client as soon as possible!"
+                    )
+                    if len(applicable_jobs) == 0:
+                        sleep(60)
                         continue
+                job, sql_result = self.pick_job(applicable_jobs)
 
-                    applicable_jobs = [
-                        x for x in result if x["minimum_version"] <= CLIENT_VERSION
-                    ]
-                    if len(applicable_jobs) < len(result):
-                        self.logger.warning(
-                            "There are jobs which require a higher client version. Please update "
-                            "the client as soon as possible!"
-                        )
-                        if len(applicable_jobs) == 0:
-                            sleep(30)
-                            continue
-
-                    job = self.pick_job(applicable_jobs)
-
-                    # 2. Set up experiment
-                    # a) write engines.json
-                    if self.client_config is not None:
-                        self.incorporate_config(job)
-                    job_id = job["job_id"]
-                    config = job["config"]
-                    self.logger.debug(f"Received config:\n{config}")
-                    engine_config = config["engine"]
-                    self.set_working_directories(engine_config)
-                    with open("engines.json", "w") as file:
-                        json.dump(engine_config, file, sort_keys=True, indent=4)
-                    sleep(2)
-                    # b) Adjust time control:
-                    if self.lc0_benchmark is None:
-                        self.logger.info(
-                            "Running initial nodes/second benchmark to calibrate time controls."
-                            "Ensure that your pc is idle to get a good reading."
-                        )
-                        self.run_benchmark(config)
-                        self.logger.info(
-                            f"Benchmark complete. Results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps"
-                        )
-                    else:
-                        self.logger.debug(
-                            f"Initial benchmark results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps"
-                        )
-                    time_control = self.adjust_time_control(
-                        TimeControl(
-                            engine1=config["time_control"][0],
-                            engine2=config["time_control"][1],
-                        ),
-                        float(job["lc0_nodes"]),
-                        float(job["sf_nodes"]),
-                    )
-                    self.logger.debug(
-                        f"Adjusted time control from {config['time_control']} to {time_control}"
-                    )
-
-                    # 3. Run experiment (and block)
-                    self.logger.info(f"Running match with time control\n{time_control}")
-                    result = self.run_experiment(
-                        time_control=time_control, cutechess_options=config["cutechess"]
-                    )
+                # 2. Set up experiment
+                # a) write engines.json
+                config = json.loads(job.config)
+                if self.client_config is not None:
+                    self.incorporate_config(config)
+                # TODO: remove: job_id = job["job_id"]
+                self.logger.debug(f"Received config:\n{config}")
+                engine_config = config["engine"]
+                self.set_working_directories(job, engine_config)
+                with open("engines.json", "w") as file:
+                    json.dump(engine_config, file, sort_keys=True, indent=4)
+                sleep(2)
+                # b) Adjust time control:
+                if self.lc0_benchmark is None:
                     self.logger.info(
-                        f"Match result (WLD): {result.wins} - {result.losses} - {result.draws}"
+                        "Running initial nodes/second benchmark to calibrate time controls."
+                        "Ensure that your pc is idle to get a good reading."
                     )
-                    # 5. Send results to database and lock it during access
-                    # TODO: Check if job_id is actually present and warn if necessary
-                    update_job = """
-                    UPDATE tuning_results SET wins = wins + %(wins)s, losses = losses + %(losses)s, draws = draws + %(draws)s
-                    WHERE job_id = %(job_id)s;
-                    """
-                    curs.execute(
-                        update_job,
-                        {
-                            "wins": result.wins,
-                            "losses": result.losses,
-                            "draws": result.draws,
-                            "job_id": job_id,
-                        },
+                    self.run_benchmark(config)
+                    self.logger.info(
+                        f"Benchmark complete. Results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps"
                     )
-                    self.logger.info("Uploaded match result to database.\n")
+                else:
+                    self.logger.debug(
+                        f"Initial benchmark results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps"
+                    )
+                orig_tc = sql_result.time_control.to_tuple()
+                time_control = self.adjust_time_control(
+                    orig_tc, float(job.engine1_nps), float(job.engine2_nps),
+                )
+                self.logger.debug(f"Adjusted time control from {orig_tc} to {time_control}")
+
+                # 3. Run experiment (and block)
+                self.logger.info(f"Running match with time control\n{time_control}")
+                result = self.run_experiment(
+                    time_control=time_control, cutechess_options=config["cutechess"]
+                )
+                self.logger.info(
+                    f"Match result (WLD): {result.wins} - {result.losses} - {result.draws}"
+                )
+                # 5. Send results to database and lock it during access
+                q = session.query(SqlResult).filter_by(
+                        job_id=job.id, tc_id=sql_result.time_control.id
+                    )
+                if result.wins == 2:  # WW
+                    q.update({"ww_count": SqlResult.ww_count + 1})
+                elif result.wins == 1:
+                    if result.draws == 1:  # WD
+                        q.update({"wd_count": SqlResult.wd_count + 1})
+                    else:  # WL
+                        q.update({"wl_count": SqlResult.wl_count + 1})
+                elif result.draws == 2:  # DD
+                    q.update({"dd_count": SqlResult.dd_count + 1})
+                elif result.draws == 1:  # DL
+                    q.update({"dl_count": SqlResult.dl_count + 1})
+                else:  # LL
+                    q.update({"ll_count": SqlResult.ll_count + 1})
+                self.logger.info("Uploaded match result to database.\n")
