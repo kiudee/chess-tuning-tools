@@ -13,9 +13,10 @@ import scipy.stats
 from bask import Optimizer
 from skopt.learning.gaussian_process.kernels import Matern, ConstantKernel
 from skopt.space import space as skspace
-from skopt.utils import normalize_dimensions
+from skopt.utils import normalize_dimensions, create_result
 from sqlalchemy.orm import sessionmaker
 
+from tune.utils import expected_ucb
 from tune.db_workers.dbmodels import (
     Base,
     SqlJob,
@@ -282,10 +283,12 @@ class TuningServer(object):
                 .one_or_none()
             )
             if sql_tc is None:
-                sql_tc = SqlTimeControl(engine1_time=tc.engine1_time,
-                                        engine1_increment=tc.engine1_increment,
-                                        engine2_time=tc.engine2_time,
-                                        engine2_increment=tc.engine2_increment)
+                sql_tc = SqlTimeControl(
+                    engine1_time=tc.engine1_time,
+                    engine1_increment=tc.engine1_increment,
+                    engine2_time=tc.engine2_time,
+                    engine2_increment=tc.engine2_increment,
+                )
                 session.add(sql_tc)
 
             result = SqlResult(job=job, time_control=sql_tc)
@@ -364,6 +367,14 @@ class TuningServer(object):
             with self.sessionmaker() as session:
                 self.insert_jobs(session, new_x)
             self.logger.info("New jobs committed to database.")
+
+            result_object = create_result(
+                Xi=X.tolist(), yi=y.tolist(), space=self.opt.space, models=[self.opt.gp]
+            )
+            opt_x, opt_y = expected_ucb(result_object)
+            self.logger.info(
+                f"Current optimum: {dict(zip(self.parameters, np.around(opt_x,4)))}"
+            )
 
     def deactivate(self):
         raise NotImplementedError
