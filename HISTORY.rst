@@ -2,6 +2,12 @@
 History
 =======
 
+0.2.0 (2020-02-10)
+------------------
+
+* Completely new database implemented in SQLAlchemy.
+* Pentanomial scoring of matches, accounting for the paired openings and different draw rates of time controls.
+
 0.1.6 (2020-02-02)
 ------------------
 

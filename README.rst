@@ -26,7 +26,8 @@ A collection of tools for local and distributed tuning of chess engines.
 Features
 --------
 
-* TODO
+* Optimization of chess engines (Leela Chess Zero in particular) using distributed Bayesian optimization.
+* Scoring matches using the pentanomial model for paired openings.
 
 
 Starting the tuning client
