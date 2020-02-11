@@ -9,6 +9,7 @@ from time import sleep
 
 import joblib
 import numpy as np
+import pandas as pd
 import scipy.stats
 from bask import Optimizer
 from skopt.learning.gaussian_process.kernels import Matern, ConstantKernel
@@ -205,18 +206,12 @@ class TuningServer(object):
         if not include_active:
             q = q.filter(SqlJob.active == False)  # noqa
         jobs = q.all()
-        X = []
+        query = session.query(SqlUCIParam.job_id, SqlUCIParam.key, SqlUCIParam.value).join(SqlJob).filter(SqlJob.tune_id == 2)
+        df = pd.read_sql(query.statement, query.session.bind)
+        df['value'] = df['value'].astype(float)
+        X = df.pivot(index="job_id", columns="key").sort_index().droplevel(0, axis=1)[self.parameters].values
         y = {tc: [] for tc in self.time_controls}
         for job in jobs:
-            x = {}
-            for p in self.parameters:
-                value = (
-                    session.query(SqlUCIParam.value)
-                    .filter(SqlUCIParam.job_id == job.id, SqlUCIParam.key == p)
-                    .one()
-                )
-                x[p] = float(value[0])
-            X.append(list(x.values()))
             for result in job.results:
                 tc = result.time_control.to_tuple()
                 if tc not in self.time_controls:
@@ -235,7 +230,7 @@ class TuningServer(object):
                     draw_rate=draw_rate, counts=counts, prior_games=10, prior_elo=0
                 )
                 y[tc].append(-score)
-        return np.array(X), np.array(list(y.values())).mean(axis=0), samplesize_reached
+        return X, np.array(list(y.values())).mean(axis=0), samplesize_reached
 
     @staticmethod
     def change_engine_config(engine_config, params):

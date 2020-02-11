@@ -20,7 +20,8 @@ requirements = [
     "emcee>=3.0.2",
     "psycopg2",
     "bask>=0.1.0",
-    "sqlalchemy>=1.3"
+    "sqlalchemy>=1.3",
+    "pandas>=1.0.1"
 ]
 
 setup_requirements = ["pytest-runner"]
