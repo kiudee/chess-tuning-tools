@@ -313,6 +313,7 @@ class TuningServer(object):
                 self.experiment["tune_id"] = tune.id
                 self.write_experiment_file()
         while True:
+            self.logger.debug("Begin querying for new data...")
             # Check if minimum sample size and minimum wait time are reached, then query data and update model:
             with self.sessionmaker() as session:
                 X, y, samplesize_reached = self.query_data(session, include_active=True)
@@ -330,7 +331,7 @@ class TuningServer(object):
                     samplesize_reached = False
 
             if not samplesize_reached:
-                sleep_seconds = self.experiment.get("sleep_time")
+                sleep_seconds = self.experiment.get("sleep_time", 60)
                 self.logger.debug(
                     f"Required sample size not yet reached. Sleeping {sleep_seconds} seconds."
                 )
@@ -367,6 +368,7 @@ class TuningServer(object):
             with self.sessionmaker() as session:
                 self.insert_jobs(session, new_x)
             self.logger.info("New jobs committed to database.")
+            sleep(self.experiment.get("sleep_time", 60))
 
             result_object = create_result(
                 Xi=X.tolist(), yi=y.tolist(), space=self.opt.space, models=[self.opt.gp]
