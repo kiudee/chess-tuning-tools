@@ -23,8 +23,8 @@ class TimeControl(TC):
     def from_strings(cls, engine1, engine2):
         tc1 = parse_timecontrol(engine1)
         tc2 = parse_timecontrol(engine2)
-        inc1 = Decimal('0.0') if len(tc1) == 1 else tc1[1]
-        inc2 = Decimal('0.0') if len(tc2) == 1 else tc2[1]
+        inc1 = Decimal("0.0") if len(tc1) == 1 else tc1[1]
+        inc2 = Decimal("0.0") if len(tc2) == 1 else tc2[1]
         return cls(
             engine1_time=Decimal(tc1[0]),
             engine1_increment=inc1,
@@ -133,3 +133,10 @@ def penta_to_score(draw_rate, counts, prior_games=10, prior_elo=0):
         / (probabilities.dot(np.power(np.linspace(0, 2, 5), 2)) - 4 * s01 ** 2)
     )
     return score
+
+
+def simple_penta_to_score(draw_rate, counts, prior_games=10, prior_elo=0):
+    prior = prior_games * prior_from_drawrate(prior_elo, draw_rate)
+    probabilities = (counts + prior) / (counts.sum() + prior.sum())
+    s01 = score_in_01(probabilities)
+    return s01 * 2 - 1

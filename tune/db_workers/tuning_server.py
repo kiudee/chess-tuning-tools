@@ -30,7 +30,7 @@ from tune.db_workers.utils import (
     get_session_maker,
     create_sqlalchemy_engine,
     TimeControl,
-    penta_to_score,
+    simple_penta_to_score,
 )
 from tune.io import InitStrings
 
@@ -226,7 +226,7 @@ class TuningServer(object):
                         result.ww_count,
                     ]
                 )
-                score = penta_to_score(
+                score = simple_penta_to_score(
                     draw_rate=draw_rate, counts=counts,
                     prior_games=self.experiment.get("prior_games", 1),
                     prior_elo=self.experiment.get("prior_elo", 0.0)
