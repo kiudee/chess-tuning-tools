@@ -370,10 +370,13 @@ class TuningServer(object):
             result_object = create_result(
                 Xi=X.tolist(), yi=y.tolist(), space=self.opt.space, models=[self.opt.gp]
             )
-            opt_x, opt_y = expected_ucb(result_object)
-            self.logger.info(
-                f"Current optimum: {dict(zip(self.parameters, np.around(opt_x,4)))}"
-            )
+            try:
+                opt_x, opt_y = expected_ucb(result_object)
+                self.logger.info(
+                    f"Current optimum: {dict(zip(self.parameters, np.around(opt_x,4)))}"
+                )
+            except ValueError:
+                self.logger.info(f"Current optimum: None (optimizer errored out :( )")
 
     def deactivate(self):
         raise NotImplementedError
