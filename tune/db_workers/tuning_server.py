@@ -227,7 +227,9 @@ class TuningServer(object):
                     ]
                 )
                 score = penta_to_score(
-                    draw_rate=draw_rate, counts=counts, prior_games=10, prior_elo=0
+                    draw_rate=draw_rate, counts=counts,
+                    prior_games=self.experiment.get("prior_games", 1),
+                    prior_elo=self.experiment.get("prior_elo", 0.0)
                 )
                 y[tc].append(-score)
         return X, np.array(list(y.values())).mean(axis=0), samplesize_reached
