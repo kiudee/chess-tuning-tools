@@ -209,7 +209,7 @@ class TuningServer(object):
         if not include_active:
             q = q.filter(SqlJob.active == False)  # noqa
         jobs = q.all()
-        query = session.query(SqlUCIParam.job_id, SqlUCIParam.key, SqlUCIParam.value).join(SqlJob).filter(SqlJob.tune_id == 2)
+        query = session.query(SqlUCIParam.job_id, SqlUCIParam.key, SqlUCIParam.value).join(SqlJob).filter(SqlJob.tune_id == tune_id)
         df = pd.read_sql(query.statement, query.session.bind)
         df['value'] = df['value'].astype(float)
         self.logger.debug(f"Data frame: {df.head()}")
