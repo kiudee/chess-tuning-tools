@@ -212,6 +212,7 @@ class TuningServer(object):
         query = session.query(SqlUCIParam.job_id, SqlUCIParam.key, SqlUCIParam.value).join(SqlJob).filter(SqlJob.tune_id == 2)
         df = pd.read_sql(query.statement, query.session.bind)
         df['value'] = df['value'].astype(float)
+        self.logger.debug(f"Data frame: {df.head()}")
         X = df.pivot(index="job_id", columns="key").sort_index().droplevel(0, axis=1)[self.parameters].values
         y = {tc: [] for tc in self.time_controls}
         for job in jobs:
