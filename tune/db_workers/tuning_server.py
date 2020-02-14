@@ -101,18 +101,21 @@ class TuningServer(object):
             self.opt.gp.chain_ = data["arr_1"]
 
     def parse_dimensions(self, param_dict):
-        def floatify(s):
+        def make_numeric(s):
             try:
-                return float(s)
+                return int(s)
             except ValueError:
-                return s
+                try:
+                    return float(s)
+                except ValueError:
+                    return s
 
         dimensions = []
         for s in param_dict.values():
             prior_str = re.findall(r"(\w+)\(", s)[0]
             prior_param_strings = re.findall(r"\((.*?)\)", s)[0].split(",")
             keys = [x.split("=")[0].strip() for x in prior_param_strings]
-            vals = [floatify(x.split("=")[1].strip()) for x in prior_param_strings]
+            vals = [make_numeric(x.split("=")[1].strip()) for x in prior_param_strings]
             dim = getattr(skspace, prior_str)(**dict(zip(keys, vals)))
             dimensions.append(dim)
         return dimensions
