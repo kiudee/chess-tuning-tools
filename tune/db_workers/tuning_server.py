@@ -312,6 +312,12 @@ class TuningServer(object):
                 session.flush()
                 self.experiment["tune_id"] = tune.id
                 self.write_experiment_file()
+                new_x = self.opt.ask()
+                # Alter engine json using Initstrings
+                params = dict(zip(self.parameters, new_x))
+                self.change_engine_config(self.experiment["engine"], params)
+                self.insert_jobs(session, new_x)
+                self.logger.info("New jobs committed to database.")
         while True:
             self.logger.debug("Begin querying for new data...")
             # Check if minimum sample size and minimum wait time are reached, then query data and update model:
