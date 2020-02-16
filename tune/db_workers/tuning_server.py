@@ -138,19 +138,19 @@ class TuningServer(object):
                 keys = [x.split("=")[0].strip() for x in prior_param_strings]
                 vals = [float(x.split("=")[1].strip()) for x in prior_param_strings]
                 if prior_str == "roundflat":
-                    prior = lambda x: roundflat(np.exp(x), **dict(zip(keys, vals))) + x
+                    prior = lambda x, keys=keys, vals=vals: roundflat(np.exp(x), **dict(zip(keys, vals))) + x
                 else:
                     dist = getattr(scipy.stats, prior_str)(**dict(zip(keys, vals)))
                     if i == 0 or i == len(priors) - 1:
                         # The signal variance and the signal noise are in positive, sqrt domain
                         prior = (
-                            lambda x: dist.logpdf(np.sqrt(np.exp(x)))
+                            lambda x, dist=dist: dist.logpdf(np.sqrt(np.exp(x)))
                             + x / 2.0
                             - np.log(2.0)
                         )
                     else:
                         # The lengthscale(s) are in positive domain
-                        prior = lambda x: dist.logpdf(np.exp(x)) + x
+                        prior = lambda x, dist=dist: dist.logpdf(np.exp(x)) + x
                 result.append(prior)
         return result
 
