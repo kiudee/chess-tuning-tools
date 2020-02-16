@@ -17,6 +17,7 @@ from skopt.space import space as skspace
 from skopt.utils import normalize_dimensions, create_result
 from sqlalchemy.orm import sessionmaker
 
+from tune.priors import roundflat
 from tune.utils import expected_ucb
 from tune.db_workers.dbmodels import (
     Base,
@@ -136,17 +137,20 @@ class TuningServer(object):
                 prior_param_strings = re.findall(r"\((.*?)\)", p)[0].split(",")
                 keys = [x.split("=")[0].strip() for x in prior_param_strings]
                 vals = [float(x.split("=")[1].strip()) for x in prior_param_strings]
-                dist = getattr(scipy.stats, prior_str)(**dict(zip(keys, vals)))
-                if i == 0 or i == len(priors) - 1:
-                    # The signal variance and the signal noise are in positive, sqrt domain
-                    prior = (
-                        lambda x: dist.logpdf(np.sqrt(np.exp(x)))
-                        + x / 2.0
-                        - np.log(2.0)
-                    )
+                if prior_str == "roundflat":
+                    prior = lambda x: roundflat(np.exp(x), **dict(zip(keys, vals))) + x
                 else:
-                    # The lengthscale(s) are in positive domain
-                    prior = lambda x: dist.logpdf(np.exp(x)) + x
+                    dist = getattr(scipy.stats, prior_str)(**dict(zip(keys, vals)))
+                    if i == 0 or i == len(priors) - 1:
+                        # The signal variance and the signal noise are in positive, sqrt domain
+                        prior = (
+                            lambda x: dist.logpdf(np.sqrt(np.exp(x)))
+                            + x / 2.0
+                            - np.log(2.0)
+                        )
+                    else:
+                        # The lengthscale(s) are in positive domain
+                        prior = lambda x: dist.logpdf(np.exp(x)) + x
                 result.append(prior)
         return result
 
