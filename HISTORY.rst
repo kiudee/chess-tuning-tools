@@ -2,6 +2,12 @@
 History
 =======
 
+0.3 (2020-03-02)
+------------------
+
+* Support for round-flat prior distributions
+* Fix parsing of priors and benchmark results
+
 0.2.0 (2020-02-10)
 ------------------
 
