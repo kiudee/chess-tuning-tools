@@ -169,7 +169,7 @@ class TuningClient(object):
         out = subprocess.run([path, "benchmark"] + args, capture_output=True)
         s = out.stdout.decode("utf-8")
         try:
-            result = float(re.findall(r"([0-9]+\.[0-9]+)\snodes per second", s)[0])
+            result = float(re.findall(r"([0-9\.]+)\snodes per second", s)[0])
         except IndexError:
             self.logger.error(f"Error while parsing engine1 benchmark:\n{s}")
             sys.exit(1)
