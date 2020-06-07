@@ -7,6 +7,8 @@ from sqlalchemy import create_engine
 from scipy.optimize import root_scalar
 from scipy.special import expit
 
+from tune.utils import parse_timecontrol
+
 MatchResult = namedtuple("MatchResult", ["wins", "losses", "draws"])
 
 ELO_CONSTANT = np.log(10) / 400.0
@@ -37,12 +39,6 @@ class TimeControl(TC):
             f"{self.engine1_time}+{self.engine1_increment}",
             f"{self.engine2_time}+{self.engine2_increment}",
         )
-
-
-def parse_timecontrol(tc_string):
-    if "+" in tc_string:
-        return tuple([Decimal(x) for x in tc_string.split("+")])
-    return (Decimal(tc_string),)
 
 
 def get_session_maker(sessionmaker):

@@ -1,3 +1,5 @@
+from decimal import Decimal
+from collections import namedtuple
 import numpy as np
 from scipy.optimize import minimize
 
@@ -47,3 +49,31 @@ def expected_ucb(res, n_random_starts=100, alpha=1.96, random_state=None):
             best_x = r.x
             best_fun = r.fun
     return res.space.inverse_transform(best_x[None, :])[0], best_fun
+
+
+def parse_timecontrol(tc_string):
+    if "+" in tc_string:
+        return tuple([Decimal(x) for x in tc_string.split("+")])
+    return Decimal(tc_string),
+
+
+TC = namedtuple(
+    "TimeControl",
+    ["time", "increment"],
+)
+
+
+class TimeControl(TC):
+    @classmethod
+    def from_string(cls, tc_string):
+        tc = parse_timecontrol(tc_string)
+        inc = Decimal("0.0") if len(tc) == 1 else tc[1]
+        return cls(
+            time=Decimal(tc[0]),
+            increment=inc,
+        )
+
+    def to_string(self):
+        if abs(self.increment) < 1e-10:
+            return f"{self.time}"
+        return f"{self.time}+{self.increment}"
