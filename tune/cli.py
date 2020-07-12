@@ -98,10 +98,26 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "--tuning-config",
     help="json file containing the tuning configuration.",
     required=True,
-    type=str,
+    type=click.File("r"),
 )
 @click.option(
-    "--data-path", default=None, help="Save the evaluated points to this file."
+    "-d", "--data-path", default=None, help="Save the evaluated points to this file."
+)
+@click.option("-l", "--logfile", default="log.txt", help="Path to log file.")
+@click.option(
+    "--n-initial-points", default=30, help="Size of initial dense set of points to try."
+)
+@click.option(
+    "--n-points",
+    default=500,
+    help="The number of random points to consider as possible next point. "
+         "Less points reduce the computation time of the tuner, but reduce "
+         "the coverage of the space.",
+)
+@click.option(
+    "--random-seed",
+    default=0,
+    help="Number to seed all internally used random generators.",
 )
 @click.option(
     "--resume/--no-resume",
@@ -109,30 +125,16 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     help="Let the optimizer resume, if it finds points it can use.",
 )
 @click.option(
-    "--n-points",
-    default=500,
-    help="The number of random points to consider as the next point.",
-)
-@click.option(
-    "--n-initial-points", default=30, help="Size of initial dense set of points to try."
-)
-@click.option(
-    "--random-seed",
-    default=0,
-    help="Number to seed all internally used random generators.",
-)
-@click.option("--logfile", default="log.txt", help="Path to log file.")
-@click.option(
     "--verbose", "-v", is_flag=True, default=False, help="Turn on debug output."
 )
 def local(
     tuning_config,
     data_path=None,
-    resume=True,
-    n_points=500,
-    n_initial_points=30,
-    random_seed=0,
     logfile="log.txt",
+    n_initial_points=30,
+    n_points=500,
+    random_seed=0,
+    resume=True,
     verbose=False,
 ):
     """Run a local tune.
@@ -143,31 +145,24 @@ def local(
     log_format = logging.Formatter("%(asctime)s %(levelname)-8s %(message)s")
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
-    #logging.basicConfig(
-    #    level=log_level,
-    #    filename=logfile,
-    #    format=,
-    #    datefmt="%Y-%m-%d %H:%M:%S",
-    #)
     file_logger = logging.FileHandler(logfile)
     file_logger.setFormatter(log_format)
     root_logger.addHandler(file_logger)
     console_logger = logging.StreamHandler(sys.stdout)
     console_logger.setFormatter(log_format)
     root_logger.addHandler(console_logger)
-    #logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
     # Read tuning configuration:
-    conf_path = pathlib.Path(tuning_config)
-    if conf_path.exists():
-        with open(conf_path) as json_file:
-            json_dict = json.load(json_file)
-            logging.debug(f"Got the following tuning settings:\n{json_dict}")
-            settings, commands, fixed_params, param_ranges = load_tuning_config(
-                json_dict
-            )
-    else:
-        raise ValueError(f"No tuning configuration file found here: {conf_path}")
+    #conf_path = pathlib.Path(tuning_config)
+    #if conf_path.exists():
+    #    with open(conf_path) as json_file:
+    json_dict = json.load(tuning_config)
+    logging.debug(f"Got the following tuning settings:\n{json_dict}")
+    settings, commands, fixed_params, param_ranges = load_tuning_config(
+        json_dict
+    )
+    #else:
+    #    raise ValueError(f"No tuning configuration file found here: {conf_path}")
 
     # 1. Create seed sequence
     ss = np.random.SeedSequence(random_seed)
@@ -176,12 +171,12 @@ def local(
     random_state = np.random.RandomState(np.random.MT19937(ss.spawn(1)[0]))
     opt = Optimizer(
         dimensions=list(param_ranges.values()),
-        n_points=n_points,
-        n_initial_points=n_initial_points,
+        n_points=settings.get("n_points", n_points),
+        n_initial_points=settings.get("n_initial_points", n_initial_points),
         # gp_kernel=kernel,  # TODO: Let user pass in different kernels
         gp_kwargs=dict(normalize_y=True),
         # gp_priors=priors,  # TODO: Let user pass in priors
-        acq_func="pvrs",
+        acq_func=settings.get("acq_func", "mes"),
         acq_func_kwargs=dict(alpha="inf", n_thompson=20),
         random_state=random_state,
     )
@@ -206,9 +201,9 @@ def local(
                 X,
                 y,
                 noise_vector=noise,
-                gp_burnin=300,
-                gp_samples=100,
-                n_samples=0,
+                gp_burnin=settings.get("gp_initial_burnin", 100),
+                gp_samples=settings.get("gp_initial_samples", 300),
+                n_samples=settings.get("n_samples", 1),
                 progress=True,
             )
             logging.info("Importing finished.")
@@ -238,7 +233,7 @@ def local(
             try:
                 now = datetime.now()
                 # We fetch kwargs manually here to avoid collisions:
-                n_samples = settings.get("n_samples", 0)
+                n_samples = settings.get("n_samples", 1)
                 gp_burnin = settings.get("gp_burnin", 5)
                 gp_samples = settings.get("gp_samples", 200)
                 if opt.gp.chain_ is None:
