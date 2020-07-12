@@ -94,6 +94,21 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 
 @cli.command()
 @click.option(
+    "-a",
+    "--acq-function",
+    default="mes",
+    help="Acquisition function to use for selecting points to try. "
+    "Can be {mes, pvrs, ei, ts, vr}.",
+)
+@click.option(
+    "--acq-function-samples",
+    default=1,
+    help="How many GP samples to average the acquisition function over. "
+    "More samples will slow down the computation time, but might give more "
+    "stable tuning results. Less samples on the other hand cause more exploration "
+    "which could help avoid the tuning to get stuck.",
+)
+@click.option(
     "-c",
     "--tuning-config",
     help="json file containing the tuning configuration.",
@@ -101,9 +116,48 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     type=click.File("r"),
 )
 @click.option(
-    "-d", "--data-path", default=None, help="Save the evaluated points to this file."
+    "-d",
+    "--data-path",
+    default="data.npz",
+    help="Save the evaluated points to this file.",
+    type=click.Path(exists=False),
 )
-@click.option("-l", "--logfile", default="log.txt", help="Path to log file.")
+@click.option(
+    "--gp-burnin",
+    default=5,
+    type=int,
+    help="Number of samples to discard before sampling model parameters. "
+    "This is used during tuning and few samples suffice.",
+)
+@click.option(
+    "--gp-samples",
+    default=300,
+    type=int,
+    help="Number of model parameters to sample for the model. "
+    "This is used during tuning and it should be a multiple of 100.",
+)
+@click.option(
+    "--gp-initial-burnin",
+    default=100,
+    type=int,
+    help="Number of samples to discard before starting to sample the initial model "
+    "parameters. This is only used when resuming or for the first model.",
+)
+@click.option(
+    "--gp-initial-samples",
+    default=300,
+    type=int,
+    help="Number of model parameters to sample for the initial model. "
+    "This is only used when resuming or for the first model. "
+    "Should be a multiple of 100.",
+)
+@click.option(
+    "-l",
+    "--logfile",
+    default="log.txt",
+    help="Path to log file.",
+    type=click.Path(exists=False),
+)
 @click.option(
     "--n-initial-points", default=30, help="Size of initial dense set of points to try."
 )
@@ -111,8 +165,8 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "--n-points",
     default=500,
     help="The number of random points to consider as possible next point. "
-         "Less points reduce the computation time of the tuner, but reduce "
-         "the coverage of the space.",
+    "Less points reduce the computation time of the tuner, but reduce "
+    "the coverage of the space.",
 )
 @click.option(
     "--random-seed",
@@ -129,7 +183,13 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 )
 def local(
     tuning_config,
+    acq_function="mes",
+    acq_function_samples=1,
     data_path=None,
+    gp_burnin=5,
+    gp_samples=300,
+    gp_initial_burnin=100,
+    gp_initial_samples=300,
     logfile="log.txt",
     n_initial_points=30,
     n_points=500,
@@ -152,17 +212,9 @@ def local(
     console_logger.setFormatter(log_format)
     root_logger.addHandler(console_logger)
 
-    # Read tuning configuration:
-    #conf_path = pathlib.Path(tuning_config)
-    #if conf_path.exists():
-    #    with open(conf_path) as json_file:
     json_dict = json.load(tuning_config)
     logging.debug(f"Got the following tuning settings:\n{json_dict}")
-    settings, commands, fixed_params, param_ranges = load_tuning_config(
-        json_dict
-    )
-    #else:
-    #    raise ValueError(f"No tuning configuration file found here: {conf_path}")
+    settings, commands, fixed_params, param_ranges = load_tuning_config(json_dict)
 
     # 1. Create seed sequence
     ss = np.random.SeedSequence(random_seed)
@@ -176,7 +228,7 @@ def local(
         # gp_kernel=kernel,  # TODO: Let user pass in different kernels
         gp_kwargs=dict(normalize_y=True),
         # gp_priors=priors,  # TODO: Let user pass in priors
-        acq_func=settings.get("acq_func", "mes"),
+        acq_func=settings.get("acq_function", acq_function),
         acq_func_kwargs=dict(alpha="inf", n_thompson=20),
         random_state=random_state,
     )
@@ -196,13 +248,15 @@ def local(
             y = importa["arr_1"].tolist()
             noise = importa["arr_2"].tolist()
             iteration = len(X)
-            logging.info(f"Importing {iteration} existing datapoints. This could take a while...")
+            logging.info(
+                f"Importing {iteration} existing datapoints. This could take a while..."
+            )
             opt.tell(
                 X,
                 y,
                 noise_vector=noise,
-                gp_burnin=settings.get("gp_initial_burnin", 100),
-                gp_samples=settings.get("gp_initial_samples", 300),
+                gp_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
+                gp_samples=settings.get("gp_initial_samples", gp_initial_samples),
                 n_samples=settings.get("n_samples", 1),
                 progress=True,
             )
@@ -233,12 +287,12 @@ def local(
             try:
                 now = datetime.now()
                 # We fetch kwargs manually here to avoid collisions:
-                n_samples = settings.get("n_samples", 1)
-                gp_burnin = settings.get("gp_burnin", 5)
-                gp_samples = settings.get("gp_samples", 200)
+                n_samples = settings.get("acq_function_samples", acq_function_samples)
+                gp_burnin = settings.get("gp_burnin", gp_burnin)
+                gp_samples = settings.get("gp_samples", gp_samples)
                 if opt.gp.chain_ is None:
-                    gp_burnin = settings.get("gp_initial_burnin", 200)
-                    gp_samples = settings.get("gp_initial_samples", 300)
+                    gp_burnin = settings.get("gp_initial_burnin", gp_initial_burnin)
+                    gp_samples = settings.get("gp_initial_samples", gp_initial_samples)
                     opt.tell(
                         point,
                         score,
@@ -259,8 +313,9 @@ def local(
                 logging.info(f"GP sampling finished ({difference}s)")
                 logging.debug(f"GP kernel: {opt.gp.kernel_}")
             except ValueError:
-                logging.warning("Error encountered during fitting."
-                                "Trying to sample chain a bit.")
+                logging.warning(
+                    "Error encountered during fitting." "Trying to sample chain a bit."
+                )
                 opt.gp.sample(n_burnin=5, priors=opt.gp_priors)
             else:
                 break
