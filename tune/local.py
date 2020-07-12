@@ -11,7 +11,7 @@ from tune.utils import TimeControl
 __all__ = ["run_match", "parse_experiment_result"]
 
 
-def parse_experiment_result(outstr, prior_counts=None, n_samples=1000000):
+def parse_experiment_result(outstr, prior_counts=None, n_dirichlet_samples=1000000, **kwargs):
     """Parse cutechess-cli result output to extract mean score and error.
 
     Here we use a simple pentanomial model to exploit paired openings.
@@ -36,7 +36,7 @@ def parse_experiment_result(outstr, prior_counts=None, n_samples=1000000):
     prior_counts : list-like float or int, default=None
         Pseudo counts to use for WW, WD, WL/DD, LD and LL in the
         pentanomial model.
-    n_samples : int, default = 1 000 000
+    n_dirichlet_samples : int, default = 1 000 000
         Number of samples to draw from the Dirichlet distribution in order to
         estimate the standard error of the score.
     Returns
@@ -77,7 +77,7 @@ def parse_experiment_result(outstr, prior_counts=None, n_samples=1000000):
     dist = dirichlet(alpha=counts_array + prior_counts)
     scores = [-1.0, -0.5, 0.0, 0.5, 1.0]
     score = dist.mean().dot(scores)
-    error = dist.rvs(n_samples).dot(scores).var()
+    error = dist.rvs(n_dirichlet_samples).dot(scores).var()
     return score, error
 
 
@@ -245,5 +245,5 @@ def run_match(
 
     out = subprocess.run(string_array, capture_output=True)
     if output_as_string:
-        return out.stdout.decode("utf-8")
+        return out.stdout.decode("utf-8"), out.stderr.decode("utf-8")
     return out
