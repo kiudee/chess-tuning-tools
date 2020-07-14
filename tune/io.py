@@ -19,7 +19,7 @@ __all__ = [
 # TODO: Backup file to restore it, should there be an error
 def uci_tuple(uci_string):
     try:
-        name, value = re.findall(r"name (\w+) value (\S*)", uci_string)[0]
+        name, value = re.findall(r"name\s+(\S.*?)\s+value\s+(.*?)\s*$", uci_string)[0]
     except IndexError:
         print(f"Error parsing UCI tuples:\n{uci_string}")
         sys.exit(1)
