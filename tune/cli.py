@@ -9,11 +9,13 @@ from bask.optimizer import Optimizer
 import click
 import matplotlib.pyplot as plt
 import numpy as np
+from skopt.utils import create_result
 
 
 from tune.db_workers import TuningServer, TuningClient
 from tune.local import run_match, parse_experiment_result
 from tune.io import prepare_engines_json, load_tuning_config, write_engines_json
+from tune.utils import expected_ucb
 
 
 @click.group()
@@ -174,6 +176,14 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     help="Number to seed all internally used random generators.",
 )
 @click.option(
+    "--result-every",
+    default=5,
+    help="Output the actual current optimum every n-th iteration."
+    "The further you are in the tuning process, the longer this will take to "
+    "compute. Consider increasing this number, if you do not need the output "
+    "that often.",
+)
+@click.option(
     "--resume/--no-resume",
     default=True,
     help="Let the optimizer resume, if it finds points it can use.",
@@ -194,6 +204,7 @@ def local(
     n_initial_points=30,
     n_points=500,
     random_seed=0,
+    result_every=5,
     resume=True,
     verbose=False,
 ):
@@ -265,6 +276,19 @@ def local(
     # 4. Main optimization loop:
     while True:
         logging.info("Starting iteration {}".format(iteration))
+        if iteration % result_every == 0 and opt.gp.chain_ is not None:
+            result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
+            try:
+                best_point, best_value = expected_ucb(result_object, alpha=0.0)
+                best_point_dict = dict(zip(param_ranges.keys(), best_point))
+                logging.info(f"Current optimum:\n{best_point_dict}")
+                logging.info(f"Estimated value: {best_value}")
+            except ValueError:
+                logging.info(
+                    "Computing current optimum was not successful. "
+                    "This can happen in rare cases and running the "
+                    "tuner again usually works."
+                )
         point = opt.ask()
         point_dict = dict(zip(param_ranges.keys(), point))
         logging.info("Testing {}".format(point_dict))
