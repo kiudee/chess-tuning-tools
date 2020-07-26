@@ -11,6 +11,7 @@ with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
 requirements = [
+    "atomicwrites>=1.4.0",
     "Click>=7.0",
     "numpy>=1.18",
     "scipy>=1.3.2",
@@ -21,7 +22,7 @@ requirements = [
     "psycopg2",
     "bask>=0.1.0",
     "sqlalchemy>=1.3",
-    "pandas>=1.0.1"
+    "pandas>=1.0.1",
 ]
 
 setup_requirements = ["pytest-runner"]

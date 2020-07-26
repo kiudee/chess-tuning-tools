@@ -5,6 +5,7 @@ import logging
 import pathlib
 import sys
 
+from atomicwrites import AtomicWriter
 from bask.optimizer import Optimizer
 import click
 import matplotlib.pyplot as plt
@@ -347,7 +348,9 @@ def local(
         y.append(score)
         noise.append(error)
         iteration = len(X)
-        np.savez_compressed(data_path, np.array(X), np.array(y), np.array(noise))
+
+        with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
+            np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
 
 
 if __name__ == "__main__":
