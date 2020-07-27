@@ -4,6 +4,7 @@ import json
 import logging
 import pathlib
 import sys
+import time
 
 from atomicwrites import AtomicWriter
 from bask.optimizer import Optimizer
@@ -16,6 +17,7 @@ from skopt.utils import create_result
 from tune.db_workers import TuningServer, TuningClient
 from tune.local import run_match, parse_experiment_result
 from tune.io import prepare_engines_json, load_tuning_config, write_engines_json
+from tune.plots import plot_objective
 from tune.utils import expected_ucb
 
 
@@ -172,6 +174,17 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "the coverage of the space.",
 )
 @click.option(
+    "--plot-every",
+    default=0,
+    help="Plot the current optimization landscape every n-th iteration. "
+    "Set to 0 to turn it off.",
+)
+@click.option(
+    "--plot-path",
+    default="plots",
+    help="Path to the directory to which the tuner will output plots.",
+)
+@click.option(
     "--random-seed",
     default=0,
     help="Number to seed all internally used random generators.",
@@ -182,7 +195,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     help="Output the actual current optimum every n-th iteration."
     "The further you are in the tuning process, the longer this will take to "
     "compute. Consider increasing this number, if you do not need the output "
-    "that often.",
+    "that often. Set to 0 to turn it off.",
 )
 @click.option(
     "--resume/--no-resume",
@@ -204,6 +217,8 @@ def local(
     logfile="log.txt",
     n_initial_points=30,
     n_points=500,
+    plot_every=5,
+    plot_path="plots",
     random_seed=0,
     result_every=5,
     resume=True,
@@ -277,7 +292,11 @@ def local(
     # 4. Main optimization loop:
     while True:
         logging.info("Starting iteration {}".format(iteration))
-        if iteration % result_every == 0 and opt.gp.chain_ is not None:
+        if (
+            result_every > 0
+            and iteration % result_every == 0
+            and opt.gp.chain_ is not None
+        ):
             result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
             try:
                 best_point, best_value = expected_ucb(result_object, alpha=0.0)
@@ -289,6 +308,40 @@ def local(
                     "Computing current optimum was not successful. "
                     "This can happen in rare cases and running the "
                     "tuner again usually works."
+                )
+        if plot_every > 0 and iteration % plot_every == 0 and opt.gp.chain_ is not None:
+            logging.getLogger('matplotlib.font_manager').disabled = True
+            if opt.space.n_dims == 1:
+                logging.warning(
+                    "Plotting for only 1 parameter is not supported " "yet."
+                )
+            else:
+                logging.info("Saving a plot to ")
+                result_object = create_result(
+                    Xi=X, yi=y, space=opt.space, models=[opt.gp]
+                )
+                plt.style.use("dark_background")
+                fig, ax = plt.subplots(
+                    nrows=opt.space.n_dims,
+                    ncols=opt.space.n_dims,
+                    figsize=(3 * opt.space.n_dims, 3 * opt.space.n_dims),
+                )
+                fig.patch.set_facecolor("#36393f")
+                for i in range(opt.space.n_dims):
+                    for j in range(opt.space.n_dims):
+                        ax[i, j].set_facecolor("#36393f")
+                timestr = time.strftime("%Y%m%d-%H%M%S")
+                plot_objective(
+                    result_object, dimensions=list(param_ranges.keys()), fig=fig, ax=ax
+                )
+                plotpath = pathlib.Path(plot_path)
+                plotpath.mkdir(parents=True, exist_ok=True)
+                plt.savefig(
+                    plotpath / f"{timestr}-{iteration}.png",
+                    pad_inches=0.1,
+                    dpi=300,
+                    bbox_inches="tight",
+                    facecolor="#36393f",
                 )
         point = opt.ask()
         point_dict = dict(zip(param_ranges.keys(), point))
