@@ -2,6 +2,12 @@
 History
 =======
 
+0.4 (tba)
+---------
+* Add new standalone tuning script. With this it is possible to tune parameters
+  of an engine without having to set up the distributed tuning framework.
+  Usage instructions and example configurations are included.
+
 0.3 (2020-03-02)
 ------------------
 
