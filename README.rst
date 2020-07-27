@@ -26,7 +26,7 @@ A collection of tools for local and distributed tuning of chess engines.
 Features
 --------
 
-* Optimization of chess engines using Bayesian optimization.
+* Optimization of chess engines using state-of-the-art Bayesian optimization.
 * Scoring matches using the pentanomial model for paired openings.
 
 Quick Start
@@ -44,8 +44,8 @@ To execute the local tuner, simply run::
 
    tune local -c tuning_config.json
 
-Take a look at the `example configurations`_ to learn how to set up the
-``tuning_config.json`` file.
+Take a look at the `usage instructions`_ and the `example configurations`_ to
+learn how to set up the ``tuning_config.json`` file.
 
 
 Distributed tuning
@@ -85,3 +85,4 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
 .. _example configurations: https://github.com/kiudee/chess-tuning-tools/tree/master/examples
+.. _usage instructions: https://chess-tuning-tools.readthedocs.io/en/latest/usage.html
