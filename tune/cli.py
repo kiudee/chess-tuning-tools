@@ -2,6 +2,7 @@
 from datetime import datetime
 import json
 import logging
+import os
 import pathlib
 import sys
 import time
@@ -367,6 +368,7 @@ def local(
                     facecolor="#36393f",
                 )
                 logging.info(f"Saving a plot to {full_plotpath}")
+                plt.close(fig)
         point = opt.ask()
         point_dict = dict(zip(param_ranges.keys(), point))
         logging.info("Testing {}".format(point_dict))
@@ -426,8 +428,11 @@ def local(
         noise.append(error)
         iteration = len(X)
 
-        with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
-            np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
+        if os.name == "nt":
+            np.savez_compressed(data_path, np.array(X), np.array(y), np.array(noise))
+        else:
+            with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
+                np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
 
 
 if __name__ == "__main__":
