@@ -22,3 +22,7 @@ Navigate to the folder and then run:
 
    tune local -c simple_tune.json
 
+Complete configuration
+----------------------
+The file ``complete_config.json`` exhaustively lists all available options and
+their default values.
