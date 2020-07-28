@@ -99,11 +99,19 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 
 @cli.command()
 @click.option(
+    "-c",
+    "--tuning-config",
+    help="json file containing the tuning configuration.",
+    required=True,
+    type=click.File("r"),
+)
+@click.option(
     "-a",
     "--acq-function",
     default="mes",
     help="Acquisition function to use for selecting points to try. "
     "Can be {mes, pvrs, ei, ts, vr}.",
+    show_default=True,
 )
 @click.option(
     "--acq-function-samples",
@@ -112,13 +120,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "More samples will slow down the computation time, but might give more "
     "stable tuning results. Less samples on the other hand cause more exploration "
     "which could help avoid the tuning to get stuck.",
-)
-@click.option(
-    "-c",
-    "--tuning-config",
-    help="json file containing the tuning configuration.",
-    required=True,
-    type=click.File("r"),
+    show_default=True,
 )
 @click.option(
     "-d",
@@ -126,6 +128,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     default="data.npz",
     help="Save the evaluated points to this file.",
     type=click.Path(exists=False),
+    show_default=True,
 )
 @click.option(
     "--gp-burnin",
@@ -133,6 +136,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     type=int,
     help="Number of samples to discard before sampling model parameters. "
     "This is used during tuning and few samples suffice.",
+    show_default=True,
 )
 @click.option(
     "--gp-samples",
@@ -140,6 +144,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     type=int,
     help="Number of model parameters to sample for the model. "
     "This is used during tuning and it should be a multiple of 100.",
+    show_default=True,
 )
 @click.option(
     "--gp-initial-burnin",
@@ -147,6 +152,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     type=int,
     help="Number of samples to discard before starting to sample the initial model "
     "parameters. This is only used when resuming or for the first model.",
+    show_default=True,
 )
 @click.option(
     "--gp-initial-samples",
@@ -155,6 +161,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     help="Number of model parameters to sample for the initial model. "
     "This is only used when resuming or for the first model. "
     "Should be a multiple of 100.",
+    show_default=True,
 )
 @click.option(
     "-l",
@@ -162,9 +169,13 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     default="log.txt",
     help="Path to log file.",
     type=click.Path(exists=False),
+    show_default=True,
 )
 @click.option(
-    "--n-initial-points", default=30, help="Size of initial dense set of points to try."
+    "--n-initial-points",
+    default=30,
+    help="Size of initial dense set of points to try.",
+    show_default=True,
 )
 @click.option(
     "--n-points",
@@ -172,22 +183,26 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     help="The number of random points to consider as possible next point. "
     "Less points reduce the computation time of the tuner, but reduce "
     "the coverage of the space.",
+    show_default=True,
 )
 @click.option(
     "--plot-every",
     default=0,
     help="Plot the current optimization landscape every n-th iteration. "
     "Set to 0 to turn it off.",
+    show_default=True,
 )
 @click.option(
     "--plot-path",
     default="plots",
     help="Path to the directory to which the tuner will output plots.",
+    show_default=True,
 )
 @click.option(
     "--random-seed",
     default=0,
     help="Number to seed all internally used random generators.",
+    show_default=True,
 )
 @click.option(
     "--result-every",
@@ -196,11 +211,13 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "The further you are in the tuning process, the longer this will take to "
     "compute. Consider increasing this number, if you do not need the output "
     "that often. Set to 0 to turn it off.",
+    show_default=True,
 )
 @click.option(
     "--resume/--no-resume",
     default=True,
     help="Let the optimizer resume, if it finds points it can use.",
+    show_default=True,
 )
 @click.option(
     "--verbose", "-v", is_flag=True, default=False, help="Turn on debug output."
