@@ -337,7 +337,7 @@ def local(
                     "Plotting for only 1 parameter is not supported " "yet."
                 )
             else:
-                logging.info("Saving a plot to ")
+                logging.debug("Starting to compute the next plot")
                 result_object = create_result(
                     Xi=X, yi=y, space=opt.space, models=[opt.gp]
                 )
@@ -357,13 +357,15 @@ def local(
                 )
                 plotpath = pathlib.Path(settings.get("plot_path", plot_path))
                 plotpath.mkdir(parents=True, exist_ok=True)
+                full_plotpath = plotpath / f"{timestr}-{iteration}.png"
                 plt.savefig(
-                    plotpath / f"{timestr}-{iteration}.png",
+                    full_plotpath,
                     pad_inches=0.1,
                     dpi=300,
                     bbox_inches="tight",
                     facecolor="#36393f",
                 )
+                logging.info(f"Saving a plot to {full_plotpath}")
         point = opt.ask()
         point_dict = dict(zip(param_ranges.keys(), point))
         logging.info("Testing {}".format(point_dict))
