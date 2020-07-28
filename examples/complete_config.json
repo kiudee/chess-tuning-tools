@@ -30,6 +30,7 @@
     "plot_path": "plots",
     "random_seed": 0,
     "result_every": 5,
+    "rounds": 5,
     "engine1_tc": "1+0.1",
     "engine2_npm": 1000,
     "opening_file": "openings.pgn",

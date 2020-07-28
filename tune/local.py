@@ -93,7 +93,7 @@ def _construct_engine_conf(id, engine_npm=None, engine_tc=None):
 
 
 def run_match(
-    rounds=1,
+    rounds=5,
     engine1_tc=None,
     engine2_tc=None,
     engine1_npm=None,
