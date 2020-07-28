@@ -308,9 +308,10 @@ def local(
     # 4. Main optimization loop:
     while True:
         logging.info("Starting iteration {}".format(iteration))
+        result_every_n = settings.get("result_every", result_every)
         if (
-            result_every > 0
-            and iteration % result_every == 0
+            result_every_n > 0
+            and iteration % result_every_n == 0
             and opt.gp.chain_ is not None
         ):
             result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
