@@ -228,23 +228,22 @@ def local(
 
     Parameters defined in the `tuning_config` file always take precedence.
     """
+    json_dict = json.load(tuning_config)
+    settings, commands, fixed_params, param_ranges = load_tuning_config(json_dict)
     log_level = logging.DEBUG if verbose else logging.INFO
     log_format = logging.Formatter("%(asctime)s %(levelname)-8s %(message)s")
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
-    file_logger = logging.FileHandler(logfile)
+    file_logger = logging.FileHandler(settings.get("logfile", logfile))
     file_logger.setFormatter(log_format)
     root_logger.addHandler(file_logger)
     console_logger = logging.StreamHandler(sys.stdout)
     console_logger.setFormatter(log_format)
     root_logger.addHandler(console_logger)
-
-    json_dict = json.load(tuning_config)
     logging.debug(f"Got the following tuning settings:\n{json_dict}")
-    settings, commands, fixed_params, param_ranges = load_tuning_config(json_dict)
 
     # 1. Create seed sequence
-    ss = np.random.SeedSequence(random_seed)
+    ss = np.random.SeedSequence(settings.get("random_seed", random_seed))
     # 2. Create kernel
     # 3. Create optimizer
     random_state = np.random.RandomState(np.random.MT19937(ss.spawn(1)[0]))
@@ -309,8 +308,13 @@ def local(
                     "This can happen in rare cases and running the "
                     "tuner again usually works."
                 )
-        if plot_every > 0 and iteration % plot_every == 0 and opt.gp.chain_ is not None:
-            logging.getLogger('matplotlib.font_manager').disabled = True
+        plot_every_n = settings.get("plot_every", plot_every)
+        if (
+            plot_every_n > 0
+            and iteration % plot_every_n == 0
+            and opt.gp.chain_ is not None
+        ):
+            logging.getLogger("matplotlib.font_manager").disabled = True
             if opt.space.n_dims == 1:
                 logging.warning(
                     "Plotting for only 1 parameter is not supported " "yet."
@@ -334,7 +338,7 @@ def local(
                 plot_objective(
                     result_object, dimensions=list(param_ranges.keys()), fig=fig, ax=ax
                 )
-                plotpath = pathlib.Path(plot_path)
+                plotpath = pathlib.Path(settings.get("plot_path", plot_path))
                 plotpath.mkdir(parents=True, exist_ok=True)
                 plt.savefig(
                     plotpath / f"{timestr}-{iteration}.png",

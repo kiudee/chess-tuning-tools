@@ -1,0 +1,46 @@
+{
+    "engines": [
+        {
+            "command": "engine1",
+            "fixed_parameters": {
+                "Threads": 2
+            }
+        },
+        {
+            "command": "engine2",
+            "fixed_parameters": {
+                "Threads": 4
+            }
+        }
+    ],
+    "parameter_ranges": {
+        "CPuct": "Real(0.0, 10.0)",
+        "MaxCollisionEvents": "Integer(1, 65536)"
+    },
+    "acq_function": "mes",
+    "acq_function_samples": 1,
+    "gp_burnin": 5,
+    "gp_samples": 300,
+    "gp_initial_burnin": 100,
+    "gp_initial_samples": 300,
+    "logfile": "log.txt",
+    "n_initial_points": 30,
+    "n_points": 500,
+    "plot_every": 5,
+    "plot_path": "plots",
+    "random_seed": 0,
+    "result_every": 5,
+    "engine1_tc": "1+0.1",
+    "engine2_npm": 1000,
+    "opening_file": "openings.pgn",
+    "adjudicate_draws": true,
+    "draw_movenumber": 1,
+    "draw_movecount": 10,
+    "draw_score": 8,
+    "adjudicate_resign": true,
+    "resign_movecount": 3,
+    "resign_score": 550,
+    "adjudicate_tb": false,
+    "tb_path": null,
+    "concurrency": 1
+}
