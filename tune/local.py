@@ -11,7 +11,9 @@ from tune.utils import TimeControl
 __all__ = ["run_match", "parse_experiment_result"]
 
 
-def parse_experiment_result(outstr, prior_counts=None, n_dirichlet_samples=1000000, **kwargs):
+def parse_experiment_result(
+    outstr, prior_counts=None, n_dirichlet_samples=1000000, **kwargs
+):
     """Parse cutechess-cli result output to extract mean score and error.
 
     Here we use a simple pentanomial model to exploit paired openings.
@@ -110,6 +112,7 @@ def run_match(
     tb_path=None,
     concurrency=1,
     output_as_string=True,
+    **kwargs,
 ):
     """Run a cutechess-cli match of two engines with paired random openings.
 
