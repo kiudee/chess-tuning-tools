@@ -27,6 +27,7 @@ Features
 --------
 
 * Optimization of chess engines using state-of-the-art Bayesian optimization.
+* Support for automatic visualization of the optimization landscape.
 * Scoring matches using the pentanomial model for paired openings.
 
 Quick Start
