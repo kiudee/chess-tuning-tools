@@ -2,6 +2,11 @@
 History
 =======
 
+Unreleased version
+------------------
+* Add support for parameter range reduction. Since this potentially requires
+  discarding some of the data points, it will also save a backup.
+
 0.4 (2020-08-02)
 ----------------
 * Add new standalone tuning script. With this it is possible to tune parameters
