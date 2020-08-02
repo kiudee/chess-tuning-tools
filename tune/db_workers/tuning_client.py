@@ -20,12 +20,12 @@ from tune.db_workers.dbmodels import (
 )
 from tune.io import InitStrings
 from tune.db_workers.utils import (
-    parse_timecontrol,
     MatchResult,
     TimeControl,
     create_sqlalchemy_engine,
     get_session_maker,
 )
+from tune.utils import parse_timecontrol
 
 CLIENT_VERSION = 2
 

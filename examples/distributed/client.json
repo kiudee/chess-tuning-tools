@@ -1,0 +1,14 @@
+{
+    "engine1": {
+        "Threads": 2,
+        "Backend": "cudnn-auto",
+        "BackendOptions": "",
+        "NNCacheSize": 200000,
+        "MinibatchSize": 256,
+        "MaxPrefetch": 32
+    },
+    "engine2": {
+        "Threads": 4
+    },
+    "SyzygyPath": "path/to/tb/wdl"
+}
