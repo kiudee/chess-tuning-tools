@@ -13,8 +13,7 @@ directory structure:
    |-- simple_tune.json
    |-- engine1
    |-- engine2
-   |-- openings.pgn
-   `-- sf.exe
+   `-- openings.pgn
 
 Navigate to the folder and then run:
 
