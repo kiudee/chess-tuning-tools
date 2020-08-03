@@ -2,8 +2,8 @@
 History
 =======
 
-Unreleased version
-------------------
+0.5.0-beta (2020-08-03)
+-----------------------
 * Add support for parameter range reduction. Since this potentially requires
   discarding some of the data points, it will also save a backup.
 
