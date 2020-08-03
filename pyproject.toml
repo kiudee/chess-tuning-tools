@@ -7,12 +7,15 @@ license = "Apache-2.0"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "Natural Language :: English",
+    "Natural Language :: English"
 ]
 readme = "README.rst"
 repository = "https://github.com/kiudee/chess-tuning-tools"
 keywords = ["chess", "tuning", "optimization", "engine"]
 documentation = "https://chess-tuning-tools.readthedocs.io"
+packages = [
+    {include = "tune"}
+]
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -34,9 +37,7 @@ dist = ["joblib", "psycopg2", "sqlalchemy", "pandas"]
 [tool.poetry.dev-dependencies]
 
 [tool.poetry.scripts]
-run_client = "tune.cli:run_client"
-run_server = "tune.cli:run_server"
-local = "tune.cli:local"
+tune = "tune.cli:cli"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/kiudee/chess-tuning-tools/issues"

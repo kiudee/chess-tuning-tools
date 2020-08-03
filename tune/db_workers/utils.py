@@ -3,7 +3,10 @@ from contextlib import contextmanager
 from decimal import Decimal
 
 import numpy as np
-from sqlalchemy import create_engine
+try:
+    from sqlalchemy import create_engine
+except ImportError:
+    create_engine = None
 from scipy.optimize import root_scalar
 from scipy.special import expit
 
