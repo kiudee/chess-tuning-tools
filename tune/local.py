@@ -4,11 +4,12 @@ import subprocess
 
 import numpy as np
 from scipy.stats import dirichlet
+from skopt.space import Categorical, Integer, Real
 
 from tune.utils import TimeControl
 
 
-__all__ = ["run_match", "parse_experiment_result"]
+__all__ = ["run_match", "parse_experiment_result", "reduce_ranges"]
 
 
 def parse_experiment_result(
@@ -250,3 +251,29 @@ def run_match(
     if output_as_string:
         return out.stdout.decode("utf-8"), out.stderr.decode("utf-8")
     return out
+
+
+def reduce_ranges(X, y, noise, space):
+    X_new = []
+    y_new = []
+    noise_new = []
+    reduction_needed = False
+    for row, yval, nval in zip(X, y, noise):
+        include_row = True
+        for dim, value in zip(space.dimensions, row):
+            if isinstance(dim, Integer) or isinstance(dim, Real):
+                lb, ub = dim.bounds
+                if value < lb or value > ub:
+                    include_row = False
+            elif isinstance(dim, Categorical):
+                if value not in dim.bounds:
+                    include_row = False
+            else:
+                raise ValueError(f"Parameter type {type(dim)} unknown.")
+        if include_row:
+            X_new.append(row)
+            y_new.append(yval)
+            noise_new.append(nval)
+        else:
+            reduction_needed = True
+    return reduction_needed, X_new, y_new, noise_new

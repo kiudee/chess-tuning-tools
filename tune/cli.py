@@ -16,7 +16,7 @@ from skopt.utils import create_result
 
 
 from tune.db_workers import TuningServer, TuningClient
-from tune.local import run_match, parse_experiment_result
+from tune.local import run_match, parse_experiment_result, reduce_ranges
 from tune.io import prepare_engines_json, load_tuning_config, write_engines_json
 from tune.plots import plot_objective
 from tune.utils import expected_ucb
@@ -291,6 +291,31 @@ def local(
             X = importa["arr_0"].tolist()
             y = importa["arr_1"].tolist()
             noise = importa["arr_2"].tolist()
+            if len(X[0]) != opt.space.n_dims:
+                logging.error(
+                    "The number of parameters are not matching the number of dimensions. "
+                    "Rename the existing data file or ensure that the parameter ranges are correct."
+                )
+                sys.exit(1)
+            reduction_needed, X_reduced, y_reduced, noise_reduced = reduce_ranges(
+                X, y, noise, opt.space
+            )
+            if reduction_needed:
+                backup_path = path.parent / (
+                    path.stem + f"_backup_{int(time.time())}" + path.suffix
+                )
+                logging.warning(
+                    f"The parameter ranges are smaller than the existing data. "
+                    f"Some points will have to be discarded. "
+                    f"The original {iteration} data points will be saved to {backup_path}"
+                )
+                np.savez_compressed(
+                    backup_path, np.array(X), np.array(y), np.array(noise)
+                )
+                X = X_reduced
+                y = y_reduced
+                noise = noise_reduced
+
             iteration = len(X)
             logging.info(
                 f"Importing {iteration} existing datapoints. This could take a while..."
