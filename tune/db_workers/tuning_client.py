@@ -8,7 +8,10 @@ import sys
 import numpy as np
 from time import sleep, time
 
-from sqlalchemy.orm import sessionmaker
+try:
+    from sqlalchemy.orm import sessionmaker
+except ImportError:
+    sessionmaker = None
 
 from tune.db_workers.dbmodels import (
     Base,

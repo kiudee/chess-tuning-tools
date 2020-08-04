@@ -77,7 +77,6 @@ immediately by sending it twice.
 You will also need to run a PostgreSQL database, which the server will use to
 post jobs for the clients to fetch and the clients to report their results to.
 
-
 Credits
 -------
 

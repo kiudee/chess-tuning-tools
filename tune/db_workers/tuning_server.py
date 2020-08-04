@@ -7,15 +7,24 @@ import sys
 from datetime import datetime
 from time import sleep
 
-import joblib
+try:
+    import joblib
+except ImportError:
+    joblib = None
 import numpy as np
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 import scipy.stats
 from bask import Optimizer
 from skopt.learning.gaussian_process.kernels import Matern, ConstantKernel
 from skopt.space import space as skspace
 from skopt.utils import normalize_dimensions, create_result
-from sqlalchemy.orm import sessionmaker
+try:
+    from sqlalchemy.orm import sessionmaker
+except ImportError:
+    sessionmaker = None
 
 from tune.priors import roundflat
 from tune.utils import expected_ucb
