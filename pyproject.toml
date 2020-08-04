@@ -45,6 +45,7 @@ wheel = "^0.34.2"
 flake8 = "^3.8.3"
 Sphinx = "^3.1.2"
 Click = "^7.1.2"
+black = "^19.10b0"
 
 [tool.poetry.scripts]
 tune = "tune.cli:cli"
