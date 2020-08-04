@@ -1,4 +1,3 @@
-from numpy.testing import assert_almost_equal
 from tune.io import load_tuning_config
 
 

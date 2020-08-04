@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import LogLocator
 
 
+__all__ = ["partial_dependence", "plot_objective"]
+
+
 def _evenly_sample(dim, n_points):
     """Return `n_points` evenly spaced points from a Dimension.
     Parameters
@@ -244,7 +247,7 @@ def plot_objective(
                     result, alpha=0.0, n_random_starts=n_random_restarts
                 )[0]
                 min_ucb = expected_ucb(result, n_random_starts=n_random_restarts)[0]
-        except:
+        except ValueError:
             failures += 1
             if failures == 10:
                 break

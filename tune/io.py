@@ -3,7 +3,6 @@ from collections.abc import MutableMapping
 import json
 from pathlib import Path
 import re
-import subprocess
 import sys
 
 import skopt.space as skspace
@@ -13,6 +12,10 @@ from skopt.space.space import check_dimension
 __all__ = [
     "InitStrings",
     "uci_tuple",
+    "parse_ranges",
+    "load_tuning_config",
+    "prepare_engines_json",
+    "write_engines_json",
 ]
 
 
@@ -30,7 +33,7 @@ def uci_tuple(uci_string):
     return name, tmp
 
 
-def set_option(name, value):
+def _set_option(name, value):
     return f"setoption name {name} value {value}"
 
 
@@ -52,9 +55,9 @@ class InitStrings(MutableMapping):
         for i, s in enumerate(self._init_strings):
             name, _ = uci_tuple(s)
             if key == name:
-                self._init_strings[i] = set_option(key, value)
+                self._init_strings[i] = _set_option(key, value)
                 return
-        self._init_strings.append(set_option(key, value))
+        self._init_strings.append(_set_option(key, value))
 
     def __delitem__(self, key):
         elem = -1
@@ -84,7 +87,7 @@ class InitStrings(MutableMapping):
         return repr(self._init_strings)
 
 
-def make_numeric(s):
+def _make_numeric(s):
     try:
         return int(s)
     except ValueError:
@@ -115,11 +118,11 @@ def parse_ranges(s):
                     arg_string = "".join(arg_string.split())
 
                     key, val = arg_string.split("=")
-                    kwargs[key] = make_numeric(val)
+                    kwargs[key] = _make_numeric(val)
                 elif "[" in arg_string or "(" in arg_string:
                     args.append(literal_eval(arg_string))
                 else:  # args:
-                    val = make_numeric(arg_string)
+                    val = _make_numeric(arg_string)
                     args.append(val)
             if hasattr(skspace, param_str[0]):
                 dim = getattr(skspace, param_str[0])(*args, **kwargs)
@@ -202,28 +205,3 @@ def write_engines_json(engine_json, point_dict):
     initstr.update(point_dict)
     with open(Path() / "engines.json", "w") as file:
         json.dump(engine_json, file, sort_keys=True, indent=4)
-
-
-class Engines(object):
-    def __init__(self, parameters, engine1_fixed, engine2_fixed):
-        pass
-
-    def set_params(self, values):
-        """Set tunable parameters to new values.
-
-        Parameters
-        ----------
-        values :
-
-        """
-        pass
-
-    def write_json(self, path=None):
-        """Write the engines.json file
-
-        Parameters
-        ----------
-        path :
-
-        """
-        pass

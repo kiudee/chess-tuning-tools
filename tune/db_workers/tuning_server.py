@@ -166,7 +166,7 @@ class TuningServer(object):
                         )
                     else:
                         # The lengthscale(s) are in positive domain
-                        prior = lambda x, dist=dist: dist.logpdf(np.exp(x)) + x
+                        prior = lambda x, dist=dist: dist.logpdf(np.exp(x)) + x  # noqa: E731
                 result.append(prior)
         return result
 
@@ -279,7 +279,7 @@ class TuningServer(object):
     def insert_jobs(self, session, new_x):
         # First set all active jobs to inactive:
         session.query(SqlJob).filter(
-            SqlJob.active == True, SqlJob.tune_id == self.experiment["tune_id"]
+            SqlJob.active == True, SqlJob.tune_id == self.experiment["tune_id"]  # noqa: E712
         ).update(
             {"active": False}
         )  # noqa
@@ -416,7 +416,7 @@ class TuningServer(object):
                     f"Current optimum: {dict(zip(self.parameters, np.around(opt_x,4)))}"
                 )
             except ValueError:
-                self.logger.info(f"Current optimum: None (optimizer errored out :( )")
+                self.logger.info("Current optimum: None (optimizer errored out :( )")
 
     def deactivate(self):
         raise NotImplementedError

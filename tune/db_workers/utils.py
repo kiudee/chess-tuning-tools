@@ -83,10 +83,10 @@ def score_in_01(rates):
 
 def ldw_probabilities(elo, draw_elo, bias):
     pos = elo + bias
-    w = expit(ELO_CONSTANT * (pos - draw_elo))
-    l = expit(ELO_CONSTANT * (-pos - draw_elo))
-    d = 1 - w - l
-    return np.array([l, d, w])
+    wins = expit(ELO_CONSTANT * (pos - draw_elo))
+    losses = expit(ELO_CONSTANT * (-pos - draw_elo))
+    draws = 1 - wins - losses
+    return np.array([losses, draws, wins])
 
 
 def draw_rate_to_elo(draw_rate):

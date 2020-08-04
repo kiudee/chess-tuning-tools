@@ -16,10 +16,7 @@ except ImportError:
 from tune.db_workers.dbmodels import (
     Base,
     SqlJob,
-    SqlUCIParam,
     SqlResult,
-    SqlTimeControl,
-    SqlTune,
 )
 from tune.io import InitStrings
 from tune.db_workers.utils import (
@@ -28,7 +25,6 @@ from tune.db_workers.utils import (
     create_sqlalchemy_engine,
     get_session_maker,
 )
-from tune.utils import parse_timecontrol
 
 CLIENT_VERSION = 2
 
@@ -90,7 +86,7 @@ class TuningClient(object):
             "-concurrency",
             f"{cutechess_options['concurrency']}",
             "-engine",
-            f"conf=engine1",
+            "conf=engine1",
             f"tc={time_control.to_strings()[0]}",
             "-engine",
             "conf=engine2",
@@ -298,7 +294,7 @@ class TuningClient(object):
             with self.sessionmaker() as session:
                 rows = (
                     session.query(SqlJob, SqlResult)
-                    .filter(SqlJob.id == SqlResult.job_id, SqlJob.active == True)
+                    .filter(SqlJob.id == SqlResult.job_id, SqlJob.active == True)  # noqa: E712
                     .all()
                 )
                 if len(rows) == 0:
