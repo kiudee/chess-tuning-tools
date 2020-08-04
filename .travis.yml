@@ -14,7 +14,7 @@ before_deploy:
 
 deploy:
   provider: script
-  script: poetry publish
+  script: poetry publish -v --build
   on:
       tags: true
       python: 3.8
