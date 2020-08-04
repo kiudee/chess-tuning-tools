@@ -25,10 +25,9 @@ def _evenly_sample(dim, n_points):
     xi_transformed : np.array
         The transformed values of `xi`, for feeding to a model.
     """
-    cats = np.array(getattr(dim, 'categories', []), dtype=object)
+    cats = np.array(getattr(dim, "categories", []), dtype=object)
     if len(cats):  # Sample categoricals while maintaining order
-        xi = np.linspace(0, len(cats) - 1, min(len(cats), n_points),
-                         dtype=int)
+        xi = np.linspace(0, len(cats) - 1, min(len(cats), n_points), dtype=int)
         xi_transformed = dim.transform(cats[xi])
     else:
         bounds = dim.bounds
@@ -41,8 +40,9 @@ def _evenly_sample(dim, n_points):
     return xi, xi_transformed
 
 
-def partial_dependence(space, model, i, j=None, sample_points=None,
-                       n_samples=250, n_points=40, x_eval=None):
+def partial_dependence(
+    space, model, i, j=None, sample_points=None, n_samples=250, n_points=40, x_eval=None
+):
     """Calculate the partial dependence for dimensions `i` and `j` with
     respect to the objective value, as approximated by `model`.
     The partial dependence plot shows how the value of the dimensions
@@ -125,7 +125,7 @@ def partial_dependence(space, model, i, j=None, sample_points=None,
             rvs_ = np.array(sample_points)  # copy
             # We replace the values in the dimension that we want to keep
             # fixed
-            rvs_[:, dim_locs[i]:dim_locs[i + 1]] = x_
+            rvs_[:, dim_locs[i] : dim_locs[i + 1]] = x_
             # In case of `x_eval=None` rvs conists of random samples.
             # Calculating the mean of these samples is how partial dependence
             # is implemented.
@@ -142,8 +142,8 @@ def partial_dependence(space, model, i, j=None, sample_points=None,
             row = []
             for y_ in yi_transformed:
                 rvs_ = np.array(sample_points)  # copy
-                rvs_[:, dim_locs[j]:dim_locs[j + 1]] = x_
-                rvs_[:, dim_locs[i]:dim_locs[i + 1]] = y_
+                rvs_[:, dim_locs[j] : dim_locs[j + 1]] = x_
+                rvs_[:, dim_locs[i] : dim_locs[i + 1]] = y_
                 row.append(np.mean(model.predict(rvs_)))
             zi.append(row)
 

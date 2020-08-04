@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from decimal import Decimal
 
 import numpy as np
+
 try:
     from sqlalchemy import create_engine
 except ImportError:

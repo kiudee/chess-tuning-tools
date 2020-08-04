@@ -12,6 +12,7 @@ try:
 except ImportError:
     joblib = None
 import numpy as np
+
 try:
     import pandas as pd
 except ImportError:
@@ -21,6 +22,7 @@ from bask import Optimizer
 from skopt.learning.gaussian_process.kernels import Matern, ConstantKernel
 from skopt.space import space as skspace
 from skopt.utils import normalize_dimensions, create_result
+
 try:
     from sqlalchemy.orm import sessionmaker
 except ImportError:
@@ -147,7 +149,12 @@ class TuningServer(object):
                 keys = [x.split("=")[0].strip() for x in prior_param_strings]
                 vals = [float(x.split("=")[1].strip()) for x in prior_param_strings]
                 if prior_str == "roundflat":
-                    prior = lambda x, keys=keys, vals=vals: roundflat(np.exp(x), **dict(zip(keys, vals))) + x
+                    prior = (
+                        lambda x, keys=keys, vals=vals: roundflat(
+                            np.exp(x), **dict(zip(keys, vals))
+                        )
+                        + x
+                    )
                 else:
                     dist = getattr(scipy.stats, prior_str)(**dict(zip(keys, vals)))
                     if i == 0 or i == len(priors) - 1:
@@ -222,11 +229,20 @@ class TuningServer(object):
         if not include_active:
             q = q.filter(SqlJob.active == False)  # noqa
         jobs = q.all()
-        query = session.query(SqlUCIParam.job_id, SqlUCIParam.key, SqlUCIParam.value).join(SqlJob).filter(SqlJob.tune_id == tune_id)
+        query = (
+            session.query(SqlUCIParam.job_id, SqlUCIParam.key, SqlUCIParam.value)
+            .join(SqlJob)
+            .filter(SqlJob.tune_id == tune_id)
+        )
         df = pd.read_sql(query.statement, query.session.bind)
-        df['value'] = df['value'].astype(float)
+        df["value"] = df["value"].astype(float)
         self.logger.debug(f"Data frame: {df.head()}")
-        X = df.pivot(index="job_id", columns="key").sort_index().droplevel(0, axis=1)[self.parameters].values
+        X = (
+            df.pivot(index="job_id", columns="key")
+            .sort_index()
+            .droplevel(0, axis=1)[self.parameters]
+            .values
+        )
         y = {tc: [] for tc in self.time_controls}
         for job in jobs:
             for result in job.results:
@@ -244,9 +260,10 @@ class TuningServer(object):
                     ]
                 )
                 score = simple_penta_to_score(
-                    draw_rate=draw_rate, counts=counts,
+                    draw_rate=draw_rate,
+                    counts=counts,
                     prior_games=self.experiment.get("prior_games", 1),
-                    prior_elo=self.experiment.get("prior_elo", 0.0)
+                    prior_elo=self.experiment.get("prior_elo", 0.0),
                 )
                 y[tc].append(-score)
         return X, np.array(list(y.values())).mean(axis=0), samplesize_reached

@@ -348,7 +348,9 @@ class TuningClient(object):
                 time_control = self.adjust_time_control(
                     orig_tc, float(job.engine1_nps), float(job.engine2_nps),
                 )
-                self.logger.debug(f"Adjusted time control from {orig_tc} to {time_control}")
+                self.logger.debug(
+                    f"Adjusted time control from {orig_tc} to {time_control}"
+                )
 
                 # 3. Run experiment (and block)
                 self.logger.info(f"Running match with time control\n{time_control}")
@@ -360,8 +362,8 @@ class TuningClient(object):
                 )
                 # 5. Send results to database and lock it during access
                 q = session.query(SqlResult).filter_by(
-                        job_id=job.id, tc_id=sql_result.time_control.id
-                    )
+                    job_id=job.id, tc_id=sql_result.time_control.id
+                )
                 if result.wins == 2:  # WW
                     q.update({"ww_count": SqlResult.ww_count + 1})
                 elif result.wins == 1:
