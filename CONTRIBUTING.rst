@@ -69,6 +69,7 @@ this is how you set up your fork for local development::
 
     $ cd chess-tuning-tools/
     $ poetry install
+    $ poetry run pre-commit install
 
 4. Create a branch for local development::
 
