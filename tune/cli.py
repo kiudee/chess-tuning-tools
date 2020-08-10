@@ -229,7 +229,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 @click.option(
     "--verbose", "-v", is_flag=True, default=False, help="Turn on debug output."
 )
-def local(
+def local(  # noqa: C901
     tuning_config,
     acq_function="mes",
     acq_function_samples=1,
