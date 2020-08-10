@@ -2,6 +2,7 @@
 # Image: nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
 
 mkdir tuning
+mkdir plots
 
 apt update
 apt install -y clang-6.0 gcc-8 g++-8 ninja-build pkg-config wget git libqtcore4 p7zip-full zlib1g-dev libpq-dev qt5-qmake qt5-default
@@ -53,6 +54,6 @@ wget https://cdn.discordapp.com/attachments/539960268982059008/72350961948544209
 7za x -oopenings openings-dd.zip
 
 # Download the neural network to use:
-wget http://training.lczero.org/get_network?sha=50258149f09aa4469e703dfe6bbf314b5fc7b687c5f3146587aba11f67c54284 -O 703556
+wget https://training.lczero.org/get_network?sha=b30e742bcfd905815e0e7dbd4e1bafb41ade748f85d006b8e28758f1a3107ae3 -O 703810
 
 # jupyter lab --ip=127.0.0.1 --port 8080 --no-browser --allow-root
