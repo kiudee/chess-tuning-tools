@@ -2,7 +2,7 @@
 
 __author__ = """Karlson Pfannschmidt"""
 __email__ = "kiudee@mail.upb.de"
-__version__ = "0.5.0-beta.1"
+__version__ = "0.5.0-beta.2"
 
 from tune.io import InitStrings, load_tuning_config, parse_ranges
 from tune.local import parse_experiment_result, reduce_ranges, run_match
