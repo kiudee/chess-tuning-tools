@@ -2,6 +2,11 @@
 History
 =======
 
+0.5.0-beta.2 (2020-08-10)
+-------------------------
+* Add support for confidence intervals of the optimum. By default a table of
+  highest density intervals will be reported alongside the current optimum.
+
 0.5.0-beta (2020-08-03)
 -----------------------
 * Add support for parameter range reduction. Since this potentially requires
