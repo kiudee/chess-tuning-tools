@@ -19,32 +19,32 @@ except ImportError:
     pd = None
 import scipy.stats
 from bask import Optimizer
-from skopt.learning.gaussian_process.kernels import Matern, ConstantKernel
+from skopt.learning.gaussian_process.kernels import ConstantKernel, Matern
 from skopt.space import space as skspace
-from skopt.utils import normalize_dimensions, create_result
+from skopt.utils import create_result, normalize_dimensions
 
 try:
     from sqlalchemy.orm import sessionmaker
 except ImportError:
     sessionmaker = None
 
-from tune.priors import roundflat
-from tune.utils import expected_ucb
 from tune.db_workers.dbmodels import (
     Base,
     SqlJob,
-    SqlUCIParam,
     SqlResult,
     SqlTimeControl,
     SqlTune,
+    SqlUCIParam,
 )
 from tune.db_workers.utils import (
-    get_session_maker,
-    create_sqlalchemy_engine,
     TimeControl,
+    create_sqlalchemy_engine,
+    get_session_maker,
     simple_penta_to_score,
 )
 from tune.io import InitStrings
+from tune.priors import roundflat
+from tune.utils import expected_ucb
 
 __all__ = ["TuningServer"]
 

@@ -1,6 +1,7 @@
 from numpy.testing import assert_almost_equal
-from tune.local import parse_experiment_result, reduce_ranges
 from skopt.utils import normalize_dimensions
+
+from tune.local import parse_experiment_result, reduce_ranges
 
 
 def test_parse_experiment_result():

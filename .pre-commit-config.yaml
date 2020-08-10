@@ -7,3 +7,7 @@ repos:
     rev: 3.8.3
     hooks:
       - id: flake8
+  - repo: https://github.com/timothycrosley/isort
+    rev: 5.3.0
+    hooks:
+        - id: isort

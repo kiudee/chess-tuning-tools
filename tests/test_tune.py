@@ -3,7 +3,6 @@
 """Tests for `chess-tuning-tools` package."""
 
 import pytest
-
 from click.testing import CliRunner
 
 from tune import cli

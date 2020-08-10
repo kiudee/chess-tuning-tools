@@ -1,5 +1,5 @@
-import re
 import pathlib
+import re
 import subprocess
 
 import numpy as np
@@ -7,7 +7,6 @@ from scipy.stats import dirichlet
 from skopt.space import Categorical, Integer, Real
 
 from tune.utils import TimeControl
-
 
 __all__ = ["run_match", "parse_experiment_result", "reduce_ranges"]
 

@@ -1,13 +1,12 @@
-from ast import literal_eval
-from collections.abc import MutableMapping
 import json
-from pathlib import Path
 import re
 import sys
+from ast import literal_eval
+from collections.abc import MutableMapping
+from pathlib import Path
 
 import skopt.space as skspace
 from skopt.space.space import check_dimension
-
 
 __all__ = [
     "InitStrings",

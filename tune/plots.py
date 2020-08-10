@@ -1,10 +1,9 @@
-from skopt.plots import _format_scatter_plot_axes
-from tune.utils import expected_ucb
-
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.ticker import LogLocator
+from skopt.plots import _format_scatter_plot_axes
 
+from tune.utils import expected_ucb
 
 __all__ = ["partial_dependence", "plot_objective"]
 
