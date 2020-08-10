@@ -9,12 +9,12 @@ __all__ = [
 ]
 try:
     from sqlalchemy import (
+        JSON,
         Boolean,
         Column,
         DateTime,
         ForeignKey,
         Integer,
-        JSON,
         Numeric,
         PrimaryKeyConstraint,
         String,

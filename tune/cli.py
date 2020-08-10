@@ -1,23 +1,22 @@
 """Console script for chess_tuning_tools."""
-from datetime import datetime
 import json
 import logging
 import os
 import pathlib
 import sys
 import time
+from datetime import datetime
 
-from atomicwrites import AtomicWriter
-from bask.optimizer import Optimizer
 import click
 import matplotlib.pyplot as plt
 import numpy as np
+from atomicwrites import AtomicWriter
+from bask.optimizer import Optimizer
 from skopt.utils import create_result
 
-
-from tune.db_workers import TuningServer, TuningClient
-from tune.local import run_match, parse_experiment_result, reduce_ranges
-from tune.io import prepare_engines_json, load_tuning_config, write_engines_json
+from tune.db_workers import TuningClient, TuningServer
+from tune.io import load_tuning_config, prepare_engines_json, write_engines_json
+from tune.local import parse_experiment_result, reduce_ranges, run_match
 from tune.plots import plot_objective
 from tune.utils import expected_ucb
 

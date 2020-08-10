@@ -6,14 +6,14 @@ import numpy as np
 from numpy.testing import assert_almost_equal
 
 from tune.db_workers.utils import (
-    penta,
-    ldw_probabilities,
-    draw_rate_to_elo,
-    compute_probabilities_for_bias,
-    compute_probabilities,
-    elo_to_bayeselo,
-    penta_to_score,
     TimeControl,
+    compute_probabilities,
+    compute_probabilities_for_bias,
+    draw_rate_to_elo,
+    elo_to_bayeselo,
+    ldw_probabilities,
+    penta,
+    penta_to_score,
 )
 
 

@@ -1,10 +1,9 @@
+import itertools
 from collections import namedtuple
 from decimal import Decimal
-import itertools
 
 import numpy as np
 from scipy.optimize import minimize
-
 
 __all__ = ["expected_ucb", "parse_timecontrol", "TimeControl", "TimeControlBag"]
 

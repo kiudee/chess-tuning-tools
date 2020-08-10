@@ -5,26 +5,23 @@ import re
 import signal
 import subprocess
 import sys
-import numpy as np
 from time import sleep, time
+
+import numpy as np
 
 try:
     from sqlalchemy.orm import sessionmaker
 except ImportError:
     sessionmaker = None
 
-from tune.db_workers.dbmodels import (
-    Base,
-    SqlJob,
-    SqlResult,
-)
-from tune.io import InitStrings
+from tune.db_workers.dbmodels import Base, SqlJob, SqlResult
 from tune.db_workers.utils import (
     MatchResult,
     TimeControl,
     create_sqlalchemy_engine,
     get_session_maker,
 )
+from tune.io import InitStrings
 
 CLIENT_VERSION = 2
 
