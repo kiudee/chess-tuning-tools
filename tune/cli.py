@@ -18,6 +18,7 @@ from tune.db_workers import TuningClient, TuningServer
 from tune.io import load_tuning_config, prepare_engines_json, write_engines_json
 from tune.local import parse_experiment_result, reduce_ranges, run_match
 from tune.plots import plot_objective
+from tune.summary import confidence_intervals
 from tune.utils import expected_ucb
 
 
@@ -120,6 +121,12 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "More samples will slow down the computation time, but might give more "
     "stable tuning results. Less samples on the other hand cause more exploration "
     "which could help avoid the tuning to get stuck.",
+    show_default=True,
+)
+@click.option(
+    "--confidence",
+    default=0.90,
+    help="Confidence to use for the highest density intervals of the optimum.",
     show_default=True,
 )
 @click.option(
@@ -226,6 +233,7 @@ def local(
     tuning_config,
     acq_function="mes",
     acq_function_samples=1,
+    confidence=0.9,
     data_path=None,
     gp_burnin=5,
     gp_samples=300,
@@ -345,6 +353,17 @@ def local(
                 best_point_dict = dict(zip(param_ranges.keys(), best_point))
                 logging.info(f"Current optimum:\n{best_point_dict}")
                 logging.info(f"Estimated value: {best_value}")
+                confidence_val = settings.get("confidence", confidence)
+                confidence_out = confidence_intervals(
+                    optimizer=opt,
+                    param_names=list(param_ranges.keys()),
+                    hdi_prob=confidence_val,
+                    opt_samples=1000,
+                    multimodal=False,
+                )
+                logging.info(
+                    f"{confidence_val*100}% confidence intervals:\n{confidence_out}"
+                )
             except ValueError:
                 logging.info(
                     "Computing current optimum was not successful. "
