@@ -47,6 +47,7 @@ Sphinx = "^3.1.2"
 Click = "^7.1.2"
 black = "^19.10b0"
 pre-commit = "^2.6.0"
+isort = "^5.3.2"
 
 [tool.poetry.scripts]
 tune = "tune.cli:cli"
