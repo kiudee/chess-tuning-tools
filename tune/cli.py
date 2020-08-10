@@ -229,7 +229,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 @click.option(
     "--verbose", "-v", is_flag=True, default=False, help="Turn on debug output."
 )
-def local(
+def local(  # noqa: C901
     tuning_config,
     acq_function="mes",
     acq_function_samples=1,
@@ -300,8 +300,9 @@ def local(
             noise = importa["arr_2"].tolist()
             if len(X[0]) != opt.space.n_dims:
                 logging.error(
-                    "The number of parameters are not matching the number of dimensions. "
-                    "Rename the existing data file or ensure that the parameter ranges are correct."
+                    "The number of parameters are not matching the number of "
+                    "dimensions. Rename the existing data file or ensure that the "
+                    "parameter ranges are correct."
                 )
                 sys.exit(1)
             reduction_needed, X_reduced, y_reduced, noise_reduced = reduce_ranges(
@@ -314,7 +315,8 @@ def local(
                 logging.warning(
                     f"The parameter ranges are smaller than the existing data. "
                     f"Some points will have to be discarded. "
-                    f"The original {iteration} data points will be saved to {backup_path}"
+                    f"The original {iteration} data points will be saved to "
+                    f"{backup_path}"
                 )
                 np.savez_compressed(
                     backup_path, np.array(X), np.array(y), np.array(noise)

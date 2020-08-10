@@ -38,7 +38,10 @@ try:
         jobs = relationship("SqlJob", back_populates="tune", cascade="all")
 
         def __repr__(self):
-            return f"<Tune (id={self.id}, timestamp={self.timestamp}, weight={self.weight})>"
+            return (
+                f"<Tune (id={self.id}, timestamp={self.timestamp}, "
+                f"weight={self.weight})>"
+            )
 
     job_tc_table = Table(
         "jobstotimes",
@@ -73,8 +76,9 @@ try:
         def __repr__(self):
             return (
                 f"<Job (id={self.id}, timestamp={self.timestamp}, active={self.active},"
-                f" weight={self.weight}, engine1_exe={self.engine1_exe}, engine1_nps={self.engine1_nps},"
-                f" engine2_exe={self.engine2_exe}, engine2_nps={self.engine2_nps}, config={self.config})>"
+                f" weight={self.weight}, engine1_exe={self.engine1_exe}, "
+                f"engine1_nps={self.engine1_nps}, engine2_exe={self.engine2_exe}, "
+                f"engine2_nps={self.engine2_nps}, config={self.config})>"
             )
 
     class SqlUCIParam(Base):
@@ -110,7 +114,8 @@ try:
             )
             return (
                 f"<TC (id={self.id}, engine1={self.engine1_time}{engine1_inc},"
-                f" engine2={self.engine2_time}{engine2_inc}, draw_rate={self.draw_rate})>"
+                f" engine2={self.engine2_time}{engine2_inc}, "
+                f"draw_rate={self.draw_rate})>"
             )
 
         def to_tuple(self):

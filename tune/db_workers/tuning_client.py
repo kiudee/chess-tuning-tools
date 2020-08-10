@@ -69,7 +69,8 @@ class TuningClient(object):
             sys.exit(0)
         self.interrupt_pressed = True
         self.logger.info(
-            "Signal received. Shutting down after next match.\nPress a second time to terminate immediately."
+            "Signal received. Shutting down after next match.\nPress a second time to "
+            "terminate immediately."
         )
 
     def run_experiment(self, time_control, cutechess_options):
@@ -303,8 +304,8 @@ class TuningClient(object):
                 ]
                 if len(applicable_jobs) < len(rows):
                     self.logger.warning(
-                        "There are jobs which require a higher client version. Please update "
-                        "the client as soon as possible!"
+                        "There are jobs which require a higher client version. "
+                        "Please update the client as soon as possible!"
                     )
                     if len(applicable_jobs) == 0:
                         sleep(60)
@@ -326,16 +327,18 @@ class TuningClient(object):
                 # b) Adjust time control:
                 if self.lc0_benchmark is None:
                     self.logger.info(
-                        "Running initial nodes/second benchmark to calibrate time controls."
-                        "Ensure that your pc is idle to get a good reading."
+                        "Running initial nodes/second benchmark to calibrate time "
+                        "controls. Ensure that your pc is idle to get a good reading."
                     )
                     self.run_benchmark(config)
                     self.logger.info(
-                        f"Benchmark complete. Results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps"
+                        f"Benchmark complete. Results: lc0: {self.lc0_benchmark} nps, "
+                        f"sf: {self.sf_benchmark} nps"
                     )
                 else:
                     self.logger.debug(
-                        f"Initial benchmark results: lc0: {self.lc0_benchmark} nps, sf: {self.sf_benchmark} nps"
+                        f"Initial benchmark results: lc0: {self.lc0_benchmark} nps, "
+                        f"sf: {self.sf_benchmark} nps"
                     )
                 orig_tc = sql_result.time_control.to_tuple()
                 time_control = self.adjust_time_control(
@@ -351,7 +354,8 @@ class TuningClient(object):
                     time_control=time_control, cutechess_options=config["cutechess"]
                 )
                 self.logger.info(
-                    f"Match result (WLD): {result.wins} - {result.losses} - {result.draws}"
+                    f"Match result (WLD): {result.wins} - {result.losses} - "
+                    f"{result.draws}"
                 )
                 # 5. Send results to database and lock it during access
                 q = session.query(SqlResult).filter_by(
