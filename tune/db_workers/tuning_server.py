@@ -158,7 +158,8 @@ class TuningServer(object):
                 else:
                     dist = getattr(scipy.stats, prior_str)(**dict(zip(keys, vals)))
                     if i == 0 or i == len(priors) - 1:
-                        # The signal variance and the signal noise are in positive, sqrt domain
+                        # The signal variance and the signal noise are in positive,
+                        # sqrt domain
                         prior = (
                             lambda x, dist=dist: dist.logpdf(np.sqrt(np.exp(x)))
                             + x / 2.0
@@ -302,7 +303,7 @@ class TuningServer(object):
             tune_id=self.experiment["tune_id"],
         )
         session.add(job)
-        for i, tc in enumerate(self.time_controls):
+        for tc in self.time_controls:
             sql_tc = (
                 session.query(SqlTimeControl)
                 .filter(
@@ -351,11 +352,13 @@ class TuningServer(object):
                 self.logger.info("New jobs committed to database.")
         while True:
             self.logger.debug("Begin querying for new data...")
-            # Check if minimum sample size and minimum wait time are reached, then query data and update model:
+            # Check if minimum sample size and minimum wait time are reached, then query
+            # data and update model:
             with self.sessionmaker() as session:
                 X, y, samplesize_reached = self.query_data(session, include_active=True)
                 self.logger.debug(
-                    f"Queried the database for data and got (last 5):\n{X[-5:]}\n{y[-5:]}"
+                    f"Queried the database for data and got (last 5):\n"
+                    f"{X[-5:]}\n{y[-5:]}"
                 )
                 if len(X) == 0:
                     self.logger.info("There are no datapoints yet, start first job")
@@ -370,7 +373,8 @@ class TuningServer(object):
             if not samplesize_reached:
                 sleep_seconds = self.experiment.get("sleep_time", 60)
                 self.logger.debug(
-                    f"Required sample size not yet reached. Sleeping {sleep_seconds} seconds."
+                    f"Required sample size not yet reached. Sleeping {sleep_seconds}"
+                    f"seconds."
                 )
                 sleep(sleep_seconds)
                 continue
@@ -390,7 +394,8 @@ class TuningServer(object):
             later = datetime.now()
             difference = (later - now).total_seconds()
             self.logger.info(
-                f"Calculating GP posterior and acquisition function finished in {difference}s"
+                f"Calculating GP posterior and acquisition function finished in "
+                f"{difference}s"
             )
             self.logger.info(f"Current GP kernel:\n{self.opt.gp.kernel_}")
             if self.opt.gp.chain_ is not None:

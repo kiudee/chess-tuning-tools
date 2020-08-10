@@ -103,12 +103,13 @@ def parse_ranges(s):
         j = s
 
     dimensions = []
-    for i, s in enumerate(j.values()):
+    for s in j.values():
         # First check, if the string is a list/tuple or a function call:
         param_str = re.findall(r"(\w+)\(", s)
         if len(param_str) > 0:  # Function
             args, kwargs = [], dict()
-            # TODO: this split does not always work (example Categorical(["a", "b", "c"]))
+            # TODO: this split does not always work
+            #  (example Categorical(["a", "b", "c"]))
             prior_param_strings = re.findall(r"\((.*?)\)", s)[0].split(",")
             for arg_string in prior_param_strings:
                 # Check if arg or kwarg:
@@ -129,16 +130,16 @@ def parse_ranges(s):
                 raise ValueError("Dimension {} does not exist.".format(param_str))
             dimensions.append(dim)
         else:  # Tuple or list
-            # We assume that the contents of the collection should be used as is and construct a python list/tuple
+            # We assume that the contents of the collection should be used as is and
+            # construct a python list/tuple
             # skopt.space.check_dimension will be used for validation
             parsed = literal_eval(s)
             if isinstance(parsed, (tuple, list)):
                 dimensions.append(check_dimension(parsed))
             else:
                 raise ValueError(
-                    "Dimension {} is not valid. Make sure you pass a Dimension, tuple or list.".format(
-                        param_str
-                    )
+                    "Dimension {} is not valid. Make sure you pass a Dimension, tuple "
+                    "or list.".format(param_str)
                 )
 
     return dict(zip(j.keys(), dimensions))

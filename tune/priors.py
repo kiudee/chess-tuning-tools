@@ -11,7 +11,8 @@ def roundflat(x, a_low=2.0, a_high=8.0, d_low=0.005, d_high=1.2):
     ``a_low`` and ``a_high`` specify how quickly the density falls at the boundaries.
 
     Args:
-        x (float): A parameter value in [0, inf) for which to compute the log probability
+        x (float): A parameter value in [0, inf) for which to compute the log
+            probability
         a_low (float): Steepness of the prior at the boundary ``d_low``.
         a_high (float): Steepness of the prior at the boundary ``d_high``.
         d_low (float): Lower boundary for which the log probability is -2.
