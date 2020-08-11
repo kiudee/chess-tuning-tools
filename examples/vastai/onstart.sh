@@ -1,7 +1,8 @@
 #! /bin/bash
 # Image: nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
 
-if [ "$TUNER_INSTALLED" != true ]; then
+
+if [ ! -f "$HOME"/tuning/config.json ]; then
     mkdir tuning
     mkdir tuning/plots
 
@@ -20,14 +21,14 @@ if [ "$TUNER_INSTALLED" != true ]; then
     chmod +x miniconda.sh
     bash ./miniconda.sh -b -p "$HOME"/miniconda
     export PATH=$HOME/miniconda/bin:$PATH
-    echo PATH="$HOME"/miniconda/bin:"$PATH" >> "$HOME"/.bashrc
+    echo export PATH="$HOME"/miniconda/bin:"$PATH" >> "$HOME"/.bashrc
     rm "$HOME"/miniconda.sh
     . "$HOME"/miniconda/etc/profile.d/conda.sh
 
     # Set up the environment for the chess-tuning-tools:
     conda create -y -n tuning python=3.8
     conda activate tuning
-    pip install meson chess-tuning-tools
+    pip install meson chess-tuning-tools==0.5.0b2 scikit-learn==0.22.2
 
     # Download a recent version of LeelaChessZero, compile it and copy it to the
     # tuning folder:
@@ -54,7 +55,7 @@ if [ "$TUNER_INSTALLED" != true ]; then
     qmake -after "SUBDIRS = lib cli"
     make
     export PATH=$HOME/cutechess/projects/cli:$PATH
-    echo PATH="$HOME"/cutechess/projects/cli:"$PATH" >> "$HOME"/.bashrc
+    echo export PATH="$HOME"/cutechess/projects/cli:"$PATH" >> "$HOME"/.bashrc
 
     ## Uncomment, if you need endgame tablebases. Remember to also activate it in
     ## in the tuning script and for the engines themselves.
@@ -70,17 +71,16 @@ if [ "$TUNER_INSTALLED" != true ]; then
     7za x -oopenings openings-dd.zip
 
     # Download the actual tuning configuration (config.json):
-    wget https://gist.githubusercontent.com/kiudee/0584405676d6f71ca3dc6dfd02061663/raw/e9c950dffaea62e0f7aae53fa207e6debc7ad154/config.json
+    wget https://gist.githubusercontent.com/kiudee/0584405676d6f71ca3dc6dfd02061663/raw/4a013b4d3700720f81326fe9c10254414dbca0f0/config.json
 
     # Download the neural network to use for LeelaChessZero:
     wget https://training.lczero.org/get_network?sha=b30e742bcfd905815e0e7dbd4e1bafb41ade748f85d006b8e28758f1a3107ae3 -O 703810
-
-    # Everything was installed successfully. Set environment variable and start
-    # the tuning script:
-    export TUNER_INSTALLED=true
-    echo TUNER_INSTALLED=true >> "$HOME"/.bashrc
 fi
 
 # Tuning script is installed, or we are resuming. Start tuning script:
+export PATH=$HOME/miniconda/bin:$PATH
+export PATH=$HOME/cutechess/projects/cli:$PATH
+. "$HOME"/miniconda/etc/profile.d/conda.sh
+conda activate tuning
 cd "$HOME"/tuning || exit
 tune local -c config.json
