@@ -11,11 +11,11 @@ LeelaChessZero.
 
 This folder contains:
 
- * ``config.json``: The configuration file for the tuning script.
- * ``onstart.sh``: The setup script which will install all the dependencies,
-   set up the folder structure and run the tuning script. In addition,
-   it will resume the tuning script, if your vast.ai instance is restarted.
- * ``README.rst``: This document.
+* ``config.json``: The configuration file for the tuning script.
+* ``onstart.sh``: The setup script which will install all the dependencies,
+  set up the folder structure and run the tuning script. In addition,
+  it will resume the tuning script, if your vast.ai instance is restarted.
+* ``README.rst``: This document.
 
 -----
 Setup
@@ -61,16 +61,16 @@ Another important parameter type is ``Integer``, which can be set as follows:
 
 Other important settings you might want to change:
 
- * ``engineX_tc``: Time control to use for the engine. Follows the same
-   format used in ``cutechess-cli``.
- * ``rounds``: Number of rounds (2 games each) to play to evaluate one
-   configuration. The fewer rounds, the more noisy each evaluation will be,
-   but each evaluation will be much faster.
-   By default a compromise of 5 rounds (10 games) is used. If you run very short
-   games, then it is better to increase the number of rounds to 30-50.
- * ``opening_file``: The file containing the openings. Can be pgn or epd.
- * ``tb_path`` and ``adjudicate_tb``: If you installed tablebases, that is where
-   you can set the path.
+* ``engineX_tc``: Time control to use for the engine. Follows the same
+  format used in ``cutechess-cli``.
+* ``rounds``: Number of rounds (2 games each) to play to evaluate one
+  configuration. The fewer rounds, the more noisy each evaluation will be,
+  but each evaluation will be much faster.
+  By default a compromise of 5 rounds (10 games) is used. If you run very short
+  games, then it is better to increase the number of rounds to 30-50.
+* ``opening_file``: The file containing the openings. Can be pgn or epd.
+* ``tb_path`` and ``adjudicate_tb``: If you installed tablebases, that is where
+  you can set the path.
 
 Once you are finished, it is convenient to upload the file to cloud storage like
 `Gist`_. That way the ``onstart.sh`` script can download and start it
@@ -82,11 +82,11 @@ onstart.sh
 There are usually not many things you need to change here. The file itself is
 documented with comments. Here is a list of the things you might want to change:
 
- * The specific LeelaChessZero version (maybe you are optimizing the parameters
-   for a pull request).
- * Download your ``config.json`` file.
- * Download the 3-5 piece Syzygy tablebases.
- * Download other openings
+* The specific LeelaChessZero version (maybe you are optimizing the parameters
+  for a pull request).
+* Download your ``config.json`` file.
+* Download the 3-5 piece Syzygy tablebases.
+* Download other openings
 
 ------------------
 Running the script
