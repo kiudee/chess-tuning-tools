@@ -69,6 +69,9 @@ if [ "$TUNER_INSTALLED" != true ]; then
     wget https://cdn.discordapp.com/attachments/539960268982059008/723509619485442098/openings-dd.zip
     7za x -oopenings openings-dd.zip
 
+    # Download the actual tuning configuration (config.json):
+    wget https://gist.githubusercontent.com/kiudee/0584405676d6f71ca3dc6dfd02061663/raw/e9c950dffaea62e0f7aae53fa207e6debc7ad154/config.json
+
     # Download the neural network to use for LeelaChessZero:
     wget https://training.lczero.org/get_network?sha=b30e742bcfd905815e0e7dbd4e1bafb41ade748f85d006b8e28758f1a3107ae3 -O 703810
 
