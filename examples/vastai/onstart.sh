@@ -47,6 +47,7 @@ if [ "$TUNER_INSTALLED" != true ]; then
     cp stockfish "$HOME"/tuning/sf
     mv ./*.nnue "$HOME"/tuning
 
+    # Download and compile cutechess-cli with minimal dependencies:
     cd "$HOME" || exit
     git clone https://github.com/cutechess/cutechess.git
     cd cutechess/projects || exit
