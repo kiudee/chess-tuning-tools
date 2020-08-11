@@ -8,15 +8,15 @@ apt update
 apt install -y clang-6.0 gcc-8 g++-8 ninja-build pkg-config wget git libqtcore4 p7zip-full zlib1g-dev libpq-dev qt5-qmake qt5-default
 
 
-wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
+wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O $HOME/miniconda.sh
 chmod +x miniconda.sh
 bash ./miniconda.sh -b -p $HOME/miniconda
 export PATH=$HOME/miniconda/bin:$PATH
-echo PATH=$HOME/miniconda/bin:$PATH >> ~/.bashrc
-rm ~/miniconda.sh
-. ~/miniconda/etc/profile.d/conda.sh
+echo PATH=$HOME/miniconda/bin:$PATH >> $HOME/.bashrc
+rm $HOME/miniconda.sh
+. $HOME/miniconda/etc/profile.d/conda.sh
 #conda init bash
-#source ~/.bashrc
+#source $HOME/.bashrc
 
 conda create -y -n tuning python=3.8
 conda activate tuning
@@ -27,31 +27,31 @@ git clone https://github.com/LeelaChessZero/lc0.git
 cd lc0 || exit
 git checkout release/0.26
 CC=clang-6.0 CXX=clang++-6.0 ./build.sh
-cp build/release/lc0 ~/tuning/
+cp build/release/lc0 $HOME/tuning/
 
-cd ~ || exit
+cd $HOME || exit
 git clone https://github.com/official-stockfish/Stockfish.git
-cd ~/Stockfish/src || exit
+cd $HOME/Stockfish/src || exit
 make profile-build ARCH=x86-64-modern
-cp stockfish ~/tuning/sf
+cp stockfish $HOME/tuning/sf
 
-cd ~ || exit
+cd $HOME || exit
 git clone https://github.com/cutechess/cutechess.git
 cd cutechess/projects || exit
 qmake -after "SUBDIRS = lib cli"
 make
 export PATH=$HOME/cutechess/projects/cli:$PATH
-echo PATH=$HOME/cutechess/projects/cli:$PATH >> ~/.bashrc
+echo PATH=$HOME/cutechess/projects/cli:$PATH >> $HOME/.bashrc
 
 # Uncomment, if you need endgame tablebases:
 ## mkdir $HOME/syzygy
-## cd ~/syzygy
+## cd $HOME/syzygy
 ## wget -e robots=off -r -np http://tablebase.sesse.net/syzygy/3-4-5/
 ## mv tablebase.sesse.net/syzygy/3-4-5/* .
 ## md5sum -c checksum.md5
 
 # Insert your own download link for openings here:
-cd ~/tuning || exit
+cd $HOME/tuning || exit
 wget https://cdn.discordapp.com/attachments/539960268982059008/723509619485442098/openings-dd.zip
 7za x -oopenings openings-dd.zip
 
