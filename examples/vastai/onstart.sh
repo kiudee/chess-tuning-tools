@@ -56,8 +56,10 @@ if [ "$TUNER_INSTALLED" != true ]; then
     export PATH=$HOME/cutechess/projects/cli:$PATH
     echo PATH="$HOME"/cutechess/projects/cli:"$PATH" >> "$HOME"/.bashrc
 
-    ## Uncomment, if you need endgame tablebases. Remember to also activate it in
-    ## in the tuning script and for the engines themselves.
+    ## Uncomment, if you need endgame tablebases. Remember to also activate it
+    ## in the tuning script and for the engines themselves. Specifically, add
+    ## "SyzygyPath": "/root/syzygy" to the "fixed_parameters" sections and set
+    ## "adjudicate_tb": true and "tb_path": "/root/syzygy" in config.json.
     # mkdir $HOME/syzygy
     # cd $HOME/syzygy
     # wget -e robots=off -r -np http://tablebase.sesse.net/syzygy/3-4-5/
