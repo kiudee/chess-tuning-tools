@@ -11,15 +11,16 @@ apt install -y clang-6.0 gcc-8 g++-8 ninja-build pkg-config wget git libqtcore4 
 wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
 chmod +x miniconda.sh
 bash ./miniconda.sh -b -p $HOME/miniconda
-export PATH=~/miniconda/bin:$PATH
+export PATH=$HOME/miniconda/bin:$PATH
+echo PATH=$HOME/miniconda/bin:$PATH >> ~/.bashrc
 rm ~/miniconda.sh
 . ~/miniconda/etc/profile.d/conda.sh
 #conda init bash
 #source ~/.bashrc
 
-conda create -y -n tuning python=3
+conda create -y -n tuning python=3.8
 conda activate tuning
-pip install meson chess-tuning-tools scikit-learn==0.22.2 jupyterlab
+pip install meson chess-tuning-tools
 
 
 git clone https://github.com/LeelaChessZero/lc0.git
@@ -40,6 +41,7 @@ cd cutechess/projects || exit
 qmake -after "SUBDIRS = lib cli"
 make
 export PATH=$HOME/cutechess/projects/cli:$PATH
+echo PATH=$HOME/cutechess/projects/cli:$PATH >> ~/.bashrc
 
 # Uncomment, if you need endgame tablebases:
 ## mkdir $HOME/syzygy
