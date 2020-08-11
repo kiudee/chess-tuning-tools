@@ -43,7 +43,9 @@ if [ "$TUNER_INSTALLED" != true ]; then
     git clone https://github.com/official-stockfish/Stockfish.git
     cd "$HOME"/Stockfish/src || exit
     make profile-build ARCH=x86-64-modern
+    make net
     cp stockfish "$HOME"/tuning/sf
+    mv ./*.nnue "$HOME"/tuning
 
     cd "$HOME" || exit
     git clone https://github.com/cutechess/cutechess.git
@@ -68,9 +70,6 @@ if [ "$TUNER_INSTALLED" != true ]; then
 
     # Download the neural network to use for LeelaChessZero:
     wget https://training.lczero.org/get_network?sha=b30e742bcfd905815e0e7dbd4e1bafb41ade748f85d006b8e28758f1a3107ae3 -O 703810
-
-    # Download the neural network for Stockfish NNUE to use:
-    # TODO
 
     # Everything was installed successfully. Set environment variable and start
     # the tuning script:
