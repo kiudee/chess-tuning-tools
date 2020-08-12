@@ -77,12 +77,12 @@ if [ ! -f "$HOME"/tuning/config.json ]; then
 
     # Download the neural network to use for LeelaChessZero:
     wget https://training.lczero.org/get_network?sha=b30e742bcfd905815e0e7dbd4e1bafb41ade748f85d006b8e28758f1a3107ae3 -O 703810
+else
+	# Tuning script is installed, or we are resuming. Start tuning script:
+	export PATH=$HOME/miniconda/bin:$PATH
+	export PATH=$HOME/cutechess/projects/cli:$PATH
+	. "$HOME"/miniconda/etc/profile.d/conda.sh
+	conda activate tuning
+	cd "$HOME"/tuning || exit
+	tune local -c config.json -v
 fi
-
-# Tuning script is installed, or we are resuming. Start tuning script:
-export PATH=$HOME/miniconda/bin:$PATH
-export PATH=$HOME/cutechess/projects/cli:$PATH
-. "$HOME"/miniconda/etc/profile.d/conda.sh
-conda activate tuning
-cd "$HOME"/tuning || exit
-tune local -c config.json
