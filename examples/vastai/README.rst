@@ -103,10 +103,15 @@ Running the script
       $ chmod +x onstart.sh
       $ ./onstart.sh
 
-4. The script will save a log file to ``~/tuning/log.txt`` and output plots
-   to ``~/tuning/plots/``.
-5. If you are using an interruptable instance, the script will be run
-   automatically, if your instance is restarted and will resume the tune.
+   This will install all dependencies and set up the folder structure.
+4. (optional) Run benchmarks or calibration matches.
+5. Run ``./onstart.sh`` again if you set everything up. It will now execute the
+   tuning script.
+
+The script will save a log file to ``~/tuning/log.txt`` and output plots
+to ``~/tuning/plots/``.
+If you are using an interruptable instance, the script will be run
+automatically, if your instance is restarted and will resume the tune.
 
 
 .. _Gist: https://gist.github.com/
