@@ -1,7 +1,6 @@
 """Console script for chess_tuning_tools."""
 import json
 import logging
-import os
 import pathlib
 import sys
 import time
@@ -294,10 +293,10 @@ def local(  # noqa: C901
     if resume:
         path = pathlib.Path(data_path)
         if path.exists():
-            importa = np.load(path)
-            X = importa["arr_0"].tolist()
-            y = importa["arr_1"].tolist()
-            noise = importa["arr_2"].tolist()
+            with np.load(path) as importa:
+                X = importa["arr_0"].tolist()
+                y = importa["arr_1"].tolist()
+                noise = importa["arr_2"].tolist()
             if len(X[0]) != opt.space.n_dims:
                 logging.error(
                     "The number of parameters are not matching the number of "
@@ -473,11 +472,8 @@ def local(  # noqa: C901
         noise.append(error)
         iteration = len(X)
 
-        if os.name == "nt":
-            np.savez_compressed(data_path, np.array(X), np.array(y), np.array(noise))
-        else:
-            with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
-                np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
+        with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
+            np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
 
 
 if __name__ == "__main__":
