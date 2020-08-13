@@ -2,6 +2,11 @@
 History
 =======
 
+0.5.0-beta.4 (2020-08-13)
+-------------------------
+* Change score calculation to be in logit/Elo space. This fixes problems with
+  scores being compressed for very unevenly matched engines.
+
 0.5.0-beta.3 (2020-08-12)
 -------------------------
 * Add support for the new cutechess-cli 1.2.0 output format.
