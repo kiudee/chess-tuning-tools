@@ -88,13 +88,21 @@ documented with comments. Here is a list of the things you might want to change:
 * Download the 3-5 piece Syzygy tablebases.
 * Download other openings
 
+The onstart.sh script can be transferred to the instance using `scp`, but
+another possibility is to set it as an on-start script when selecting the OS
+image on vast.ai:
+
+.. image:: https://github.com/kiudee/chess-tuning-tools/raw/master/examples/vastai/on-start-script.png
+   :align: center
+
 ------------------
 Running the script
 ------------------
 
 1. Allocate a new vast.ai instance using the
    ``nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04`` image.
-2. Transfer your ``onstart.sh`` to the home folder root of our vast.ai instance::
+2. Transfer your ``onstart.sh`` to the home folder root of our vast.ai
+   instance::
 
       scp -P <instance-port> onstart.sh root@<instance-ip>:~/
 
