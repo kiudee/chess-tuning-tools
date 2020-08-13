@@ -92,7 +92,7 @@ The onstart.sh script can be transferred to the instance using `scp`, but
 another possibility is to set it as an on-start script when selecting the OS
 image on vast.ai:
 
-.. image:: https://github.com/kiudee/chess-tuning-tools/raw/master/examples/vastai/on-start-script.png
+.. image:: on-start-script.png
    :align: center
 
 ------------------
