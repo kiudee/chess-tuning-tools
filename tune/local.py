@@ -8,11 +8,74 @@ from skopt.space import Categorical, Integer, Real
 
 from tune.utils import TimeControl
 
-__all__ = ["run_match", "parse_experiment_result", "reduce_ranges"]
+__all__ = [
+    "run_match",
+    "parse_experiment_result",
+    "reduce_ranges",
+    "elo_to_prob",
+    "prob_to_elo",
+]
+
+
+def elo_to_prob(elo, k=4.0):
+    """Convert an Elo score (logit space) to a probability.
+
+    Parameters
+    ----------
+    elo : float
+        A real-valued Elo score.
+    k : float, optional (default=4.0)
+        Scale of the logistic distribution.
+
+    Returns
+    -------
+    float
+        Win probability
+
+    Raises
+    ------
+    ValueError
+        if k <= 0
+
+    """
+    if k <= 0:
+        raise ValueError("k must be positive")
+    return 1 / (1 + np.power(10, -elo / k))
+
+
+def prob_to_elo(p, k=4.0):
+    """Convert a win probability to an Elo score (logit space).
+
+    Parameters
+    ----------
+    p : float
+        The win probability of the player.
+    k : float, optional (default=4.0)
+        Scale of the logistic distribution.
+
+    Returns
+    -------
+    float
+        Elo score of the player
+
+    Raises
+    ------
+    ValueError
+        if k <= 0
+
+    """
+    if k <= 0:
+        raise ValueError("k must be positive")
+    return k * np.log10(-p / (p - 1))
 
 
 def parse_experiment_result(
-    outstr, prior_counts=None, n_dirichlet_samples=1000000, **kwargs
+    outstr,
+    prior_counts=None,
+    n_dirichlet_samples=1000000,
+    score_scale=4.0,
+    random_state=None,
+    **kwargs,
 ):
     """Parse cutechess-cli result output to extract mean score and error.
 
@@ -41,6 +104,14 @@ def parse_experiment_result(
     n_dirichlet_samples : int, default = 1 000 000
         Number of samples to draw from the Dirichlet distribution in order to
         estimate the standard error of the score.
+    score_scale : float, optional (default=4.0)
+        Scale of the logistic distribution used to calculate the score. Has to be a
+        positive real number
+    random_state : int, RandomState instance or None, optional (default: None)
+        The generator used to initialize the centers. If int, random_state is
+        the seed used by the random number generator; If RandomState instance,
+        random_state is the random number generator; If None, the random number
+        generator is the RandomState instance used by `np.random`.
     Returns
     -------
     score : float (in [-1, 1])
@@ -77,9 +148,12 @@ def parse_experiment_result(
     elif len(prior_counts) != 5:
         raise ValueError("Argument prior_counts should contain 5 elements.")
     dist = dirichlet(alpha=counts_array + prior_counts)
-    scores = [-1.0, -0.5, 0.0, 0.5, 1.0]
-    score = dist.mean().dot(scores)
-    error = dist.rvs(n_dirichlet_samples).dot(scores).var()
+    scores = [0.0, 0.25, 0.5, 0.75, 1.0]
+    score = prob_to_elo(dist.mean().dot(scores), k=score_scale)
+    error = prob_to_elo(
+        dist.rvs(n_dirichlet_samples, random_state=random_state).dot(scores),
+        k=score_scale,
+    ).var()
     return score, error
 
 
