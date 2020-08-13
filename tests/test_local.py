@@ -15,9 +15,11 @@ def test_parse_experiment_result():
     Elo difference: -31.4 +/- 57.1, LOS: 13.9 %, DrawRatio: 31.0 %
     Finished match
     """
-    score, error = parse_experiment_result(teststr, n_dirichlet_samples=1000)
+    score, error = parse_experiment_result(
+        teststr, n_dirichlet_samples=1000, random_state=0
+    )
     assert_almost_equal(score, 0.0)
-    assert_almost_equal(error, 0.06, decimal=2)
+    assert_almost_equal(error, 0.887797821633887)
 
     # Test cutechess 1.2.0 output:
     teststr = """Started game 1 of 4 (engine1 vs engine2)
@@ -38,9 +40,11 @@ def test_parse_experiment_result():
     Elo difference: -88.7 +/- nan, LOS: 28.2 %, DrawRatio: 25.0 %
     Finished match
     """
-    score, error = parse_experiment_result(teststr, n_dirichlet_samples=1000)
-    assert_almost_equal(score, 1 / 9)
-    assert_almost_equal(error, 0.04, decimal=2)
+    score, error = parse_experiment_result(
+        teststr, n_dirichlet_samples=1000, random_state=0
+    )
+    assert_almost_equal(score, 0.38764005203222596)
+    assert_almost_equal(error, 0.6255020676255081)
 
 
 def test_reduce_ranges():
