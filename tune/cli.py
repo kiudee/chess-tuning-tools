@@ -314,7 +314,7 @@ def local(  # noqa: C901
                 logging.warning(
                     f"The parameter ranges are smaller than the existing data. "
                     f"Some points will have to be discarded. "
-                    f"The original {iteration} data points will be saved to "
+                    f"The original {len(X)} data points will be saved to "
                     f"{backup_path}"
                 )
                 np.savez_compressed(
@@ -380,10 +380,10 @@ def local(  # noqa: C901
             logging.getLogger("matplotlib.font_manager").disabled = True
             if opt.space.n_dims == 1:
                 logging.warning(
-                    "Plotting for only 1 parameter is not supported " "yet."
+                    "Plotting for only 1 parameter is not supported yet."
                 )
             else:
-                logging.debug("Starting to compute the next plot")
+                logging.debug("Starting to compute the next plot.")
                 result_object = create_result(
                     Xi=X, yi=y, space=opt.space, models=[opt.gp]
                 )
@@ -411,7 +411,7 @@ def local(  # noqa: C901
                     bbox_inches="tight",
                     facecolor="#36393f",
                 )
-                logging.info(f"Saving a plot to {full_plotpath}")
+                logging.info(f"Saving a plot to {full_plotpath}.")
                 plt.close(fig)
         point = opt.ask()
         point_dict = dict(zip(param_ranges.keys(), point))
@@ -425,7 +425,7 @@ def local(  # noqa: C901
         out_exp, out_exp_err = run_match(**settings)
         later = datetime.now()
         difference = (later - now).total_seconds()
-        logging.info(f"Experiment finished ({difference}s elapsed)")
+        logging.info(f"Experiment finished ({difference}s elapsed).")
         logging.debug(f"Raw result:\n{out_exp}\n{out_exp_err}")
 
         score, error = parse_experiment_result(out_exp, **settings)
@@ -462,7 +462,8 @@ def local(  # noqa: C901
                 logging.debug(f"GP kernel: {opt.gp.kernel_}")
             except ValueError:
                 logging.warning(
-                    "Error encountered during fitting." "Trying to sample chain a bit."
+                    "Error encountered during fitting. Trying to sample chain a bit. "
+                    "If this problem persists, restart the tuner to reinitialize."
                 )
                 opt.gp.sample(n_burnin=5, priors=opt.gp_priors)
             else:
