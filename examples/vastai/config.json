@@ -1,0 +1,42 @@
+{
+    "engines": [
+        {
+            "command": "lc0",
+            "fixed_parameters": {
+                "Threads": 2
+            }
+        },
+        {
+            "command": "sf",
+            "fixed_parameters": {
+                "Threads": 4,
+                "Use NNUE": true
+            }
+        }
+    ],
+    "parameter_ranges": {
+        "CPuct": "Real(0.0, 5.0)",
+        "CPuctAtRoot": "Real(0.0, 5.0)"
+    },
+    "gp_burnin": 5,
+    "gp_samples": 300,
+    "gp_initial_burnin": 100,
+    "n_initial_points": 50,
+    "plot_every": 5,
+    "plot_path": "plots",
+    "result_every": 5,
+    "rounds": 5,
+    "engine1_tc": "1+0.02",
+    "engine2_tc": "1+0.02",
+    "opening_file": "openings/openings-dd-8ply-2000.pgn",
+    "adjudicate_draws": true,
+    "draw_movenumber": 1,
+    "draw_movecount": 10,
+    "draw_score": 8,
+    "adjudicate_resign": true,
+    "resign_movecount": 3,
+    "resign_score": 550,
+    "adjudicate_tb": false,
+    "tb_path": null,
+    "concurrency": 1
+}
