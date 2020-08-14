@@ -2,32 +2,23 @@
 History
 =======
 
-0.5.0-beta.4 (2020-08-13)
--------------------------
+0.5.0 (2020-08-14)
+------------------
+* Add support for the new cutechess-cli 1.2.0 output format.
+* Add support for confidence intervals of the optimum. By default a table of
+  highest density intervals will be reported alongside the current optimum.
+* Add support for parameter range reduction. Since this potentially requires
+  discarding some of the data points, it will also save a backup.
 * Change score calculation to be in logit/Elo space. This fixes problems with
   scores being compressed for very unevenly matched engines.
 
-0.5.0-beta.3 (2020-08-12)
--------------------------
-* Add support for the new cutechess-cli 1.2.0 output format.
-
-0.5.0-beta.2 (2020-08-10)
--------------------------
-* Add support for confidence intervals of the optimum. By default a table of
-  highest density intervals will be reported alongside the current optimum.
-
-0.5.0-beta (2020-08-03)
------------------------
-* Add support for parameter range reduction. Since this potentially requires
-  discarding some of the data points, it will also save a backup.
-
-0.4 (2020-08-02)
+0.4.0 (2020-08-02)
 ----------------
 * Add new standalone tuning script. With this it is possible to tune parameters
   of an engine without having to set up the distributed tuning framework.
   Usage instructions and example configurations are included.
 
-0.3 (2020-03-02)
+0.3.0 (2020-03-02)
 ----------------
 
 * Support for round-flat prior distributions
