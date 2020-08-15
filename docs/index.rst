@@ -1,5 +1,4 @@
-Welcome to Chess Tuning Tools's documentation!
-==============================================
+.. include:: ../README.rst
 
 .. toctree::
    :maxdepth: 2
@@ -15,5 +14,4 @@ Welcome to Chess Tuning Tools's documentation!
 Indices and tables
 ==================
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`

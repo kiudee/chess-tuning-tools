@@ -1,7 +1,7 @@
-==================
-Chess Tuning Tools
-==================
 
+.. image:: ../docs/_static/logo.png
+
+|
 
 .. image:: https://img.shields.io/pypi/v/chess-tuning-tools.svg
         :target: https://pypi.python.org/pypi/chess-tuning-tools
@@ -12,8 +12,6 @@ Chess Tuning Tools
 .. image:: https://readthedocs.org/projects/chess-tuning-tools/badge/?version=latest
         :target: https://chess-tuning-tools.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
-
-
 
 
 A collection of tools for local and distributed tuning of chess engines.
