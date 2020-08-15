@@ -28,7 +28,7 @@ if [ ! -f "$HOME"/tuning/config.json ]; then
     # Set up the environment for the chess-tuning-tools:
     conda create -y -n tuning python=3.8
     conda activate tuning
-    pip install meson chess-tuning-tools scikit-learn==0.22.2
+    pip install meson chess-tuning-tools
 
     # Download a recent version of LeelaChessZero, compile it and copy it to the
     # tuning folder:
