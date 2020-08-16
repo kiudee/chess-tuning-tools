@@ -1,0 +1,72 @@
+---
+jupytext:
+  formats: md:myst
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: '0.8'
+    jupytext_version: 1.4.1+dev
+kernelspec:
+  display_name: Python 3
+  language: python
+  name: python3
+---
+
+# Chess Tuning Tools
+
+[![pypi-badge](https://img.shields.io/pypi/v/chess-tuning-tools.svg?style=flat-square)](https://pypi.python.org/pypi/chess-tuning-tools)
+[![travis-badge](https://img.shields.io/travis/com/kiudee/chess-tuning-tools?style=flat-square)](https://travis-ci.com/github/kiudee/chess-tuning-tools)
+[![rtd-badge](https://readthedocs.org/projects/chess-tuning-tools/badge/?version=latest&style=flat-square)](https://chess-tuning-tools.readthedocs.io/en/latest/?badge=latest)
+
+A collection of tools for local and distributed tuning of chess engines.
+
+## Features
+
+* Optimization of chess engines using state-of-the-art Bayesian optimization.
+* Support for automatic visualization of the optimization landscape.
+* Scoring matches using a Bayesian-pentanomial model for paired openings.
+
+## Quick Start
+
+In order to be able to start the tuning, first create a python
+environment and install chess-tuning-tools by typing:
+
+```shell script
+pip install chess-tuning-tools
+```
+
+Furthermore, you need to have [cutechess-cli](https://github.com/cutechess/cutechess>)
+in the path. The tuner will use it to run matches.
+
+To execute the local tuner, simply run:
+
+```shell script
+tune local -c tuning_config.json
+```
+
+Take a look at the {doc}`usage instructions <usage>` and the
+[example configurations][examples] to learn how to set up the
+`tuning_config.json` file.
+
+[examples]: https://github.com/kiudee/chess-tuning-tools/tree/master/examples
+
+## Site contents
+
+```{toctree}
+:maxdepth: 1
+:caption: Get Started
+
+usage
+readme
+installation
+```
+
+```{toctree}
+:maxdepth: 1
+:caption: Test
+
+contributing
+authors
+history
+test
+```
