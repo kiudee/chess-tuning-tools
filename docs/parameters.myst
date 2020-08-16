@@ -1,1 +1,293 @@
 # Parameter Reference
+
+Parameters of the tuner can be set in the tuning configuration file
+(e.g. `config.json`) or via command line options.
+
+```{attention}
+If a parameter is present in both the configuration file and as a command line
+option, the configuration file takes precedence.
+```
+
+We will distinguish between the main setup parameters and model-related,
+tuning-related, match-related and miscellaneous parameters.
+
+
+## Main tuning setup
+
+The most important part when setting up a tuning run is to specify the
+participating engines, their fixed parameters and the UCI parameters to tune
+for the first engine.
+
+A minimal tuning configuration could look like this:
+
+```JSON
+{
+    "engines": [
+        {
+            "command": "engine1",
+            "fixed_parameters": {
+                "Threads": 2
+            }
+        },
+        {
+            "command": "engine2",
+            "fixed_parameters": {
+                "Threads": 4
+            }
+        }
+    ],
+    "parameter_ranges": {
+        "CPuct": "Real(0.0, 10.0)",
+        "MaxCollisionEvents": "Integer(1, 65536)"
+    }
+}
+```
+
+The participating engines are given as a list in `"engines"`. Each engine needs
+to contain a field `"command"` which specifies how `cutechess-cli` runs the
+engine.
+In `"fixed_parameters"` you can set arbitrary amount of UCI parameters to fixed
+values. These will not be optimized by the tuner.
+
+To tell the tuner about the UCI parameters it should optimize, we will use the
+`"parameter_ranges"` dictionary. In the example we optimize two parameters
+`CPuct` and `MaxCollisionEvents`. We tell the tuner that `CPuct` is a
+real-valued parameter in the range from 0 to 10. Since `MaxCollisionEvents` can
+only assume whole numbers, we specify it as an `Integer` parameter.
+
+Possible parameter specifications are:
+
+* `Real(lower, upper)` or `(lower, upper)`: A real-valued parameter in the range
+   from `lower` to `upper`.
+   ````{margin}
+  ```{attention}
+  If you use the short form `(lower, upper)`, ensure that `lower` and `upper`
+  are of the correct type.
+  ```
+  ````
+* `Real(lower, upper, prior=log-uniform)`: A real-valued parameter in the range
+  from `lower` to `upper`. Will be sampled in log-space. Useful for parameters
+  for which we want to weight different orders of magnitude equally.
+* `Integer(lower, upper)` or `(lower, upper)`: An integer-valued parameter in
+  the range from `lower` to `upper`.
+* `(val1, val2, ...)`: A categorical parameter which can only assume the
+  specified values. The values can be of mixed type (e.g. `(42, 'foo', 'bar')`).
+
+The remaining parameters of the optimizer are optional and described below.
+
+## Model-related parameters
+
+The tuner fits a *Gaussian process* (GP) to the observed configuration-score
+pairs.
+We utilize the library [bayes-skopt][bask]
+to fit the model using Markov chain Monte Carlo (MCMC).
+To summarize, the hyperparameters of the Gaussian process need to be sampled
+from a distribution. A *burn-in* period is used as initialization to reach the
+high-density regions of that space. After that, the actual samples are drawn
+and used to fit the GP.
+The following parameters are passed on to [bayes-skopt][bask] and control the
+fitting process:
+
+```{list-table}
+:header-rows: 1
+:widths: 10 15 30
+
+* - Parameter
+  - CLI
+  - Description
+* - `"gp-burnin"`
+  - `--gp-burnin INTEGER`
+  - Number of samples to discard before sampling the model parameters. This is
+    used in every iteration during tuning and few samples suffice here.
+    [default: 5]
+* - `"gp-samples"`
+  - `--gp-samples INTEGER`
+  - Number of model parameters to sample for the model. This is used during
+    tuning and it should be a multiple of 100. [default: 300]
+* - `"gp-initial-burnin"`
+  - `--gp-initial-burnin INTEGER`
+  - Number of samples to discard before sampling the initial model parameters.
+    This is used only used the first time a model is fit or when resuming.
+    [default: 100]
+* - `"gp-initial-samples"`
+  - `--gp-initial-samples INTEGER`
+  - Number of model parameters to sample for the initial model. This is only
+    used when resuming or for the first model. Should be a multiple of 100.
+    [default: 300]
+* - `"n-initial-points"`
+  - `--n-initial-points INTEGER`
+  - Size of initial dense set of points to try before using the GP model to
+    select points. Too few points can make the inference of the model unstable,
+    especially when an exploitative `acq_function` is used. [default: 30]
+```
+
+[bask]: https://github.com/kiudee/bayes-skopt
+
+## Tuning-related parameters
+```{list-table}
+:header-rows: 1
+:widths: 10 15 30
+
+* - Parameter
+  - CLI
+  - Description
+* - `"acq-function"`
+  - `-a --acq-function TEXT`
+  - The search strategy used by the tuner. The following values are possible:
+    * `"mes"` (default): Max-value entropy search tries to sample points which
+      yield a lot of information about the value of the optimum.
+      A good allrounder strategy leaning on the exploitative side.
+    * `"pvrs"`: Predictive variance reduction search tries to sample points
+      which reduce the uncertainty of promising regions as much as possible.
+      Another good allrounder strategy, which compared to `mes` focuses more
+      on exploration. Is slightly more robust.
+    * `"vr"`: Variance reduction picks points which reduce the overall
+      uncertainty as much as possible. This is not useful to find the best
+      configuration, but to fit the optimization landscape very precisely.
+      Useful, if you are interested in how the parameters interact.
+      Also worthwhile to use as intermediate exploration.
+    * `"ts"`: Thompson sampling picks a random optimization landscape consistent
+      with the data and returns the optimum of that landscape. This criterion
+      explores a lot and only slowly concentrates on the optimum. Especially in
+      high dimensions. This makes it a very robust acquisition function.
+    * `"ei"`: Expected improvement is a classic search strategy which picks the
+      point which produces the biggest expected improvement over the current
+      best optimum. Skews heavily on the exploitative side. Can quickly run
+      into local optima, if used by itself.
+* - `"acq-function-samples"`
+  - `--acq-function-samples INTEGER`
+  - Number of GP samples to average the acquisition function over. More samples
+    will slow down the computation time per iteration, but might give more
+    stable results. Less samples on the other hand cause more exploration which
+    could help avoid the tuning to get stuck. Can be set to 0 for
+    `acq-function=pvrs` or `vr`. [default: 1]
+* - `"n-points"`
+  - `--n-points INTEGER`
+  - The number of random points to consider as possible next point. Less points
+    reduce the computation time per iteration, but reduce the coverage of the
+    space. [default: 500]
+```
+
+## Match-related parameters
+```{list-table}
+:header-rows: 1
+:widths: 10 15 30
+
+* - Parameter
+  - CLI
+  - Description
+* - `"rounds"`
+  -
+  - Number of rounds to play in the match (each round consists of 2 games).
+    [default: 5]
+* - `"engine1_tc"`
+  -
+  - Time control to use for the first engine. Can be a non-increment time
+    control like "10" (10 seconds) or an increment time control like "5+1.5"
+    (5 seconds total with 1.5 seconds increment).
+    If none, it is assumed that engine1_npm is provided. [default: none]
+* - `"engine2_tc"`
+  -
+  - See `engine1_tc`.
+* - `"engine1_npm"`
+  -
+  - Number of nodes per move the engine is allowed to search. If none, it is
+    assumed that engine1_tc is provided
+* - `"engine2_npm"`
+  -
+  - See `engine_npm`.
+* - `"opening_file"`
+  -
+  - Path to the file containing the openings. Can be .epd or .pgn.
+    Make sure that the file explicitly has the .epd or .pgn suffix, as it
+    is used to detect the format. [default: none]
+* - `"adjudicate_draws"`
+  -
+  - Specify, if cutechess-cli is allowed to adjudicate draws, if the scores of
+    both engines drop below draw_score for draw_movecount number of moves.
+    Only kicks in after draw_movenumber moves have been played. [default: True]
+* - `"draw_movenumber"`
+  -
+  - Number of moves to play after the opening, before draw adjudication is
+    allowed. [default: 1]
+* - `"draw_movecount"`
+  -
+  - Number of moves below the threshold draw_score, without captures and pawn
+    moves, before the game is adjudicated as draw. [default: 10]
+* - `"draw_score"`
+  -
+  - Score threshold of the engines in centipawns. If the score of both engines
+    drops below this value for draw_movecount consecutive moves, and there are
+    no captures and pawn moves, the game is adjudicated as draw. [default: 8]
+* - `"adjudicate_resign"`
+  -
+  - Specify, if cutechess-cli is allowed to adjudicate wins/losses based on the
+    engine scores. If one engine’s score drops below -resign_score for
+    resign_movecount many moves, the game is considered a loss for this engine.
+    [default: True]
+* - `"resign_movecount"`
+  -
+  - Number of consecutive moves one engine has to output a score below the
+    resign_score threshold for the game to be considered a loss for this engine.
+    [default: 3]
+* - `"resign_score"`
+  -
+  - Resign score threshold in centipawns. The score of the engine has to stay
+    below -resign_score for at least resign_movecount moves for it to be
+    adjudicated as a loss. [default: 550]
+* - `"adjudicate_tb"`
+  -
+  - Allow cutechess-cli to adjudicate games based on Syzygy tablebases. If true,
+    `tb_path` has to be set. [default: False]
+* - `"tb_path"`
+  -
+  - Path to the folder containing the Syzygy tablebases. [default: none]
+* - `"concurrency"`
+  -
+  - Number of games to run in parallel. Be careful when running time control
+    games, since the engines can negatively impact each other when running
+    in parallel. [default: 1]
+```
+
+## Miscellaneous parameters
+
+```{list-table}
+:header-rows: 1
+:widths: 10 15 30
+
+* - Parameter
+  - CLI
+  - Description
+* - `"confidence"`
+  - `--confidence FLOAT`
+  - Confidence to use for the highest density intervals of the optimum.
+    [default: 0.9]
+* -
+  - `-d --data-path PATH`
+  - Save the evaluated points to this file. When restarting the tuner, this file
+    will be read to resume the optimization process. [default: data.npz]
+* - `"logfile"`
+  - `-l --logfile PATH`
+  - Path to the log file.  [default: log.txt]
+* - `"plot-every"`
+  - `--plot-every INTEGER`
+  - Plot the current optimization landscape every n-th iteration. Set to 0 to
+    turn it off. [default: 0]
+* - `"plot-path"`
+  - `--plot-path PATH`
+  - Path to the directory to which the tuner will output plots.
+    [default: plots]
+* - `"random-seed"`
+  - `--random-seed INTEGER`
+  - Number to seed all internally used random generators.  [default: 0]
+* -
+  - `--resume / --no-resume`
+  - Let the optimizer resume, if it finds points it can use.
+    [default: True]
+* -
+  - `-v --verbose`
+  - Turn on debug output.
+```
+```{warning}
+If `--no-resume` is passed it will overwrite any data found at `data-path`.
+```
