@@ -242,7 +242,7 @@ def run_match(
         Allow cutechess-cli to adjudicate games based on Syzygy tablebases.
         If true, tb_path has to be set.
     tb_path : str, default=None
-        Path to the
+        Path to the folder containing the Syzygy tablebases.
     concurrency : int, default=1
         Number of games to run in parallel. Be careful when running time control
         games, since the engines can negatively impact each other when running
