@@ -31,7 +31,7 @@ A collection of tools for local and distributed tuning of chess engines.
 In order to be able to start the tuning, first create a python
 environment and install chess-tuning-tools by typing:
 
-```shell script
+```bash
 pip install chess-tuning-tools
 ```
 
@@ -40,7 +40,7 @@ in the path. The tuner will use it to run matches.
 
 To execute the local tuner, simply run:
 
-```shell script
+```bash
 tune local -c tuning_config.json
 ```
 
@@ -56,17 +56,23 @@ Take a look at the {doc}`usage instructions <usage>` and the
 :maxdepth: 1
 :caption: Get Started
 
-usage
-readme
 installation
+usage
 ```
 
 ```{toctree}
 :maxdepth: 1
-:caption: Test
+:caption: User Guide
+
+faq
+parameters
+```
+
+```{toctree}
+:maxdepth: 1
+:caption: Development
 
 contributing
 authors
 history
-test
 ```
