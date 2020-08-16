@@ -1,1 +1,64 @@
 # Frequently Asked Questions
+
+## How large should the ranges be?
+Ideally, the optimum is exactly in the center of the range and the playing
+strength of the engine gets worse in all directions.
+Obviously we do not know the optimum in advance. Thus, we usually want to err
+on the side of slightly too large ranges.
+```{glossary}
+Example 1
+    We have one parameter and suspect it to lie in between 1 and 2, but
+    are not 100% certain. We set the parameter range to `Real(0.0, 3.0)` to
+    avoid missing the optimum. A range of `Real(0.0, 10.0)` or even
+    `Real(0.0, 100.0)` would have been overkill and likely hurt the convergence.
+Example 2
+    We have a parameter which lies in the range [0, 1], but are not even sure
+    what the correct order of magnitude is (e.g. could be 0.3 or even 0.001).
+    Here it is useful to specify a range like
+    `Real(1e-4, 1, prior=log-uniform)`.
+    Without the prior, it will be almost impossible or the tuner to find an
+    optimum close to 0.
+```
+```{note}
+You can increase the ranges in your tuning configuration later in the process.
+You only need to restart the tuner and it will start exploring the new regions.
+Decreasing the ranges is possible as well, but potentially results in a loss of
+data (i.e. all data points outside of the new ranges are discarded).
+```
+
+## Should I decrease the ranges late in the tune to "zoom in"?
+In general you should be very careful with zooming in to the optimum.
+Even though it can appear that nothing bad should happen when removing bad
+regions, it can actually destabilize the model for quite a few iterations.
+The reason is that bad regions have a lot of leverage and help inform the model
+about the curvature of the space and the location of the optimum.
+
+When *should* you consider zooming in? If the optimum is in a very small region
+of the space (below 10%) and the rest of the landscape is either flat or of
+constant slope, it can help to zoom into the relevant region.
+Make sure that you do not remove the bad regions around the optimum when doing
+so.
+
+## The optimization landscape is very chaotic, with many local minima. What can I do against that?
+This can happen in rare cases when the noise is low and the model drifts into
+a region of the model parameter space where it is overfitting the data.
+If simply waiting for a few iterations does not resolve the situation,
+you can try restarting the tuner and letting it reinitialize. This usually fixes
+the problem.
+
+## Why is the partial dependence in the plot spanning only a small Elo range?
+The two major causes for this are (1) the parameters you are tuning only have
+a weak effect on playing strength or (2) you did not collect enough points yet
+and the model still thinks it can explain the observations by a flat landscape
+and noise.
+With (1) you could try increasing the ranges of the parameters such that they
+include obviously bad values. Other than that, there is nothing really you can
+do, other than gaining the insight that the parameters are not that important.
+One important reason could be that you have a bug in your implementation and
+the parameter(s) in question really do have no effect.
+(2) usually only happens if the sample size is still low and the signal-to-noise
+ratio is low. Then you just need to wait for more samples.
+Sometimes a restart of the tuner can help, since it will reinitialize with
+more samples and thus can adapt more quickly.
+
+
