@@ -13,13 +13,13 @@ History
   scores being compressed for very unevenly matched engines.
 
 0.4.0 (2020-08-02)
-----------------
+------------------
 * Add new standalone tuning script. With this it is possible to tune parameters
   of an engine without having to set up the distributed tuning framework.
   Usage instructions and example configurations are included.
 
 0.3.0 (2020-03-02)
-----------------
+------------------
 
 * Support for round-flat prior distributions
 * Fix parsing of priors and benchmark results
