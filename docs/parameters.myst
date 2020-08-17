@@ -95,26 +95,26 @@ fitting process:
 * - Parameter
   - CLI
   - Description
-* - `"gp-burnin"`
+* - `"gp_burnin"`
   - `--gp-burnin INTEGER`
   - Number of samples to discard before sampling the model parameters. This is
     used in every iteration during tuning and few samples suffice here.
     [default: 5]
-* - `"gp-samples"`
+* - `"gp_samples"`
   - `--gp-samples INTEGER`
   - Number of model parameters to sample for the model. This is used during
     tuning and it should be a multiple of 100. [default: 300]
-* - `"gp-initial-burnin"`
+* - `"gp_initial_burnin"`
   - `--gp-initial-burnin INTEGER`
   - Number of samples to discard before sampling the initial model parameters.
     This is used only used the first time a model is fit or when resuming.
     [default: 100]
-* - `"gp-initial-samples"`
+* - `"gp_initial_samples"`
   - `--gp-initial-samples INTEGER`
   - Number of model parameters to sample for the initial model. This is only
     used when resuming or for the first model. Should be a multiple of 100.
     [default: 300]
-* - `"n-initial-points"`
+* - `"n_initial_points"`
   - `--n-initial-points INTEGER`
   - Size of initial dense set of points to try before using the GP model to
     select points. Too few points can make the inference of the model unstable,
@@ -131,7 +131,7 @@ fitting process:
 * - Parameter
   - CLI
   - Description
-* - `"acq-function"`
+* - `"acq_function"`
   - `-a --acq-function TEXT`
   - The search strategy used by the tuner. The following values are possible:
     * `"mes"` (default): Max-value entropy search tries to sample points which
@@ -154,14 +154,14 @@ fitting process:
       point which produces the biggest expected improvement over the current
       best optimum. Skews heavily on the exploitative side. Can quickly run
       into local optima, if used by itself.
-* - `"acq-function-samples"`
+* - `"acq_function_samples"`
   - `--acq-function-samples INTEGER`
   - Number of GP samples to average the acquisition function over. More samples
     will slow down the computation time per iteration, but might give more
     stable results. Less samples on the other hand cause more exploration which
     could help avoid the tuning to get stuck. Can be set to 0 for
     `acq-function=pvrs` or `vr`. [default: 1]
-* - `"n-points"`
+* - `"n_points"`
   - `--n-points INTEGER`
   - The number of random points to consider as possible next point. Less points
     reduce the computation time per iteration, but reduce the coverage of the
@@ -269,15 +269,15 @@ fitting process:
 * - `"logfile"`
   - `-l --logfile PATH`
   - Path to the log file.  [default: log.txt]
-* - `"plot-every"`
+* - `"plot_every"`
   - `--plot-every INTEGER`
   - Plot the current optimization landscape every n-th iteration. Set to 0 to
     turn it off. [default: 0]
-* - `"plot-path"`
+* - `"plot_path"`
   - `--plot-path PATH`
   - Path to the directory to which the tuner will output plots.
     [default: plots]
-* - `"random-seed"`
+* - `"random_seed"`
   - `--random-seed INTEGER`
   - Number to seed all internally used random generators.  [default: 0]
 * -
