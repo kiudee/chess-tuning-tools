@@ -203,6 +203,10 @@ fitting process:
 * - `"engine2_npm"`
   -
   - See `engine_npm`.
+* - `"timemargin"`
+  -
+  -  Allowed number of milliseconds the engines are allowed to go over the time
+     limit. If none, the margin is 0.
 * - `"opening_file"`
   -
   - Path to the file containing the openings. Can be .epd or .pgn.
