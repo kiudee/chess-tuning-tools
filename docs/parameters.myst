@@ -189,6 +189,13 @@ fitting process:
 * - `"engine2_tc"`
   -
   - See `engine1_tc`.
+* - `"engine1_st"`
+  -
+  - Time limit in seconds for each move. If none, it is assumed that
+    engine1_tc or engine1_npm is provided.
+* - `"engine2_st"`
+  -
+  - See `engine1_st`.
 * - `"engine1_npm"`
   -
   - Number of nodes per move the engine is allowed to search. If none, it is

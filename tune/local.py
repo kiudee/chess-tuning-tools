@@ -157,10 +157,13 @@ def parse_experiment_result(
     return score, error
 
 
-def _construct_engine_conf(id, engine_npm=None, engine_tc=None):
+def _construct_engine_conf(id, engine_npm=None, engine_tc=None, engine_st=None):
     result = ["-engine", f"conf=engine{id}"]
     if engine_npm is not None:
         result.extend(("tc=inf", f"nodes={engine_npm}"))
+        return result
+    if engine_st is not None:
+        result.append(f"st={str(engine_st)}")
         return result
     if isinstance(engine_tc, str):
         engine_tc = TimeControl.from_string(engine_tc)
@@ -172,6 +175,8 @@ def run_match(
     rounds=5,
     engine1_tc=None,
     engine2_tc=None,
+    engine1_st=None,
+    engine2_st=None,
     engine1_npm=None,
     engine2_npm=None,
     opening_file=None,
@@ -198,12 +203,17 @@ def run_match(
         Time control to use for the first engine. If str, it can be a
         non-increment time control like "10" (10 seconds) or an increment
         time control like "5+1.5" (5 seconds total with 1.5 seconds increment).
-        If None, it is assumed that engine1_npm is provided.
+        If None, it is assumed that engine1_npm or engine1_st is provided.
     engine2_tc : str or TimeControl object, default=None
+        See engine1_tc.
+    engine1_st : str or int, default=None
+        Time limit in seconds for each move.
+        If None, it is assumed that engine1_tc or engine1_npm is provided.
+    engine2_st : str or TimeControl object, default=None
         See engine1_tc.
     engine1_npm : str or int, default=None
         Number of nodes per move the engine is allowed to search.
-        If None, it is assumed that engine1_tc is provided.
+        If None, it is assumed that engine1_tc or engine1_st is provided.
     engine2_npm : str or int, default=None
         See engine1_npm.
     opening_file : str, default=None
@@ -262,12 +272,12 @@ def run_match(
     string_array = ["cutechess-cli"]
     string_array.extend(("-concurrency", str(concurrency)))
 
-    if (engine1_npm is None and engine1_tc is None) or (
-        engine2_npm is None and engine2_tc is None
+    if (engine1_npm is None and engine1_tc is None and engine1_st is None) or (
+        engine2_npm is None and engine2_tc is None and engine2_st is None
     ):
         raise ValueError("A valid time control or nodes configuration is required.")
-    string_array.extend(_construct_engine_conf(1, engine1_npm, engine1_tc))
-    string_array.extend(_construct_engine_conf(2, engine2_npm, engine2_tc))
+    string_array.extend(_construct_engine_conf(1, engine1_npm, engine1_tc, engine1_st))
+    string_array.extend(_construct_engine_conf(2, engine2_npm, engine2_tc, engine1_st))
 
     if opening_file is None:
         raise ValueError("Providing an opening file is required.")
