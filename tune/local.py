@@ -277,7 +277,7 @@ def run_match(
     ):
         raise ValueError("A valid time control or nodes configuration is required.")
     string_array.extend(_construct_engine_conf(1, engine1_npm, engine1_tc, engine1_st))
-    string_array.extend(_construct_engine_conf(2, engine2_npm, engine2_tc, engine1_st))
+    string_array.extend(_construct_engine_conf(2, engine2_npm, engine2_tc, engine2_st))
 
     if opening_file is None:
         raise ValueError("Providing an opening file is required.")
