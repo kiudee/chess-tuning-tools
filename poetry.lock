@@ -686,16 +686,16 @@ description = "Python port of markdown-it. Markdown parsing, done right!"
 name = "markdown-it-py"
 optional = false
 python-versions = "~=3.6"
-version = "0.4.9"
+version = "0.5.0"
 
 [package.dependencies]
 attrs = ">=19.3,<20.0"
 
 [package.extras]
-benchmark = ["commonmark (>=0.9.1,<0.10.0)", "markdown (>=3.2,<4.0)", "mistune (>=0.8.4,<0.9.0)", "mistletoe-ebp (>=0.10.0,<0.11.0)", "panflute (>=1.12,<2.0)"]
-code_style = ["flake8 (>=3.7.0,<3.8.0)", "black (19.10b0)", "pre-commit (1.17.0)"]
-rtd = ["sphinx (>=2,<4)", "pyyaml", "sphinx-book-theme", "myst-nb", "sphinx-copybutton", "sphinx-panels (>=0.4.0,<0.5.0)"]
-testing = ["coverage", "pytest (>=3.6,<4)", "pytest-cov", "pytest-regressions"]
+code_style = ["pre-commit (2.6)"]
+compare = ["commonmark (>=0.9.1,<0.10.0)", "markdown (>=3.2,<4.0)", "mistune (>=0.8.4,<0.9.0)", "mistletoe-ebp (>=0.10.0,<0.11.0)", "panflute (>=1.12,<2.0)"]
+rtd = ["myst-nb", "sphinx-book-theme", "sphinx-panels (>=0.4.0,<0.5.0)", "sphinx-copybutton", "sphinx (>=2,<4)", "pyyaml"]
+testing = ["coverage", "pytest (>=3.6,<4)", "pytest-cov", "pytest-regressions", "pytest-benchmark (>=3.2,<4.0)", "psutil"]
 
 [[package]]
 category = "main"
@@ -759,8 +759,8 @@ docutils = ">=0.15"
 ipython = "*"
 jupyter-cache = ">=0.3.0,<0.4.0"
 jupyter_sphinx = ">=0.2.4,<0.3.0"
-myst-parser = ">=0.10.0,<0.11.0"
-nbclient = ">=0.4.1,<0.5.0"
+myst-parser = ">=0.12.0,<0.13.0"
+nbclient = "*"
 nbconvert = ">=5.6,<6.0"
 nbformat = ">=5.0,<6.0"
 pyyaml = "*"
@@ -769,11 +769,11 @@ sphinx-togglebutton = ">=0.2.2,<0.3.0"
 
 [package.extras]
 code_style = ["flake8 (>=3.7.0,<3.8.0)", "black", "pre-commit (1.17.0)"]
-rtd = ["sphinxcontrib-bibtex", "ipywidgets", "pandas", "numpy", "sympy", "altair", "alabaster", "bokeh", "plotly", "matplotlib", "sphinx-copybutton", "sphinx-book-theme"]
+rtd = ["sphinxcontrib-bibtex", "ipywidgets", "pandas", "numpy", "sympy", "altair", "alabaster", "bokeh", "plotly", "matplotlib", "sphinx-copybutton", "sphinx-book-theme", "sphinx-panels (>=0.4.1,<0.5.0)"]
 testing = ["pytest (>=5.4,<6.0)", "pytest-cov (>=2.8,<3.0)", "coverage (<5.0)", "pytest-regressions", "matplotlib", "numpy", "sympy", "pandas"]
 
 [package.source]
-reference = "2bed4d423d593c0acbfc2b10d64d39c068167250"
+reference = "48deccc85f464f96949c7e8da7670a355ea390bd"
 type = "git"
 url = "https://github.com/executablebooks/MyST-NB"
 [[package]]
@@ -782,11 +782,11 @@ description = "An extended commonmark compliant parser, with bridges to docutils
 name = "myst-parser"
 optional = false
 python-versions = ">=3.6"
-version = "0.10.0"
+version = "0.12.0"
 
 [package.dependencies]
 docutils = ">=0.15"
-markdown-it-py = ">=0.4.5,<0.5.0"
+markdown-it-py = ">=0.5.0,<0.6.0"
 pyyaml = "*"
 sphinx = ">=2,<4"
 
@@ -2101,8 +2101,8 @@ livereload = [
     {file = "livereload-2.6.2.tar.gz", hash = "sha256:d1eddcb5c5eb8d2ca1fa1f750e580da624c0f7fcb734aa5780dc81b7dcbd89be"},
 ]
 markdown-it-py = [
-    {file = "markdown-it-py-0.4.9.tar.gz", hash = "sha256:c6191ba46b84d169d5cffe77a3edea0ef263c016289f9507333587692a295c3a"},
-    {file = "markdown_it_py-0.4.9-py3-none-any.whl", hash = "sha256:d9c0d117c6e6d8913619f7d5117f74bfb5bc45f096f5c23e29ad75e64a1c5c65"},
+    {file = "markdown-it-py-0.5.0.tar.gz", hash = "sha256:b385ae71662425f1f78ba4fc2b50622ad7457534b0417166b4d8d4c4de30d2b9"},
+    {file = "markdown_it_py-0.5.0-py3-none-any.whl", hash = "sha256:8663e8abe6d403bd1bbf52ce297743276f1b18a0c8a0449167b38f96b36281ae"},
 ]
 markupsafe = [
     {file = "MarkupSafe-1.1.1-cp27-cp27m-macosx_10_6_intel.whl", hash = "sha256:09027a7803a62ca78792ad89403b1b7a73a01c8cb65909cd876f7fcebd79b161"},
@@ -2173,8 +2173,8 @@ more-itertools = [
 ]
 myst-nb = []
 myst-parser = [
-    {file = "myst-parser-0.10.0.tar.gz", hash = "sha256:e9b1ee37edae6639108aedffba3d07dade16c33b439ac863486f49d80ea27fdf"},
-    {file = "myst_parser-0.10.0-py3-none-any.whl", hash = "sha256:501a226a6896c0ba3ee77c56c36cbfbe072472183e7123807826488c77e3ff81"},
+    {file = "myst-parser-0.12.0.tar.gz", hash = "sha256:18d6348144d198d27bfb490c2db6bbd4376f4c6f0c074c71ef02fb3aaab609dd"},
+    {file = "myst_parser-0.12.0-py3-none-any.whl", hash = "sha256:c035b1b9319385bbe9469df2483ca885632a81121ee0061e20b0543c912dec80"},
 ]
 nbclient = [
     {file = "nbclient-0.4.1-py3-none-any.whl", hash = "sha256:a0ad5f22faad3273ed87134853feeaad13e3d9221961ba6dc1198e2d57854e67"},
