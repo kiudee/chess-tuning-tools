@@ -24,7 +24,7 @@ A collection of tools for local and distributed tuning of chess engines.
 Features
 --------
 
-* Optimization of chess engines using state-of-the-art [Bayesian optimization](https://github.com/kiudee/bayes-skopt).
+* Optimization of chess engines using state-of-the-art `Bayesian optimization <https://github.com/kiudee/bayes-skopt>`_.
 * Support for automatic visualization of the optimization landscape.
 * Scoring matches using a Bayesian-pentanomial model for paired openings.
 
