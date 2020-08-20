@@ -157,17 +157,23 @@ def parse_experiment_result(
     return score, error
 
 
-def _construct_engine_conf(id, engine_npm=None, engine_tc=None, engine_st=None):
+def _construct_engine_conf(
+    id, engine_npm=None, engine_tc=None, engine_st=None, timemargin=None
+):
     result = ["-engine", f"conf=engine{id}"]
     if engine_npm is not None:
         result.extend(("tc=inf", f"nodes={engine_npm}"))
         return result
     if engine_st is not None:
         result.append(f"st={str(engine_st)}")
+        if timemargin is not None:
+            result.append(f"timemargin={str(timemargin)}")
         return result
     if isinstance(engine_tc, str):
         engine_tc = TimeControl.from_string(engine_tc)
     result.append(f"tc={str(engine_tc)}")
+    if timemargin is not None:
+        result.append(f"timemargin={str(timemargin)}")
     return result
 
 
@@ -179,6 +185,7 @@ def run_match(
     engine2_st=None,
     engine1_npm=None,
     engine2_npm=None,
+    timemargin=None,
     opening_file=None,
     adjudicate_draws=True,
     draw_movenumber=1,
@@ -216,6 +223,9 @@ def run_match(
         If None, it is assumed that engine1_tc or engine1_st is provided.
     engine2_npm : str or int, default=None
         See engine1_npm.
+    timemargin : str or int, default=None
+        Allowed number of milliseconds the engines are allowed to go over the time
+        limit. If None, the margin is 0.
     opening_file : str, default=None
         Path to the file containing the openings. Can be .epd or .pgn.
         Make sure that the file explicitly has the .epd or .pgn suffix, as it
@@ -276,8 +286,12 @@ def run_match(
         engine2_npm is None and engine2_tc is None and engine2_st is None
     ):
         raise ValueError("A valid time control or nodes configuration is required.")
-    string_array.extend(_construct_engine_conf(1, engine1_npm, engine1_tc, engine1_st))
-    string_array.extend(_construct_engine_conf(2, engine2_npm, engine2_tc, engine2_st))
+    string_array.extend(
+        _construct_engine_conf(1, engine1_npm, engine1_tc, engine1_st, timemargin)
+    )
+    string_array.extend(
+        _construct_engine_conf(2, engine2_npm, engine2_tc, engine2_st, timemargin)
+    )
 
     if opening_file is None:
         raise ValueError("Providing an opening file is required.")
