@@ -75,8 +75,9 @@ by Christoph Molnar.
 The red dots/lines show the position of the current best guess of the global
 optimum. During the optimization process the global optimum can often jump
 around as soon as a particular region looks very promising. For this reason,
-we also plot a “pessimistic” optimum, which takes into account the uncertainty
-still present in the prediction. It is defined as the following minimum:
+we also plot a “pessimistic” optimum (orange), which takes into account the
+uncertainty still present in the prediction. It is defined as the following
+minimum:
 
 $$
 \DeclareMathOperator*{\argmin}{arg\,min}
