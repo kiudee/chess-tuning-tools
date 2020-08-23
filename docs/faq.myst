@@ -1,6 +1,8 @@
 # Frequently Asked Questions
 
-## How large should the ranges be?
+## Setup & Settings
+
+### How large should the ranges be?
 Ideally, the optimum is exactly in the center of the range and the playing
 strength of the engine gets worse in all directions.
 Obviously we do not know the optimum in advance. Thus, we usually want to err
@@ -26,7 +28,7 @@ Decreasing the ranges is possible as well, but potentially results in a loss of
 data (i.e. all data points outside of the new ranges are discarded).
 ```
 
-## Should I decrease the ranges late in the tune to "zoom in"?
+### Should I decrease the ranges late in the tune to "zoom in"?
 In general you should be very careful with zooming in to the optimum.
 Even though it can appear that nothing bad should happen when removing bad
 regions, it can actually destabilize the model for quite a few iterations.
@@ -39,14 +41,66 @@ constant slope, it can help to zoom into the relevant region.
 Make sure that you do not remove the bad regions around the optimum when doing
 so.
 
-## The optimization landscape is very chaotic, with many local minima. What can I do against that?
+## Plots
+```{figure} _static/plot_example.png
+---
+height: 400px
+name: example-plot
+---
+Example optimization landscape for a two parameter tune.
+```
+### What is the partial dependence shown in the plots?
+First of all, the plots show the negative Elo score (the optimizer expects a
+function to minimize) divided by 100. Thus, lower values correspond to stronger
+regions of the space. Now often we want to visualize a complicated optimization
+landscape with more than 2 parameters. This is where we use the concept of
+*partial dependence*. A partial dependence plot shows the marginal effect a
+set of parameters has on playing strength, if we were to average out the other
+parameters.
+
+Take a look at {numref}`example-plot`. On the diagonal we have the
+one-dimensional partial dependence for each of the two parameters.
+The off-diagonal shows the joint effect of the parameters on the playing
+strength. As is apparent, the global optimum (shown in red here) does not have
+to correspond to the minima of the marginals.
+
+If you want to know more about partial dependence, take a look at
+Chapter
+[5.1 Partial Dependence Plot (PDP)](https://christophm.github.io/interpretable-ml-book/pdp.html)
+of the book
+[Interpretable Machine Learning](https://christophm.github.io/interpretable-ml-book/)
+by Christoph Molnar.
+
+### What are the red/orange dots and lines?
+The red dots/lines show the position of the current best guess of the global
+optimum. During the optimization process the global optimum can often jump
+around as soon as a particular region looks very promising. For this reason,
+we also plot a “pessimistic” optimum, which takes into account the uncertainty
+still present in the prediction. It is defined as the following minimum:
+
+$$
+\DeclareMathOperator*{\argmin}{arg\,min}
+\argmin_{x \in \mathcal{X}} \bigl\{ \mu(x) + 1.96 \cdot \sigma(x) \bigr\}
+$$
+
+Where $\mu(\cdot)$ is our model function for the expected playing strength and
+$\sigma(\cdot)$ the uncertainty of the model in that estimate.
+The 1.96 was chosen to have approximately 95% of the possible values contained
+in the uncertainty region.
+
+What could you use these for? One possibility is to use these as a necessary
+condition for convergence. If the true global optimum has been confidently
+found, both optima have to be on the same point. Thus if they are still widely
+different, you know that you have to continue running the tuning process.
+
+### The optimization landscape is very chaotic, with many local minima. What can I do against that?
 This can happen in rare cases when the noise is low and the model drifts into
 a region of the model parameter space where it is overfitting the data.
 If simply waiting for a few iterations does not resolve the situation,
 you can try restarting the tuner and letting it reinitialize. This usually fixes
 the problem.
 
-## Why is the partial dependence in the plot spanning only a small Elo range?
+### Why is the partial dependence in the plot spanning only a small Elo range?
 The two major causes for this are (1) the parameters you are tuning only have
 a weak effect on playing strength or (2) you did not collect enough points yet
 and the model still thinks it can explain the observations by a flat landscape
