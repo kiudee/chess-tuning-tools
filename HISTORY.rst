@@ -6,6 +6,8 @@ History
 -------------------------
 * Improve default parameters to be slightly more robust for most use cases and
   be more in line with what a user might expect.
+* Add confidence interval and standard error of the score of the estimated
+  global optimum to the logging output
 * Fix debug output being spammed by other libraries.
 
 0.6.0-beta.0 (2020-08-24)

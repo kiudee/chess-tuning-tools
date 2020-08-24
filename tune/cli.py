@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from atomicwrites import AtomicWriter
 from bask.optimizer import Optimizer
+from scipy.special import erfinv
 from skopt.utils import create_result
 
 from tune.db_workers import TuningClient, TuningServer
@@ -353,9 +354,21 @@ def local(  # noqa: C901
             try:
                 best_point, best_value = expected_ucb(result_object, alpha=0.0)
                 best_point_dict = dict(zip(param_ranges.keys(), best_point))
+                _, best_std = opt.gp.predict(
+                    opt.space.transform([best_point]), return_std=True
+                )
                 root_logger.info(f"Current optimum:\n{best_point_dict}")
-                root_logger.info(f"Estimated value: {best_value}")
+                root_logger.info(
+                    f"Estimated value: {np.around(best_value, 4)} +- "
+                    f"{np.around(best_std, 4).item()}"
+                )
                 confidence_val = settings.get("confidence", confidence)
+                confidence_mult = erfinv(confidence_val) * np.sqrt(2)
+                root_logger.info(
+                    f"{confidence_val * 100}% confidence interval of the value: "
+                    f"({np.around(best_value - confidence_mult * best_std, 4).item()}, "
+                    f"{np.around(best_value + confidence_mult * best_std, 4).item()})"
+                )
                 confidence_out = confidence_intervals(
                     optimizer=opt,
                     param_names=list(param_ranges.keys()),
@@ -364,7 +377,8 @@ def local(  # noqa: C901
                     multimodal=False,
                 )
                 root_logger.info(
-                    f"{confidence_val*100}% confidence intervals:\n{confidence_out}"
+                    f"{confidence_val * 100}% confidence intervals of the parameters:"
+                    f"\n{confidence_out}"
                 )
             except ValueError:
                 root_logger.info(
