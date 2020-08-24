@@ -1,5 +1,5 @@
 
-.. image:: docs/_static/logo.png
+.. image:: https://raw.githubusercontent.com/kiudee/chess-tuning-tools/master/docs/_static/logo.png
 
 |
 
