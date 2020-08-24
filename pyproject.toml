@@ -33,7 +33,7 @@ atomicwrites = "^1.4.0"
 Sphinx = {version = "^3.1.2", optional = true}
 scikit-learn = ">=0.22,<0.23"
 sphinx-book-theme = {version = "^0.0.35", optional = true}
-myst-nb = {git = "https://github.com/executablebooks/MyST-NB", optional = true}
+myst-nb = {version = "^0.9", optional = true}
 
 [tool.poetry.extras]
 dist = ["joblib", "psycopg2", "sqlalchemy", "pandas"]
@@ -53,7 +53,7 @@ pre-commit = "^2.6.0"
 isort = "^5.3.2"
 flake8-bugbear = "^20.1.4"
 sphinx-book-theme = "^0.0.35"
-myst-nb = {git = "https://github.com/executablebooks/MyST-NB"}
+myst-nb = "^0.9"
 sphinx-autobuild = "^0.7.1"
 
 [tool.poetry.scripts]

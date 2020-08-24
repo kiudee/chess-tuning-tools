@@ -8,11 +8,13 @@ strength of the engine gets worse in all directions.
 Obviously we do not know the optimum in advance. Thus, we usually want to err
 on the side of slightly too large ranges.
 ```{glossary}
+
 Example 1
     We have one parameter and suspect it to lie in between 1 and 2, but
     are not 100% certain. We set the parameter range to `Real(0.0, 3.0)` to
     avoid missing the optimum. A range of `Real(0.0, 10.0)` or even
     `Real(0.0, 100.0)` would have been overkill and likely hurt the convergence.
+
 Example 2
     We have a parameter which lies in the range [0, 1], but are not even sure
     what the correct order of magnitude is (e.g. could be 0.3 or even 0.001).
