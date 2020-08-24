@@ -134,13 +134,13 @@ fitting process:
 * - `"acq_function"`
   - `-a --acq-function TEXT`
   - The search strategy used by the tuner. The following values are possible:
-    * `"mes"` (default): Max-value entropy search tries to sample points which
+    * `"mes"`: Max-value entropy search tries to sample points which
       yield a lot of information about the value of the optimum.
       A good allrounder strategy leaning on the exploitative side.
-    * `"pvrs"`: Predictive variance reduction search tries to sample points
-      which reduce the uncertainty of promising regions as much as possible.
-      Another good allrounder strategy, which compared to `mes` focuses more
-      on exploration. Is slightly more robust.
+    * `"pvrs"` (default): Predictive variance reduction search tries to sample
+      points which reduce the uncertainty of promising regions as much as
+      possible. Another good allrounder strategy, which compared to `mes`
+      focuses more on exploration. Is slightly more robust.
     * `"vr"`: Variance reduction picks points which reduce the overall
       uncertainty as much as possible. This is not useful to find the best
       configuration, but to fit the optimization landscape very precisely.
@@ -179,7 +179,7 @@ fitting process:
 * - `"rounds"`
   -
   - Number of rounds to play in the match (each round consists of 2 games).
-    [default: 5]
+    [default: 10]
 * - `"engine1_tc"`
   -
   - Time control to use for the first engine. Can be a non-increment time
@@ -216,7 +216,7 @@ fitting process:
   -
   - Specify, if cutechess-cli is allowed to adjudicate draws, if the scores of
     both engines drop below draw_score for draw_movecount number of moves.
-    Only kicks in after draw_movenumber moves have been played. [default: True]
+    Only kicks in after draw_movenumber moves have been played. [default: False]
 * - `"draw_movenumber"`
   -
   - Number of moves to play after the opening, before draw adjudication is
@@ -235,7 +235,7 @@ fitting process:
   - Specify, if cutechess-cli is allowed to adjudicate wins/losses based on the
     engine scores. If one engine’s score drops below -resign_score for
     resign_movecount many moves, the game is considered a loss for this engine.
-    [default: True]
+    [default: False]
 * - `"resign_movecount"`
   -
   - Number of consecutive moves one engine has to output a score below the
@@ -283,7 +283,7 @@ fitting process:
 * - `"plot_every"`
   - `--plot-every INTEGER`
   - Plot the current optimization landscape every n-th iteration. Set to 0 to
-    turn it off. [default: 0]
+    turn it off. [default: 1]
 * - `"plot_path"`
   - `--plot-path PATH`
   - Path to the directory to which the tuner will output plots.
@@ -291,6 +291,10 @@ fitting process:
 * - `"random_seed"`
   - `--random-seed INTEGER`
   - Number to seed all internally used random generators.  [default: 0]
+* - `"result_every"`
+  - `--result-every INTEGER`
+  - Output the current optimum, its score estimate and confidence intervals
+    every n-th iteration. Set to 0 to turn it off. [default: 1]
 * -
   - `--resume / --no-resume`
   - Let the optimizer resume, if it finds points it can use.

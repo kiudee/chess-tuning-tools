@@ -2,6 +2,11 @@
 History
 =======
 
+0.6.0-beta.1 (2020-08-24)
+-------------------------
+* Improve default parameters to be slightly more robust for most use cases and
+  be more in line with what a user might expect.
+
 0.6.0-beta.0 (2020-08-24)
 -------------------------
 * Add support for time per move matches (option ``st`` in cutechess-cli).

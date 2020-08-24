@@ -108,7 +108,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 @click.option(
     "-a",
     "--acq-function",
-    default="mes",
+    default="pvrs",
     help="Acquisition function to use for selecting points to try. "
     "Can be {mes, pvrs, ei, ts, vr}.",
     show_default=True,
@@ -179,7 +179,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 )
 @click.option(
     "--n-initial-points",
-    default=30,
+    default=16,
     help="Size of initial dense set of points to try.",
     show_default=True,
 )
@@ -193,7 +193,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 )
 @click.option(
     "--plot-every",
-    default=0,
+    default=1,
     help="Plot the current optimization landscape every n-th iteration. "
     "Set to 0 to turn it off.",
     show_default=True,
@@ -212,7 +212,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 )
 @click.option(
     "--result-every",
-    default=5,
+    default=1,
     help="Output the actual current optimum every n-th iteration."
     "The further you are in the tuning process, the longer this will take to "
     "compute. Consider increasing this number, if you do not need the output "
@@ -230,7 +230,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 )
 def local(  # noqa: C901
     tuning_config,
-    acq_function="mes",
+    acq_function="pvrs",
     acq_function_samples=1,
     confidence=0.9,
     data_path=None,
@@ -239,12 +239,12 @@ def local(  # noqa: C901
     gp_initial_burnin=100,
     gp_initial_samples=300,
     logfile="log.txt",
-    n_initial_points=30,
+    n_initial_points=16,
     n_points=500,
-    plot_every=5,
+    plot_every=1,
     plot_path="plots",
     random_seed=0,
-    result_every=5,
+    result_every=1,
     resume=True,
     verbose=False,
 ):

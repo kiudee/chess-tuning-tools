@@ -178,7 +178,7 @@ def _construct_engine_conf(
 
 
 def run_match(
-    rounds=5,
+    rounds=10,
     engine1_tc=None,
     engine2_tc=None,
     engine1_st=None,
@@ -187,11 +187,11 @@ def run_match(
     engine2_npm=None,
     timemargin=None,
     opening_file=None,
-    adjudicate_draws=True,
+    adjudicate_draws=False,
     draw_movenumber=1,
     draw_movecount=10,
     draw_score=8,
-    adjudicate_resign=True,
+    adjudicate_resign=False,
     resign_movecount=3,
     resign_score=550,
     adjudicate_tb=False,
@@ -204,7 +204,7 @@ def run_match(
 
     Parameters
     ----------
-    rounds : int, default=1
+    rounds : int, default=10
         Number of rounds to play in the match (each round consists of 2 games).
     engine1_tc : str or TimeControl object, default=None
         Time control to use for the first engine. If str, it can be a
@@ -230,7 +230,7 @@ def run_match(
         Path to the file containing the openings. Can be .epd or .pgn.
         Make sure that the file explicitly has the .epd or .pgn suffix, as it
         is used to detect the format.
-    adjudicate_draws : bool, default=True
+    adjudicate_draws : bool, default=False
         Specify, if cutechess-cli is allowed to adjudicate draws, if the
         scores of both engines drop below draw_score for draw_movecount number
         of moves. Only kicks in after draw_movenumber moves have been played.
@@ -245,7 +245,7 @@ def run_match(
         engines drops below this value for draw_movecount consecutive moves,
         and there are no captures and pawn moves, the game is adjudicated as
         draw.
-    adjudicate_resign : bool, default=True
+    adjudicate_resign : bool, default=False
         Specify, if cutechess-cli is allowed to adjudicate wins/losses based on
         the engine scores. If one engine’s score drops below -resign_score for
         resign_movecount many moves, the game is considered a loss for this
