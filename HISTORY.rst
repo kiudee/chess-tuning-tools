@@ -2,8 +2,8 @@
 History
 =======
 
-0.6.0-beta (2020-08-18)
------------------------
+0.6.0-beta.0 (2020-08-24)
+-------------------------
 * Add support for time per move matches (option ``st`` in cutechess-cli).
 * Add support for timemargin parameter.
 
