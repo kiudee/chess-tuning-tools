@@ -256,8 +256,9 @@ def local(  # noqa: C901
     settings, commands, fixed_params, param_ranges = load_tuning_config(json_dict)
     log_level = logging.DEBUG if verbose else logging.INFO
     log_format = logging.Formatter("%(asctime)s %(levelname)-8s %(message)s")
-    root_logger = logging.getLogger()
+    root_logger = logging.getLogger("ChessTuner")
     root_logger.setLevel(log_level)
+    root_logger.propagate = False
     file_logger = logging.FileHandler(settings.get("logfile", logfile))
     file_logger.setFormatter(log_format)
     root_logger.addHandler(file_logger)
@@ -298,7 +299,7 @@ def local(  # noqa: C901
                 y = importa["arr_1"].tolist()
                 noise = importa["arr_2"].tolist()
             if len(X[0]) != opt.space.n_dims:
-                logging.error(
+                root_logger.error(
                     "The number of parameters are not matching the number of "
                     "dimensions. Rename the existing data file or ensure that the "
                     "parameter ranges are correct."
@@ -311,7 +312,7 @@ def local(  # noqa: C901
                 backup_path = path.parent / (
                     path.stem + f"_backup_{int(time.time())}" + path.suffix
                 )
-                logging.warning(
+                root_logger.warning(
                     f"The parameter ranges are smaller than the existing data. "
                     f"Some points will have to be discarded. "
                     f"The original {len(X)} data points will be saved to "
@@ -325,7 +326,7 @@ def local(  # noqa: C901
                 noise = noise_reduced
 
             iteration = len(X)
-            logging.info(
+            root_logger.info(
                 f"Importing {iteration} existing datapoints. This could take a while..."
             )
             opt.tell(
@@ -337,11 +338,11 @@ def local(  # noqa: C901
                 n_samples=settings.get("n_samples", 1),
                 progress=True,
             )
-            logging.info("Importing finished.")
+            root_logger.info("Importing finished.")
 
     # 4. Main optimization loop:
     while True:
-        logging.info("Starting iteration {}".format(iteration))
+        root_logger.info("Starting iteration {}".format(iteration))
         result_every_n = settings.get("result_every", result_every)
         if (
             result_every_n > 0
@@ -352,8 +353,8 @@ def local(  # noqa: C901
             try:
                 best_point, best_value = expected_ucb(result_object, alpha=0.0)
                 best_point_dict = dict(zip(param_ranges.keys(), best_point))
-                logging.info(f"Current optimum:\n{best_point_dict}")
-                logging.info(f"Estimated value: {best_value}")
+                root_logger.info(f"Current optimum:\n{best_point_dict}")
+                root_logger.info(f"Estimated value: {best_value}")
                 confidence_val = settings.get("confidence", confidence)
                 confidence_out = confidence_intervals(
                     optimizer=opt,
@@ -362,11 +363,11 @@ def local(  # noqa: C901
                     opt_samples=1000,
                     multimodal=False,
                 )
-                logging.info(
+                root_logger.info(
                     f"{confidence_val*100}% confidence intervals:\n{confidence_out}"
                 )
             except ValueError:
-                logging.info(
+                root_logger.info(
                     "Computing current optimum was not successful. "
                     "This can happen in rare cases and running the "
                     "tuner again usually works."
@@ -377,13 +378,12 @@ def local(  # noqa: C901
             and iteration % plot_every_n == 0
             and opt.gp.chain_ is not None
         ):
-            logging.getLogger("matplotlib.font_manager").disabled = True
             if opt.space.n_dims == 1:
-                logging.warning(
+                root_logger.warning(
                     "Plotting for only 1 parameter is not supported yet."
                 )
             else:
-                logging.debug("Starting to compute the next plot.")
+                root_logger.debug("Starting to compute the next plot.")
                 result_object = create_result(
                     Xi=X, yi=y, space=opt.space, models=[opt.gp]
                 )
@@ -411,26 +411,26 @@ def local(  # noqa: C901
                     bbox_inches="tight",
                     facecolor="#36393f",
                 )
-                logging.info(f"Saving a plot to {full_plotpath}.")
+                root_logger.info(f"Saving a plot to {full_plotpath}.")
                 plt.close(fig)
         point = opt.ask()
         point_dict = dict(zip(param_ranges.keys(), point))
-        logging.info("Testing {}".format(point_dict))
+        root_logger.info("Testing {}".format(point_dict))
 
         engine_json = prepare_engines_json(commands=commands, fixed_params=fixed_params)
-        logging.debug(f"engines.json is prepared:\n{engine_json}")
+        root_logger.debug(f"engines.json is prepared:\n{engine_json}")
         write_engines_json(engine_json, point_dict)
-        logging.info("Start experiment")
+        root_logger.info("Start experiment")
         now = datetime.now()
         out_exp, out_exp_err = run_match(**settings)
         later = datetime.now()
         difference = (later - now).total_seconds()
-        logging.info(f"Experiment finished ({difference}s elapsed).")
-        logging.debug(f"Raw result:\n{out_exp}\n{out_exp_err}")
+        root_logger.info(f"Experiment finished ({difference}s elapsed).")
+        root_logger.debug(f"Raw result:\n{out_exp}\n{out_exp_err}")
 
         score, error = parse_experiment_result(out_exp, **settings)
-        logging.info("Got score: {} +- {}".format(score, error))
-        logging.info("Updating model")
+        root_logger.info("Got score: {} +- {}".format(score, error))
+        root_logger.info("Updating model")
         while True:
             try:
                 now = datetime.now()
@@ -458,10 +458,10 @@ def local(  # noqa: C901
                     )
                 later = datetime.now()
                 difference = (later - now).total_seconds()
-                logging.info(f"GP sampling finished ({difference}s)")
-                logging.debug(f"GP kernel: {opt.gp.kernel_}")
+                root_logger.info(f"GP sampling finished ({difference}s)")
+                root_logger.debug(f"GP kernel: {opt.gp.kernel_}")
             except ValueError:
-                logging.warning(
+                root_logger.warning(
                     "Error encountered during fitting. Trying to sample chain a bit. "
                     "If this problem persists, restart the tuner to reinitialize."
                 )
