@@ -420,9 +420,7 @@ def local(  # noqa: C901
                 full_plotpath = plotpath / f"{timestr}-{iteration}.png"
                 plt.savefig(
                     full_plotpath,
-                    pad_inches=0.1,
                     dpi=300,
-                    bbox_inches="tight",
                     facecolor="#36393f",
                 )
                 root_logger.info(f"Saving a plot to {full_plotpath}.")

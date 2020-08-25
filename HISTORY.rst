@@ -2,6 +2,11 @@
 History
 =======
 
+0.6.0-beta.2 (2020-08-25)
+-------------------------
+* Fix plots being of varying sizes dependent on their labels and ticks.
+  This should make it easier to animate them.
+
 0.6.0-beta.1 (2020-08-24)
 -------------------------
 * Improve default parameters to be slightly more robust for most use cases and

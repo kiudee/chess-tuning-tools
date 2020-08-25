@@ -162,6 +162,7 @@ def plot_objective(
     dimensions=None,
     n_random_restarts=100,
     alpha=0.25,
+    margin=0.65,
     colors=None,
     fig=None,
     ax=None,
@@ -200,8 +201,10 @@ def plot_objective(
         if also `None` to `['X_0', 'X_1', ..]`.
     * `n_random_restarts` [int, default=100]
         Number of restarts to try to find the global optimum.
-    * `alpha` [float, default=0.5]
+    * `alpha` [float, default=0.25]
         Transparency of the sampled points.
+    * `margin` [float, default=0.65]
+        Margin in inches around the plot.
     * `colors` [list of tuples, default=None]
         Colors to use for the optima.
     * `fig` [Matplotlib figure, default=None]
@@ -234,9 +237,15 @@ def plot_objective(
             space.n_dims,
             figsize=(size * space.n_dims, size * space.n_dims),
         )
+    width, height = fig.get_size_inches()
 
     fig.subplots_adjust(
-        left=0.05, right=0.95, bottom=0.05, top=0.95, hspace=0.1, wspace=0.1
+        left=margin / width,
+        right=1 - margin / width,
+        bottom=margin / height,
+        top=1 - margin / height,
+        hspace=0.1,
+        wspace=0.1,
     )
     failures = 0
     while True:
