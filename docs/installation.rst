@@ -8,7 +8,7 @@ Installation
 Stable release
 --------------
 
-To install Chess Tuning Tools, first create a new Python environment with `python>=3.7`,
+To install Chess Tuning Tools, first create a new Python environment with ``python>=3.7``,
 then run this command in your terminal:
 
 .. code-block:: console
