@@ -32,7 +32,7 @@ Quick Start
 -----------
 
 In order to be able to start the tuning, first create a python
-environment and install chess-tuning-tools by typing::
+environment (at least Python 3.7) and install chess-tuning-tools by typing::
 
    pip install chess-tuning-tools
 
