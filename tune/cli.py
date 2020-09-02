@@ -229,6 +229,13 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 @click.option(
     "--verbose", "-v", is_flag=True, default=False, help="Turn on debug output."
 )
+@click.option(
+    "--warp-inputs/--no-warp-inputs",
+    default=True,
+    show_default=True,
+    help="If True, let the tuner warp the input space to find a better fit to the "
+    "optimization landscape.",
+)
 def local(  # noqa: C901
     tuning_config,
     acq_function="pvrs",
@@ -248,6 +255,7 @@ def local(  # noqa: C901
     result_every=1,
     resume=True,
     verbose=False,
+    warp_inputs=True,
 ):
     """Run a local tune.
 
@@ -273,12 +281,15 @@ def local(  # noqa: C901
     # 2. Create kernel
     # 3. Create optimizer
     random_state = np.random.RandomState(np.random.MT19937(ss.spawn(1)[0]))
+    gp_kwargs = dict(
+        normalize_y=True, warp_inputs=settings.get("warp_inputs", warp_inputs)
+    )
     opt = Optimizer(
         dimensions=list(param_ranges.values()),
         n_points=settings.get("n_points", n_points),
         n_initial_points=settings.get("n_initial_points", n_initial_points),
         # gp_kernel=kernel,  # TODO: Let user pass in different kernels
-        gp_kwargs=dict(normalize_y=True),
+        gp_kwargs=gp_kwargs,
         # gp_priors=priors,  # TODO: Let user pass in priors
         acq_func=settings.get("acq_function", acq_function),
         acq_func_kwargs=dict(alpha="inf", n_thompson=20),
@@ -419,9 +430,7 @@ def local(  # noqa: C901
                 plotpath.mkdir(parents=True, exist_ok=True)
                 full_plotpath = plotpath / f"{timestr}-{iteration}.png"
                 plt.savefig(
-                    full_plotpath,
-                    dpi=300,
-                    facecolor="#36393f",
+                    full_plotpath, dpi=300, facecolor="#36393f",
                 )
                 root_logger.info(f"Saving a plot to {full_plotpath}.")
                 plt.close(fig)
@@ -472,12 +481,27 @@ def local(  # noqa: C901
                 difference = (later - now).total_seconds()
                 root_logger.info(f"GP sampling finished ({difference}s)")
                 root_logger.debug(f"GP kernel: {opt.gp.kernel_}")
+                if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
+                    warp_params = dict(
+                        zip(
+                            param_ranges.keys(),
+                            zip(
+                                np.around(np.exp(opt.gp.warp_alphas_), 3),
+                                np.around(np.exp(opt.gp.warp_betas_), 3),
+                            ),
+                        )
+                    )
+                    root_logger.debug(
+                        f"Input warping was applied using the following parameters for "
+                        f"the beta distributions:\n"
+                        f"{warp_params}"
+                    )
             except ValueError:
                 root_logger.warning(
                     "Error encountered during fitting. Trying to sample chain a bit. "
                     "If this problem persists, restart the tuner to reinitialize."
                 )
-                opt.gp.sample(n_burnin=5, priors=opt.gp_priors)
+                opt.gp.sample(n_burnin=11, priors=opt.gp_priors)
             else:
                 break
         X.append(point)
