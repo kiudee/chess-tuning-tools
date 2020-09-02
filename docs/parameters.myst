@@ -119,6 +119,14 @@ fitting process:
   - Size of initial dense set of points to try before using the GP model to
     select points. Too few points can make the inference of the model unstable,
     especially when an exploitative `acq_function` is used. [default: 30]
+* - `"warp_inputs"`
+  - `--warp-inputs/--no-warp-inputs`
+  - If True, the tuner will try to transform the input variables in such a way
+    that it ensures a good fit of the Gaussian process.
+    To be more precise, the cumulative distribution function of a beta
+    distribution is used to warp the input space. The parameters of the beta
+    distributions are estimated jointly with those of the GP. [default: True]
+
 ```
 
 [bask]: https://github.com/kiudee/bayes-skopt
