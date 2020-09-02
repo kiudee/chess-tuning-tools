@@ -2,6 +2,11 @@
 History
 =======
 
+0.6.0-beta.3 (2020-09-02)
+-------------------------
+* Add support for input warping, allowing the tuner to automatically transform
+  the data into a suitable form (internally).
+
 0.6.0-beta.2 (2020-08-25)
 -------------------------
 * Fix plots being of varying sizes dependent on their labels and ticks.

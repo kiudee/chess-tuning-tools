@@ -122,7 +122,7 @@ description = "A fully Bayesian implementation of sequential model-based optimiz
 name = "bask"
 optional = false
 python-versions = ">=3.7,<4.0"
-version = "0.8.0"
+version = "0.9.0"
 
 [package.dependencies]
 Click = ">=7.1.2,<8.0.0"
@@ -1109,7 +1109,7 @@ version = "2.8.5"
 [[package]]
 category = "main"
 description = "Run a subprocess in a pseudo terminal"
-marker = "sys_platform != \"win32\" or os_name != \"nt\" or python_version >= \"3.3\" and sys_platform != \"win32\""
+marker = "python_version >= \"3.3\" and sys_platform != \"win32\" or sys_platform != \"win32\" or os_name != \"nt\" or python_version >= \"3.3\" and sys_platform != \"win32\" and (python_version >= \"3.3\" and sys_platform != \"win32\" or sys_platform != \"win32\")"
 name = "ptyprocess"
 optional = false
 python-versions = "*"
@@ -1785,7 +1785,7 @@ dist = ["joblib", "psycopg2", "sqlalchemy", "pandas"]
 docs = ["Sphinx", "sphinx-book-theme", "myst-nb"]
 
 [metadata]
-content-hash = "0b96c3b5f204bf0f44c6befbe1cb8df3af90525df08f485b6019c680cbb68087"
+content-hash = "8d6332b39353743a635e50ad7eeb155c8a9a3b365f43c7f7a82216c8df67fdb0"
 lock-version = "1.0"
 python-versions = "^3.7"
 
@@ -1849,8 +1849,8 @@ backcall = [
     {file = "backcall-0.2.0.tar.gz", hash = "sha256:5cbdbf27be5e7cfadb448baf0aa95508f91f2bbc6c6437cd9cd06e2a4c215e1e"},
 ]
 bask = [
-    {file = "bask-0.8.0-py3-none-any.whl", hash = "sha256:362cf410ca3412e70c70ad2e7d0687aa179fe41345c6cfaa3d58833f7ed09ac4"},
-    {file = "bask-0.8.0.tar.gz", hash = "sha256:d022af687f610060dcb37e8c3181bccf82f673ed2ead45d057997346f682bbe4"},
+    {file = "bask-0.9.0-py3-none-any.whl", hash = "sha256:176f80ec06a40916f063af1ef6e17bc52a101ef53d7b9f25abf1a53f6bafb324"},
+    {file = "bask-0.9.0.tar.gz", hash = "sha256:6d62557d570ae0170260e90979a714b136d746d861dbb1241de41f2d4dc712b7"},
 ]
 beautifulsoup4 = [
     {file = "beautifulsoup4-4.9.1-py2-none-any.whl", hash = "sha256:e718f2342e2e099b640a34ab782407b7b676f47ee272d6739e60b8ea23829f2c"},
