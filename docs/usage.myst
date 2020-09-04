@@ -41,6 +41,7 @@ actual tuning configuration. Here we use a very simple configuration:
        },
        "engine1_tc": "1+0.1",
        "engine2_tc": "1+0.1",
+       "rounds": 20,
        "opening_file": "openings.pgn"
    }
 ```
@@ -61,6 +62,9 @@ to run matches. Here we use a time control of 1s + 0.1s increment for
 both engines. Depending on the hardware used, it may be necessary to
 calibrate the correct ratio of time controls such that both engines are of
 equal strength.
+The number of rounds specify how many rounds the tuner should run to evaluate
+one parameter configuration.
+Each round consists of two games (one random opening played from both sides).
 The `opening_file` field contains the path to an epd or pgn file and will
 be used by cutechess-cli to select random openings for the matches.
 

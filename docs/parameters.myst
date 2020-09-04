@@ -186,7 +186,8 @@ fitting process:
   - Description
 * - `"rounds"`
   -
-  - Number of rounds to play in the match (each round consists of 2 games).
+  - Number of rounds to play in the match (each round consists of 2 games - one
+    opening played from both sides).
     [default: 10]
 * - `"engine1_tc"`
   -
