@@ -261,7 +261,10 @@ fitting process:
     `tb_path` has to be set. [default: False]
 * - `"tb_path"`
   -
-  - Path to the folder containing the Syzygy tablebases. [default: none]
+  - Path to the folder containing the Syzygy tablebases for use in adjudicating
+    games. Note, that if you want to let engines access tablebases, you have to
+    pass the path to each engine in their corresponding `fixed_parameters`.
+    [default: none]
 * - `"concurrency"`
   -
   - Number of games to run in parallel. Be careful when running time control
