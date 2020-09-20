@@ -43,6 +43,20 @@ constant slope, it can help to zoom into the relevant region.
 Make sure that you do not remove the bad regions around the optimum when doing
 so.
 
+### Is it possible to change the acquisition function during the tune?
+Yes, this is possible without any problems and helpful in some situations.
+Here are a few examples:
+
+* Do you think that the overall landscape is not explored well enough? Then switch
+to ``"vr"`` for a few iterations.
+* Do you think the tuner has found the rough location of the optimum and you want
+to refine it? Then switch to ``"mes"`` for the final iterations.
+
+### Can I increase the number of games per iteration later in the tune?
+It is possible, but it will bias the estimated Elo values to slightly more
+extreme ones. This could lead the model to temporarily over-/underevalute
+certain regions until enough new data points were collected.
+
 ## Plots
 ```{figure} _static/plot_example.png
 ---
