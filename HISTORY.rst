@@ -2,28 +2,19 @@
 History
 =======
 
-0.6.0-beta.3 (2020-09-02)
--------------------------
+0.6.0 (2020-09-20)
+------------------
 * Add support for input warping, allowing the tuner to automatically transform
   the data into a suitable form (internally).
-
-0.6.0-beta.2 (2020-08-25)
--------------------------
-* Fix plots being of varying sizes dependent on their labels and ticks.
-  This should make it easier to animate them.
-
-0.6.0-beta.1 (2020-08-24)
--------------------------
 * Improve default parameters to be slightly more robust for most use cases and
   be more in line with what a user might expect.
 * Add confidence interval and standard error of the score of the estimated
   global optimum to the logging output
-* Fix debug output being spammed by other libraries.
-
-0.6.0-beta.0 (2020-08-24)
--------------------------
 * Add support for time per move matches (option ``st`` in cutechess-cli).
 * Add support for timemargin parameter.
+* Fix debug output being spammed by other libraries.
+* Fix plots being of varying sizes dependent on their labels and ticks.
+  This should make it easier to animate them.
 
 0.5.0 (2020-08-14)
 ------------------
