@@ -448,7 +448,7 @@ def local(  # noqa: C901
         )
         out_exp = []
         for output_line in run_match(**settings):
-            root_logger.debug(output_line)
+            root_logger.debug(output_line.rstrip())
             out_exp.append(output_line)
         out_exp = "".join(out_exp)
         later = datetime.now()
