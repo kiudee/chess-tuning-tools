@@ -198,6 +198,7 @@ def run_match(
     tb_path=None,
     concurrency=1,
     output_as_string=True,
+    debug_mode=False,
     **kwargs,
 ):
     """Run a cutechess-cli match of two engines with paired random openings.
@@ -267,17 +268,13 @@ def run_match(
         Number of games to run in parallel. Be careful when running time control
         games, since the engines can negatively impact each other when running
         in parallel.
-    output_as_string : bool, default=True
-        If True, only return the cutechess-cli output as string.
-        If False, the complete subprocess.CompletedProcess object will be
-        returned for debugging purposes.
+    debug_mode : bool, default=False
+        If True, pass ``-debug`` to cutechess-cli.
 
-    Returns
+    Yields
     -------
-    out : str or subprocess.CompletedProcess object
-        Results of the cutechess-cli match as string.
-        If output_as_string was set to False, returns the
-        CompletedProcess object for debugging purposes.
+    out : str
+        Results of the cutechess-cli match streamed as str.
     """
     string_array = ["cutechess-cli"]
     string_array.extend(("-concurrency", str(concurrency)))
@@ -342,12 +339,15 @@ def run_match(
     string_array.extend(("-games", "2"))
     string_array.append("-repeat")
     string_array.append("-recover")
+    if debug_mode:
+        string_array.append("-debug")
     string_array.extend(("-pgnout", "out.pgn"))
 
-    out = subprocess.run(string_array, capture_output=True)
-    if output_as_string:
-        return out.stdout.decode("utf-8"), out.stderr.decode("utf-8")
-    return out
+    with subprocess.Popen(
+        string_array, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+    ) as popen:
+        for line in iter(popen.stdout.readline, ""):
+            yield line
 
 
 def reduce_ranges(X, y, noise, space):
