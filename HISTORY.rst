@@ -2,6 +2,13 @@
 History
 =======
 
+0.7.0 (unreleased)
+------------------
+* Log cutechess-cli output continuously.
+* Add ``"debug_mode"`` parameter which will pass ``-debug`` to cutechess-cli.
+* Add support for pondering using ``engineX_ponder``.
+* Fix passing boolean UCI options correctly.
+
 0.6.0 (2020-09-20)
 ------------------
 * Add support for input warping, allowing the tuner to automatically transform
