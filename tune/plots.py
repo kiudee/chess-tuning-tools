@@ -306,7 +306,12 @@ def plot_objective(
                     ax[i, j].scatter(
                         min_ucb[j], min_ucb[i], c=["xkcd:orange"], s=20, lw=0.0
                     )
-
+    # Get all dimensions.
+    plot_dims = []
+    for row in range(space.n_dims):
+        if space.dimensions[row].is_constant:
+            continue
+        plot_dims.append((row, space.dimensions[row]))
     return _format_scatter_plot_axes(
-        ax, space, ylabel="Partial dependence", dim_labels=dimensions
+        ax, space, ylabel="Partial dependence", plot_dims=plot_dims, dim_labels=dimensions
     )
