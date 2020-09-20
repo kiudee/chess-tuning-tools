@@ -281,7 +281,8 @@ def local(  # noqa: C901
     random_state = np.random.RandomState(np.random.MT19937(ss.spawn(1)[0]))
     gp_kwargs = dict(
         # TODO: Due to a bug in scikit-learn 0.23.2, we set normalize_y=False:
-        normalize_y=False, warp_inputs=settings.get("warp_inputs", warp_inputs)
+        normalize_y=False,
+        warp_inputs=settings.get("warp_inputs", warp_inputs),
     )
     opt = Optimizer(
         dimensions=list(param_ranges.values()),

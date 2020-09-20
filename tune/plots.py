@@ -313,5 +313,9 @@ def plot_objective(
             continue
         plot_dims.append((row, space.dimensions[row]))
     return _format_scatter_plot_axes(
-        ax, space, ylabel="Partial dependence", plot_dims=plot_dims, dim_labels=dimensions
+        ax,
+        space,
+        ylabel="Partial dependence",
+        plot_dims=plot_dims,
+        dim_labels=dimensions,
     )

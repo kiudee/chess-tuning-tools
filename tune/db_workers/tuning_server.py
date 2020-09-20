@@ -167,7 +167,9 @@ class TuningServer(object):
                         )
                     else:
                         # The lengthscale(s) are in positive domain
-                        prior = lambda x, dist=dist: dist.logpdf(np.exp(x)) + x  # noqa: E731
+                        prior = (
+                            lambda x, dist=dist: dist.logpdf(np.exp(x)) + x
+                        )  # noqa: E731
                 result.append(prior)
         return result
 
@@ -280,7 +282,8 @@ class TuningServer(object):
     def insert_jobs(self, session, new_x):
         # First set all active jobs to inactive:
         session.query(SqlJob).filter(
-            SqlJob.active == True, SqlJob.tune_id == self.experiment["tune_id"]  # noqa: E712
+            SqlJob.active == True,
+            SqlJob.tune_id == self.experiment["tune_id"],  # noqa: E712
         ).update(
             {"active": False}
         )  # noqa
