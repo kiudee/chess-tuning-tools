@@ -41,12 +41,13 @@ Or download the `tarball`_:
 
     $ curl -OJL https://github.com/kiudee/chess-tuning-tools/tarball/master
 
-Once you have a copy of the source, you can install it with:
+Once you have a copy of the source, you can install it using `poetry`_:
 
 .. code-block:: console
 
-    $ python setup.py install
+    $ poetry install
 
 
 .. _Github repo: https://github.com/kiudee/chess-tuning-tools
 .. _tarball: https://github.com/kiudee/chess-tuning-tools/tarball/master
+.. _poetry: https://python-poetry.org/
