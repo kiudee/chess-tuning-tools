@@ -24,6 +24,19 @@ you through the process.
 .. _Python installation guide: http://docs.python-guide.org/en/latest/starting/installation/
 
 
+Beta release
+------------
+
+To give testers early access to new functionality, we will usually release
+beta versions to `PyPI`_. To install a beta version, run this command in your
+terminal (version is an example):
+
+.. code-block:: console
+
+    $ pip install chess-tuning-tools==0.6.0b2
+
+
+
 From sources
 ------------
 
@@ -51,3 +64,4 @@ Once you have a copy of the source, you can install it using `poetry`_:
 .. _Github repo: https://github.com/kiudee/chess-tuning-tools
 .. _tarball: https://github.com/kiudee/chess-tuning-tools/tarball/master
 .. _poetry: https://python-poetry.org/
+.. _PyPI: https://pypi.org/project/chess-tuning-tools/
