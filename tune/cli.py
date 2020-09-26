@@ -226,9 +226,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     help="Let the optimizer resume, if it finds points it can use.",
     show_default=True,
 )
-@click.option(
-    "--verbose", "-v", is_flag=True, default=False, help="Turn on debug output."
-)
+@click.option("--verbose", "-v", count=True, default=0, help="Turn on debug output.")
 @click.option(
     "--warp-inputs/--no-warp-inputs",
     default=True,
@@ -254,7 +252,7 @@ def local(  # noqa: C901
     random_seed=0,
     result_every=1,
     resume=True,
-    verbose=False,
+    verbose=0,
     warp_inputs=True,
 ):
     """Run a local tune.
@@ -263,7 +261,7 @@ def local(  # noqa: C901
     """
     json_dict = json.load(tuning_config)
     settings, commands, fixed_params, param_ranges = load_tuning_config(json_dict)
-    log_level = logging.DEBUG if verbose else logging.INFO
+    log_level = logging.DEBUG if verbose > 0 else logging.INFO
     log_format = logging.Formatter("%(asctime)s %(levelname)-8s %(message)s")
     root_logger = logging.getLogger("ChessTuner")
     root_logger.setLevel(log_level)
@@ -283,7 +281,8 @@ def local(  # noqa: C901
     random_state = np.random.RandomState(np.random.MT19937(ss.spawn(1)[0]))
     gp_kwargs = dict(
         # TODO: Due to a bug in scikit-learn 0.23.2, we set normalize_y=False:
-        normalize_y=False, warp_inputs=settings.get("warp_inputs", warp_inputs)
+        normalize_y=False,
+        warp_inputs=settings.get("warp_inputs", warp_inputs),
     )
     opt = Optimizer(
         dimensions=list(param_ranges.values()),
@@ -444,11 +443,17 @@ def local(  # noqa: C901
         write_engines_json(engine_json, point_dict)
         root_logger.info("Start experiment")
         now = datetime.now()
-        out_exp, out_exp_err = run_match(**settings)
+        settings["debug_mode"] = settings.get(
+            "debug_mode", False if verbose <= 1 else True
+        )
+        out_exp = []
+        for output_line in run_match(**settings):
+            root_logger.debug(output_line.rstrip())
+            out_exp.append(output_line)
+        out_exp = "".join(out_exp)
         later = datetime.now()
         difference = (later - now).total_seconds()
         root_logger.info(f"Experiment finished ({difference}s elapsed).")
-        root_logger.debug(f"Raw result:\n{out_exp}\n{out_exp_err}")
 
         score, error = parse_experiment_result(out_exp, **settings)
         root_logger.info("Got score: {} +- {}".format(score, error))

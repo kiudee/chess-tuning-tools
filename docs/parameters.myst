@@ -211,7 +211,14 @@ fitting process:
     assumed that engine1_tc is provided
 * - `"engine2_npm"`
   -
-  - See `engine_npm`.
+  - See `engine1_npm`.
+* - `"engine1_ponder"`
+  -
+  - Whether the engine is allowed to ponder the next move during the opponent
+    move.
+* - `"engine2_ponder"`
+  -
+  - See `engine1_ponder`.
 * - `"timemargin"`
   -
   -  Allowed number of milliseconds the engines are allowed to go over the time
@@ -270,6 +277,10 @@ fitting process:
   - Number of games to run in parallel. Be careful when running time control
     games, since the engines can negatively impact each other when running
     in parallel. [default: 1]
+* - `"debug_mode"`
+  - `-vv`
+  - Run cutechess-cli in debug mode. This will produce a lot of debug output and
+    should only be used to diagnose problems. [default: False]
 ```
 
 ## Miscellaneous parameters
@@ -313,7 +324,7 @@ fitting process:
     [default: True]
 * -
   - `-v --verbose`
-  - Turn on debug output.
+  - Turn on debug output. `-vv` turns on the debug flag for cutechess-cli.
 ```
 ```{warning}
 If `--no-resume` is passed it will overwrite any data found at `data-path`.

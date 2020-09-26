@@ -33,6 +33,8 @@ def uci_tuple(uci_string):
 
 
 def _set_option(name, value):
+    if str(value) in ("False", "True"):
+        value = str(value).lower()
     return f"setoption name {name} value {value}"
 
 
