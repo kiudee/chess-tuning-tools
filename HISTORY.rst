@@ -2,8 +2,8 @@
 History
 =======
 
-0.7.0 (unreleased)
-------------------
+0.7.0-beta.0 (2020-09-26)
+-------------------------
 * Log cutechess-cli output continuously.
 * Add ``"debug_mode"`` parameter which will pass ``-debug`` to cutechess-cli.
 * Add support for pondering using ``engineX_ponder``.
