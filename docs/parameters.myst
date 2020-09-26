@@ -211,7 +211,14 @@ fitting process:
     assumed that engine1_tc is provided
 * - `"engine2_npm"`
   -
-  - See `engine_npm`.
+  - See `engine1_npm`.
+* - `"engine1_ponder"`
+  -
+  - Whether the engine is allowed to ponder the next move during the opponent
+    move.
+* - `"engine2_ponder"`
+  -
+  - See `engine1_ponder`.
 * - `"timemargin"`
   -
   -  Allowed number of milliseconds the engines are allowed to go over the time

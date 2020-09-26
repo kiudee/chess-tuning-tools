@@ -158,7 +158,12 @@ def parse_experiment_result(
 
 
 def _construct_engine_conf(
-    id, engine_npm=None, engine_tc=None, engine_st=None, timemargin=None
+    id,
+    engine_npm=None,
+    engine_tc=None,
+    engine_st=None,
+    engine_ponder=False,
+    timemargin=None,
 ):
     result = ["-engine", f"conf=engine{id}"]
     if engine_npm is not None:
@@ -168,12 +173,16 @@ def _construct_engine_conf(
         result.append(f"st={str(engine_st)}")
         if timemargin is not None:
             result.append(f"timemargin={str(timemargin)}")
+        if engine_ponder:
+            result.append("ponder")
         return result
     if isinstance(engine_tc, str):
         engine_tc = TimeControl.from_string(engine_tc)
     result.append(f"tc={str(engine_tc)}")
     if timemargin is not None:
         result.append(f"timemargin={str(timemargin)}")
+    if engine_ponder:
+        result.append("ponder")
     return result
 
 
@@ -185,6 +194,8 @@ def run_match(
     engine2_st=None,
     engine1_npm=None,
     engine2_npm=None,
+    engine1_ponder=False,
+    engine2_ponder=False,
     timemargin=None,
     opening_file=None,
     adjudicate_draws=False,
@@ -197,7 +208,6 @@ def run_match(
     adjudicate_tb=False,
     tb_path=None,
     concurrency=1,
-    output_as_string=True,
     debug_mode=False,
     **kwargs,
 ):
@@ -224,6 +234,10 @@ def run_match(
         If None, it is assumed that engine1_tc or engine1_st is provided.
     engine2_npm : str or int, default=None
         See engine1_npm.
+    engine1_ponder : bool, default=False
+        If True, allow engine1 to ponder.
+    engine2_ponder : bool, default=False
+        See engine1_ponder.
     timemargin : str or int, default=None
         Allowed number of milliseconds the engines are allowed to go over the time
         limit. If None, the margin is 0.
@@ -284,10 +298,24 @@ def run_match(
     ):
         raise ValueError("A valid time control or nodes configuration is required.")
     string_array.extend(
-        _construct_engine_conf(1, engine1_npm, engine1_tc, engine1_st, timemargin)
+        _construct_engine_conf(
+            id=1,
+            engine_npm=engine1_npm,
+            engine_tc=engine1_tc,
+            engine_st=engine1_st,
+            engine_ponder=engine1_ponder,
+            timemargin=timemargin,
+        )
     )
     string_array.extend(
-        _construct_engine_conf(2, engine2_npm, engine2_tc, engine2_st, timemargin)
+        _construct_engine_conf(
+            id=2,
+            engine_npm=engine2_npm,
+            engine_tc=engine2_tc,
+            engine_st=engine2_st,
+            engine_ponder=engine2_ponder,
+            timemargin=timemargin,
+        )
     )
 
     if opening_file is None:
