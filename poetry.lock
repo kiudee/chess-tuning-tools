@@ -54,7 +54,7 @@ description = "Exploratory analysis of Bayesian models"
 name = "arviz"
 optional = false
 python-versions = "*"
-version = "0.9.0"
+version = "0.10.0"
 
 [package.dependencies]
 matplotlib = ">=3.0"
@@ -63,10 +63,11 @@ numpy = ">=1.12"
 packaging = "*"
 pandas = ">=0.23"
 scipy = ">=0.19"
-xarray = ">=0.11"
+setuptools = ">=38.4"
+xarray = ">=0.16.1"
 
 [package.extras]
-all = ["numba", "bokeh (>=1.4.0)"]
+all = ["numba", "bokeh (>=1.4.0)", "ujson"]
 
 [[package]]
 category = "main"
@@ -123,11 +124,11 @@ description = "A fully Bayesian implementation of sequential model-based optimiz
 name = "bask"
 optional = false
 python-versions = ">=3.7,<4.0"
-version = "0.10.0"
+version = "0.10.1"
 
 [package.dependencies]
 Click = ">=7.1.2,<8.0.0"
-arviz = ">=0.9.0,<0.10.0"
+arviz = ">=0.10.0,<0.11.0"
 emcee = ">=3.0.2,<4.0.0"
 matplotlib = ">=3.3.0,<4.0.0"
 numpy = ">=1.16,<2.0"
@@ -384,7 +385,7 @@ description = "File identification library for Python"
 name = "identify"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
-version = "1.5.3"
+version = "1.5.5"
 
 [package.extras]
 license = ["editdistance"]
@@ -513,7 +514,7 @@ description = "A Python utility / library to sort Python imports."
 name = "isort"
 optional = false
 python-versions = ">=3.6,<4.0"
-version = "5.5.2"
+version = "5.5.3"
 
 [package.extras]
 colors = ["colorama (>=0.4.3,<0.5.0)"]
@@ -777,7 +778,7 @@ description = "An extended commonmark compliant parser, with bridges to docutils
 name = "myst-parser"
 optional = false
 python-versions = ">=3.6"
-version = "0.12.9"
+version = "0.12.10"
 
 [package.dependencies]
 docutils = ">=0.15"
@@ -1568,11 +1569,11 @@ pymysql = ["pymysql"]
 
 [[package]]
 category = "main"
-description = "Terminals served to xterm.js using Tornado websockets"
+description = "Tornado websocket backend for the Xterm.js Javascript terminal emulator library."
 name = "terminado"
 optional = false
 python-versions = ">=3.6"
-version = "0.9.0"
+version = "0.9.1"
 
 [package.dependencies]
 ptyprocess = "*"
@@ -1766,12 +1767,12 @@ description = "N-D labeled arrays and datasets in Python"
 name = "xarray"
 optional = false
 python-versions = ">=3.6"
-version = "0.16.0"
+version = "0.16.1"
 
 [package.dependencies]
 numpy = ">=1.15"
 pandas = ">=0.25"
-setuptools = ">=41.2"
+setuptools = ">=38.4"
 
 [[package]]
 category = "main"
@@ -1779,11 +1780,11 @@ description = "Backport of pathlib-compatible object wrapper for zip files"
 name = "zipp"
 optional = false
 python-versions = ">=3.6"
-version = "3.1.0"
+version = "3.2.0"
 
 [package.extras]
 docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
-testing = ["jaraco.itertools", "func-timeout"]
+testing = ["pytest (>=3.5,<3.7.3 || >3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pytest-cov", "jaraco.test (>=3.2.0)", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy"]
 
 [extras]
 dist = ["joblib", "psycopg2", "sqlalchemy", "pandas"]
@@ -1830,8 +1831,8 @@ argon2-cffi = [
     {file = "argon2_cffi-20.1.0-cp38-cp38-win_amd64.whl", hash = "sha256:9dfd5197852530294ecb5795c97a823839258dfd5eb9420233c7cfedec2058f2"},
 ]
 arviz = [
-    {file = "arviz-0.9.0-py3-none-any.whl", hash = "sha256:18c907090de4c0ddfbcf2c46f60888d7238bc3d5fe4378f70d5f765636cb5f85"},
-    {file = "arviz-0.9.0.tar.gz", hash = "sha256:85473435c29d54b50ee5a9e3d5ab30764f06dbaf0bcfdae222ea58715338a85f"},
+    {file = "arviz-0.10.0-py3-none-any.whl", hash = "sha256:172d6c37f5f4b6d83081a26475a39692524586c05a63b223deff135b286b52e6"},
+    {file = "arviz-0.10.0.tar.gz", hash = "sha256:dc1f08ce02459989dd4f41fa6012e736cf2ba00ee44b29bebe0a451c58a68e42"},
 ]
 async-generator = [
     {file = "async_generator-1.10-py3-none-any.whl", hash = "sha256:01c7bf666359b4967d2cda0000cc2e4af16a0ae098cbffcb8472fb9e8ad6585b"},
@@ -1854,8 +1855,8 @@ backcall = [
     {file = "backcall-0.2.0.tar.gz", hash = "sha256:5cbdbf27be5e7cfadb448baf0aa95508f91f2bbc6c6437cd9cd06e2a4c215e1e"},
 ]
 bask = [
-    {file = "bask-0.10.0-py3-none-any.whl", hash = "sha256:fde22f5adfa17a55ce2ef7df57b8281ec14a5002ba5c786f252f7a11ee248260"},
-    {file = "bask-0.10.0.tar.gz", hash = "sha256:0a04eed47334ec3867e34519ea333786926c04de2f9608ea1f943a481c9e04d7"},
+    {file = "bask-0.10.1-py3-none-any.whl", hash = "sha256:da08a62f72803629ed6c8c11ba29157235baa83a5b54477a9d403fee8db82a7d"},
+    {file = "bask-0.10.1.tar.gz", hash = "sha256:7a7dc4af9dbd4246b13069690d6245ab3f5edb4301db9ebfeaa32048741e350c"},
 ]
 beautifulsoup4 = [
     {file = "beautifulsoup4-4.9.1-py2-none-any.whl", hash = "sha256:e718f2342e2e099b640a34ab782407b7b676f47ee272d6739e60b8ea23829f2c"},
@@ -1999,8 +2000,8 @@ gitpython = [
     {file = "GitPython-3.1.8.tar.gz", hash = "sha256:080bf8e2cf1a2b907634761c2eaefbe83b69930c94c66ad11b65a8252959f912"},
 ]
 identify = [
-    {file = "identify-1.5.3-py2.py3-none-any.whl", hash = "sha256:d02d004568c5a01261839a05e91705e3e9f5c57a3551648f9b3fb2b9c62c0f62"},
-    {file = "identify-1.5.3.tar.gz", hash = "sha256:c770074ae1f19e08aadbda1c886bc6d0cb55ffdc503a8c0fe8699af2fc9664ae"},
+    {file = "identify-1.5.5-py2.py3-none-any.whl", hash = "sha256:da683bfb7669fa749fc7731f378229e2dbf29a1d1337cbde04106f02236eb29d"},
+    {file = "identify-1.5.5.tar.gz", hash = "sha256:7c22c384a2c9b32c5cc891d13f923f6b2653aa83e2d75d8f79be240d6c86c4f4"},
 ]
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},
@@ -2035,8 +2036,8 @@ ipywidgets = [
     {file = "ipywidgets-7.5.1.tar.gz", hash = "sha256:e945f6e02854a74994c596d9db83444a1850c01648f1574adf144fbbabe05c97"},
 ]
 isort = [
-    {file = "isort-5.5.2-py3-none-any.whl", hash = "sha256:ba91218eee31f1e300ecc079ef0c524cea3fc41bfbb979cbdf5fd3a889e3cfed"},
-    {file = "isort-5.5.2.tar.gz", hash = "sha256:171c5f365791073426b5ed3a156c2081a47f88c329161fd28228ff2da4c97ddb"},
+    {file = "isort-5.5.3-py3-none-any.whl", hash = "sha256:c16eaa7432a1c004c585d79b12ad080c6c421dd18fe27982ca11f95e6898e432"},
+    {file = "isort-5.5.3.tar.gz", hash = "sha256:6187a9f1ce8784cbc6d1b88790a43e6083a6302f03e9ae482acc0f232a98c843"},
 ]
 jedi = [
     {file = "jedi-0.17.2-py2.py3-none-any.whl", hash = "sha256:98cc583fa0f2f8304968199b01b6b4b94f469a1f4a74c1560506ca2a211378b5"},
@@ -2185,8 +2186,8 @@ myst-nb = [
     {file = "myst_nb-0.9.2-py3-none-any.whl", hash = "sha256:409c95c0049420031cfb521a5c078fab28a5daf569ba6cc521bf369bbed7c4e8"},
 ]
 myst-parser = [
-    {file = "myst-parser-0.12.9.tar.gz", hash = "sha256:8e388ca983ad2f3cc7e4f991643284bdc77d6308809c3e4cbe650e673ab7afdc"},
-    {file = "myst_parser-0.12.9-py3-none-any.whl", hash = "sha256:33fcec3b6e3a13114817f0a25b6ba083fa4be141b1923c55fc890816bfe525a1"},
+    {file = "myst-parser-0.12.10.tar.gz", hash = "sha256:4612c46196e0344bb7e49dbc3deb288f9b9a88fcf6e9f210f7f3ea5bc9899bfc"},
+    {file = "myst_parser-0.12.10-py3-none-any.whl", hash = "sha256:a5311da4398869e596250d5a93b523735c3beb8bc9d3eba853223c705802043b"},
 ]
 nbclient = [
     {file = "nbclient-0.5.0-py3-none-any.whl", hash = "sha256:8a6e27ff581cee50895f44c41936ce02369674e85e2ad58643d8d4a6c36771b0"},
@@ -2654,8 +2655,8 @@ sqlalchemy = [
     {file = "SQLAlchemy-1.3.19.tar.gz", hash = "sha256:3bba2e9fbedb0511769780fe1d63007081008c5c2d7d715e91858c94dbaa260e"},
 ]
 terminado = [
-    {file = "terminado-0.9.0-py3-none-any.whl", hash = "sha256:e0eaea25d978d9a8d557f63ef23b0ec81a2f9e22b9dabfe5db4a79d8d38dd7c2"},
-    {file = "terminado-0.9.0.tar.gz", hash = "sha256:7ceea4c1644b0e95588d1d2ba09c5bf365b318c26d0a13ef6a5f2751a2f6efa3"},
+    {file = "terminado-0.9.1-py3-none-any.whl", hash = "sha256:c55f025beb06c2e2669f7ba5a04f47bb3304c30c05842d4981d8f0fc9ab3b4e3"},
+    {file = "terminado-0.9.1.tar.gz", hash = "sha256:3da72a155b807b01c9e8a5babd214e052a0a45a975751da3521a1c3381ce6d76"},
 ]
 testpath = [
     {file = "testpath-0.4.4-py2.py3-none-any.whl", hash = "sha256:bfcf9411ef4bf3db7579063e0546938b1edda3d69f4e1fb8756991f5951f85d4"},
@@ -2743,10 +2744,10 @@ widgetsnbextension = [
     {file = "widgetsnbextension-3.5.1.tar.gz", hash = "sha256:079f87d87270bce047512400efd70238820751a11d2d8cb137a5a5bdbaf255c7"},
 ]
 xarray = [
-    {file = "xarray-0.16.0-py3-none-any.whl", hash = "sha256:e38452dbbb9f7b1938ae23b81ca7d66d1109818040048ec42e59c0c738cbe8f3"},
-    {file = "xarray-0.16.0.tar.gz", hash = "sha256:665de4253fcf951e7a6954313b77164d7efca2bd820f0a518b7c25ea46ee43cb"},
+    {file = "xarray-0.16.1-py3-none-any.whl", hash = "sha256:72aa610a8d9ece583c3e94ad6a879aae2a33b632fea445b6685a14f288cbd9c6"},
+    {file = "xarray-0.16.1.tar.gz", hash = "sha256:5e1af056ff834bf62ca57da917159328fab21b1f8c25284f92083016bb2d92a5"},
 ]
 zipp = [
-    {file = "zipp-3.1.0-py3-none-any.whl", hash = "sha256:aa36550ff0c0b7ef7fa639055d797116ee891440eac1a56f378e2d3179e0320b"},
-    {file = "zipp-3.1.0.tar.gz", hash = "sha256:c599e4d75c98f6798c509911d08a22e6c021d074469042177c8c86fb92eefd96"},
+    {file = "zipp-3.2.0-py3-none-any.whl", hash = "sha256:43f4fa8d8bb313e65d8323a3952ef8756bf40f9a5c3ea7334be23ee4ec8278b6"},
+    {file = "zipp-3.2.0.tar.gz", hash = "sha256:b52f22895f4cfce194bc8172f3819ee8de7540aa6d873535a8668b730b8b411f"},
 ]
