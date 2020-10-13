@@ -366,9 +366,9 @@ def local(  # noqa: C901
                 best_point, best_value = expected_ucb(result_object, alpha=0.0)
                 best_point_dict = dict(zip(param_ranges.keys(), best_point))
                 with opt.gp.noise_set_to_zero():
-                _, best_std = opt.gp.predict(
-                    opt.space.transform([best_point]), return_std=True
-                )
+                    _, best_std = opt.gp.predict(
+                        opt.space.transform([best_point]), return_std=True
+                    )
                 root_logger.info(f"Current optimum:\n{best_point_dict}")
                 root_logger.info(
                     f"Estimated value: {np.around(best_value, 4)} +- "
