@@ -142,10 +142,10 @@ fitting process:
 * - `"acq_function"`
   - `-a --acq-function TEXT`
   - The search strategy used by the tuner. The following values are possible:
-    * `"mes"`: Max-value entropy search tries to sample points which
+    * `"mes"` (default): Max-value entropy search tries to sample points which
       yield a lot of information about the value of the optimum.
       A good allrounder strategy leaning on the exploitative side.
-    * `"pvrs"` (default): Predictive variance reduction search tries to sample
+    * `"pvrs"`: Predictive variance reduction search tries to sample
       points which reduce the uncertainty of promising regions as much as
       possible. Another good allrounder strategy, which compared to `mes`
       focuses more on exploration. Is slightly more robust.

@@ -109,7 +109,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 @click.option(
     "-a",
     "--acq-function",
-    default="pvrs",
+    default="mes",
     help="Acquisition function to use for selecting points to try. "
     "Can be {mes, pvrs, ei, ts, vr}.",
     show_default=True,
@@ -236,7 +236,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 )
 def local(  # noqa: C901
     tuning_config,
-    acq_function="pvrs",
+    acq_function="mes",
     acq_function_samples=1,
     confidence=0.9,
     data_path=None,
