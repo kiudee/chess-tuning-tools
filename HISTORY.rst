@@ -2,6 +2,11 @@
 History
 =======
 
+0.7.0-beta.1 (2020-10-13)
+-------------------------
+* Remove noise from the calculation of the confidence interval of the optimum
+  value.
+
 0.7.0-beta.0 (2020-09-26)
 -------------------------
 * Log cutechess-cli output continuously.
