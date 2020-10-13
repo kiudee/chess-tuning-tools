@@ -1,6 +1,9 @@
 =======
 History
 =======
+0.7.0-beta.2 (2020-10-13)
+-------------------------
+* Revert default acquisition function back to ``"mes"``.
 
 0.7.0-beta.1 (2020-10-13)
 -------------------------
