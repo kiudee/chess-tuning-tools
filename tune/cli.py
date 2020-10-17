@@ -10,7 +10,6 @@ import click
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from atomicwrites import AtomicWriter
 from bask.optimizer import Optimizer
 from scipy.special import erfinv
 from skopt.utils import create_result
