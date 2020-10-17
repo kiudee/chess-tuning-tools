@@ -298,8 +298,8 @@ fitting process:
     [default: 0.9]
 * -
   - `-d --data-path PATH`
-  - Save the evaluated points to this file. When restarting the tuner, this file
-    will be read to resume the optimization process. [default: data.npz]
+  - Save the evaluated points to this hdf5 file. When restarting the tuner, this
+    file will be read to resume the optimization process. [default: data.h5]
 * - `"logfile"`
   - `-l --logfile PATH`
   - Path to the log file.  [default: log.txt]
