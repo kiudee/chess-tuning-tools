@@ -221,6 +221,15 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     show_default=True,
 )
 @click.option(
+    "--validation-every",
+    default=0,
+    help="EXPERIMENTAL HACK: Do validation matches every n-th iteration. "
+    "A validation match is 20 times the rounds of a regular iteration. "
+    "This can significantly slow down tuning. Consider using high values. "
+    "Set to 0 to turn it off.",
+    show_default=True,
+)
+@click.option(
     "--resume/--no-resume",
     default=True,
     help="Let the optimizer resume, if it finds points it can use.",
@@ -251,6 +260,7 @@ def local(  # noqa: C901
     plot_path="plots",
     random_seed=0,
     result_every=1,
+    validation_every=0,
     resume=True,
     verbose=0,
     warp_inputs=True,
@@ -299,6 +309,7 @@ def local(  # noqa: C901
     y = []
     noise = []
     iteration = 0
+    validation_points = []
 
     # 3.1 Resume from existing data:
     if data_path is None:
@@ -310,6 +321,7 @@ def local(  # noqa: C901
                 X = importa["arr_0"].tolist()
                 y = importa["arr_1"].tolist()
                 noise = importa["arr_2"].tolist()
+                validation_points = importa["arr_3"].tolist()
             if len(X[0]) != opt.space.n_dims:
                 root_logger.error(
                     "The number of parameters are not matching the number of "
@@ -398,6 +410,101 @@ def local(  # noqa: C901
                     "This can happen in rare cases and running the "
                     "tuner again usually works."
                 )
+
+        validation_every = settings.get("validation_every", validation_every)
+        if (
+            validation_every > 0
+            and iteration % validation_every == 0
+            and opt.gp.chain_ is not None
+        ):
+            result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
+            try:
+                best_point, best_value = expected_ucb(result_object, alpha=0.0)
+                best_point_dict = dict(zip(param_ranges.keys(), best_point))
+                with opt.gp.noise_set_to_zero():
+                    _, best_std = opt.gp.predict(
+                        opt.space.transform([best_point]), return_std=True
+                    )
+                root_logger.info(f"Current optimum:\n{best_point_dict}")
+                root_logger.info(
+                    f"Estimated value: {np.around(best_value, 4)} +- "
+                    f"{np.around(best_std, 4).item()}"
+                )
+                confidence_val = settings.get("confidence", confidence)
+                confidence_mult = erfinv(confidence_val) * np.sqrt(2)
+                root_logger.info(
+                    f"{confidence_val * 100}% confidence interval of the value: "
+                    f"({np.around(best_value - confidence_mult * best_std, 4).item()}, "
+                    f"{np.around(best_value + confidence_mult * best_std, 4).item()})"
+                )
+                confidence_out = confidence_intervals(
+                    optimizer=opt,
+                    param_names=list(param_ranges.keys()),
+                    hdi_prob=confidence_val,
+                    opt_samples=1000,
+                    multimodal=False,
+                )
+                root_logger.info(
+                    f"{confidence_val * 100}% confidence intervals of the parameters:"
+                    f"\n{confidence_out}"
+                )
+
+                point = opt.ask()
+                point_dict = dict(zip(param_ranges.keys(), point))
+                root_logger.info("Testing {}".format(point_dict))
+
+                engine_json = prepare_engines_json(
+                    commands=commands, fixed_params=fixed_params
+                )
+                root_logger.debug(f"engines.json is prepared:\n{engine_json}")
+                write_engines_json(engine_json, point_dict)
+                root_logger.info("Start experiment")
+                now = datetime.now()
+                settings["debug_mode"] = settings.get(
+                    "debug_mode", False if verbose <= 1 else True
+                )
+                out_exp = []
+                validation_rounds = settings.get("rounds", 20) * 20
+                for output_line in run_match(
+                    **{k: v for k, v in settings.items() if k != "rounds"},
+                    rounds=validation_rounds,
+                ):  # TODO FIXME HACK
+                    root_logger.debug(output_line.rstrip())
+                    out_exp.append(output_line)
+                out_exp = "".join(out_exp)
+                later = datetime.now()
+                difference = (later - now).total_seconds()
+                root_logger.info(f"Experiment finished ({difference}s elapsed).")
+
+                score, error = parse_experiment_result(out_exp, **settings)
+                validation_points.append((iteration, score, error))
+
+                fig = plt.figure()
+                ax = fig.add_subplot(1, 1, 1)
+                ax.errorbar(
+                    [vp[0] for vp in validation_points],
+                    [vp[1] for vp in validation_points],
+                    yerr=[vp[2] for vp in validation_points],
+                    label="Score",
+                )
+                plotpath = pathlib.Path(settings.get("plot_path", plot_path))
+                plotpath.mkdir(parents=True, exist_ok=True)
+                timestr = time.strftime("%Y%m%d-%H%M%S")
+                full_plotpath = plotpath / f"validation-{timestr}-{iteration}.png"
+                plt.savefig(
+                    full_plotpath, dpi=300, facecolor="#36393f",
+                )
+                root_logger.info(f"Saving a plot to {full_plotpath}.")
+                plt.close(fig)
+
+                root_logger.info(f"Validation ELO: {score} +- {error}")
+            except ValueError:
+                root_logger.info(
+                    "Computing current optimum was not successful. "
+                    "This can happen in rare cases and running the "
+                    "tuner again usually works."
+                )
+
         plot_every_n = settings.get("plot_every", plot_every)
         if (
             plot_every_n > 0
@@ -517,7 +624,13 @@ def local(  # noqa: C901
         iteration = len(X)
 
         with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
-            np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
+            np.savez_compressed(
+                f,
+                np.array(X),
+                np.array(y),
+                np.array(noise),
+                np.array(validation_points),
+            )
 
 
 if __name__ == "__main__":
