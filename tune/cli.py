@@ -449,8 +449,7 @@ def local(  # noqa: C901
                     f"\n{confidence_out}"
                 )
 
-                point = opt.ask()
-                point_dict = dict(zip(param_ranges.keys(), point))
+                point_dict = dict(zip(param_ranges.keys(), best_point))
                 root_logger.info("Testing {}".format(point_dict))
 
                 engine_json = prepare_engines_json(
