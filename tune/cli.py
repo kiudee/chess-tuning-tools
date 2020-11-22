@@ -469,21 +469,14 @@ def local(  # noqa: C901
                 if opt.gp.chain_ is None:
                     gp_burnin = settings.get("gp_initial_burnin", gp_initial_burnin)
                     gp_samples = settings.get("gp_initial_samples", gp_initial_samples)
-                    opt.tell(
-                        point,
-                        score,
-                        n_samples=n_samples,
-                        gp_samples=gp_samples,
-                        gp_burnin=gp_burnin,
-                    )
-                else:
-                    opt.tell(
-                        point,
-                        score,
-                        n_samples=n_samples,
-                        gp_samples=gp_samples,
-                        gp_burnin=gp_burnin,
-                    )
+                opt.tell(
+                    point,
+                    score,
+                    noise_vector=error,
+                    n_samples=n_samples,
+                    gp_samples=gp_samples,
+                    gp_burnin=gp_burnin,
+                )
                 later = datetime.now()
                 difference = (later - now).total_seconds()
                 root_logger.info(f"GP sampling finished ({difference}s)")

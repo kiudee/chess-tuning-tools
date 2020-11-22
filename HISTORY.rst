@@ -1,6 +1,11 @@
 =======
 History
 =======
+0.7.0-beta.3 (2020-11-22)
+-------------------------
+* Fix a bug where the model was not informed about the estimated noise variance
+  of the current match.
+
 0.7.0-beta.2 (2020-10-13)
 -------------------------
 * Revert default acquisition function back to ``"mes"``.
