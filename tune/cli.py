@@ -411,6 +411,44 @@ def local(  # noqa: C901
                     "tuner again usually works."
                 )
 
+        plot_every_n = settings.get("plot_every", plot_every)
+        if (
+            plot_every_n > 0
+            and iteration % plot_every_n == 0
+            and opt.gp.chain_ is not None
+        ):
+            if opt.space.n_dims == 1:
+                root_logger.warning(
+                    "Plotting for only 1 parameter is not supported yet."
+                )
+            else:
+                root_logger.debug("Starting to compute the next plot.")
+                result_object = create_result(
+                    Xi=X, yi=y, space=opt.space, models=[opt.gp]
+                )
+                plt.style.use("dark_background")
+                fig, ax = plt.subplots(
+                    nrows=opt.space.n_dims,
+                    ncols=opt.space.n_dims,
+                    figsize=(3 * opt.space.n_dims, 3 * opt.space.n_dims),
+                )
+                fig.patch.set_facecolor("#36393f")
+                for i in range(opt.space.n_dims):
+                    for j in range(opt.space.n_dims):
+                        ax[i, j].set_facecolor("#36393f")
+                timestr = time.strftime("%Y%m%d-%H%M%S")
+                plot_objective(
+                    result_object, dimensions=list(param_ranges.keys()), fig=fig, ax=ax
+                )
+                plotpath = pathlib.Path(settings.get("plot_path", plot_path))
+                plotpath.mkdir(parents=True, exist_ok=True)
+                full_plotpath = plotpath / f"{timestr}-{iteration}.png"
+                plt.savefig(
+                    full_plotpath, dpi=300, facecolor="#36393f",
+                )
+                root_logger.info(f"Saving a plot to {full_plotpath}.")
+                plt.close(fig)
+
         validation_every = settings.get("validation_every", validation_every)
         if (
             validation_every > 0
@@ -481,6 +519,7 @@ def local(  # noqa: C901
                 )
 
                 score, error = parse_experiment_result(out_exp, **settings)
+                point = best_point
                 validation_points.append((iteration, score, error))
 
                 fig = plt.figure()
@@ -510,120 +549,89 @@ def local(  # noqa: C901
                     "This can happen in rare cases and running the "
                     "tuner again usually works."
                 )
+        else:
+            point = opt.ask()
+            point_dict = dict(zip(param_ranges.keys(), point))
+            root_logger.info("Testing {}".format(point_dict))
 
-        plot_every_n = settings.get("plot_every", plot_every)
-        if (
-            plot_every_n > 0
-            and iteration % plot_every_n == 0
-            and opt.gp.chain_ is not None
-        ):
-            if opt.space.n_dims == 1:
-                root_logger.warning(
-                    "Plotting for only 1 parameter is not supported yet."
-                )
-            else:
-                root_logger.debug("Starting to compute the next plot.")
-                result_object = create_result(
-                    Xi=X, yi=y, space=opt.space, models=[opt.gp]
-                )
-                plt.style.use("dark_background")
-                fig, ax = plt.subplots(
-                    nrows=opt.space.n_dims,
-                    ncols=opt.space.n_dims,
-                    figsize=(3 * opt.space.n_dims, 3 * opt.space.n_dims),
-                )
-                fig.patch.set_facecolor("#36393f")
-                for i in range(opt.space.n_dims):
-                    for j in range(opt.space.n_dims):
-                        ax[i, j].set_facecolor("#36393f")
-                timestr = time.strftime("%Y%m%d-%H%M%S")
-                plot_objective(
-                    result_object, dimensions=list(param_ranges.keys()), fig=fig, ax=ax
-                )
-                plotpath = pathlib.Path(settings.get("plot_path", plot_path))
-                plotpath.mkdir(parents=True, exist_ok=True)
-                full_plotpath = plotpath / f"{timestr}-{iteration}.png"
-                plt.savefig(
-                    full_plotpath, dpi=300, facecolor="#36393f",
-                )
-                root_logger.info(f"Saving a plot to {full_plotpath}.")
-                plt.close(fig)
-        point = opt.ask()
-        point_dict = dict(zip(param_ranges.keys(), point))
-        root_logger.info("Testing {}".format(point_dict))
+            engine_json = prepare_engines_json(
+                commands=commands, fixed_params=fixed_params
+            )
+            root_logger.debug(f"engines.json is prepared:\n{engine_json}")
+            write_engines_json(engine_json, point_dict)
+            root_logger.info("Start experiment")
+            now = datetime.now()
+            settings["debug_mode"] = settings.get(
+                "debug_mode", False if verbose <= 1 else True
+            )
+            out_exp = []
+            for output_line in run_match(**settings):
+                root_logger.debug(output_line.rstrip())
+                out_exp.append(output_line)
+            out_exp = "".join(out_exp)
+            later = datetime.now()
+            difference = (later - now).total_seconds()
+            root_logger.info(f"Experiment finished ({difference}s elapsed).")
 
-        engine_json = prepare_engines_json(commands=commands, fixed_params=fixed_params)
-        root_logger.debug(f"engines.json is prepared:\n{engine_json}")
-        write_engines_json(engine_json, point_dict)
-        root_logger.info("Start experiment")
-        now = datetime.now()
-        settings["debug_mode"] = settings.get(
-            "debug_mode", False if verbose <= 1 else True
-        )
-        out_exp = []
-        for output_line in run_match(**settings):
-            root_logger.debug(output_line.rstrip())
-            out_exp.append(output_line)
-        out_exp = "".join(out_exp)
-        later = datetime.now()
-        difference = (later - now).total_seconds()
-        root_logger.info(f"Experiment finished ({difference}s elapsed).")
-
-        score, error = parse_experiment_result(out_exp, **settings)
-        root_logger.info("Got score: {} +- {}".format(score, error))
-        root_logger.info("Updating model")
-        while True:
-            try:
-                now = datetime.now()
-                # We fetch kwargs manually here to avoid collisions:
-                n_samples = settings.get("acq_function_samples", acq_function_samples)
-                gp_burnin = settings.get("gp_burnin", gp_burnin)
-                gp_samples = settings.get("gp_samples", gp_samples)
-                if opt.gp.chain_ is None:
-                    gp_burnin = settings.get("gp_initial_burnin", gp_initial_burnin)
-                    gp_samples = settings.get("gp_initial_samples", gp_initial_samples)
-                    opt.tell(
-                        point,
-                        score,
-                        n_samples=n_samples,
-                        gp_samples=gp_samples,
-                        gp_burnin=gp_burnin,
+            score, error = parse_experiment_result(out_exp, **settings)
+            root_logger.info("Got score: {} +- {}".format(score, error))
+            root_logger.info("Updating model")
+            while True:
+                try:
+                    now = datetime.now()
+                    # We fetch kwargs manually here to avoid collisions:
+                    n_samples = settings.get(
+                        "acq_function_samples", acq_function_samples
                     )
-                else:
-                    opt.tell(
-                        point,
-                        score,
-                        n_samples=n_samples,
-                        gp_samples=gp_samples,
-                        gp_burnin=gp_burnin,
-                    )
-                later = datetime.now()
-                difference = (later - now).total_seconds()
-                root_logger.info(f"GP sampling finished ({difference}s)")
-                root_logger.debug(f"GP kernel: {opt.gp.kernel_}")
-                if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
-                    warp_params = dict(
-                        zip(
-                            param_ranges.keys(),
-                            zip(
-                                np.around(np.exp(opt.gp.warp_alphas_), 3),
-                                np.around(np.exp(opt.gp.warp_betas_), 3),
-                            ),
+                    gp_burnin = settings.get("gp_burnin", gp_burnin)
+                    gp_samples = settings.get("gp_samples", gp_samples)
+                    if opt.gp.chain_ is None:
+                        gp_burnin = settings.get("gp_initial_burnin", gp_initial_burnin)
+                        gp_samples = settings.get(
+                            "gp_initial_samples", gp_initial_samples
                         )
+                        opt.tell(
+                            point,
+                            score,
+                            n_samples=n_samples,
+                            gp_samples=gp_samples,
+                            gp_burnin=gp_burnin,
+                        )
+                    else:
+                        opt.tell(
+                            point,
+                            score,
+                            n_samples=n_samples,
+                            gp_samples=gp_samples,
+                            gp_burnin=gp_burnin,
+                        )
+                    later = datetime.now()
+                    difference = (later - now).total_seconds()
+                    root_logger.info(f"GP sampling finished ({difference}s)")
+                    root_logger.debug(f"GP kernel: {opt.gp.kernel_}")
+                    if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
+                        warp_params = dict(
+                            zip(
+                                param_ranges.keys(),
+                                zip(
+                                    np.around(np.exp(opt.gp.warp_alphas_), 3),
+                                    np.around(np.exp(opt.gp.warp_betas_), 3),
+                                ),
+                            )
+                        )
+                        root_logger.debug(
+                            f"Input warping was applied using the following parameters for "
+                            f"the beta distributions:\n"
+                            f"{warp_params}"
+                        )
+                except ValueError:
+                    root_logger.warning(
+                        "Error encountered during fitting. Trying to sample chain a bit. "
+                        "If this problem persists, restart the tuner to reinitialize."
                     )
-                    root_logger.debug(
-                        f"Input warping was applied using the following parameters for "
-                        f"the beta distributions:\n"
-                        f"{warp_params}"
-                    )
-            except ValueError:
-                root_logger.warning(
-                    "Error encountered during fitting. Trying to sample chain a bit. "
-                    "If this problem persists, restart the tuner to reinitialize."
-                )
-                opt.gp.sample(n_burnin=11, priors=opt.gp_priors)
-            else:
-                break
+                    opt.gp.sample(n_burnin=11, priors=opt.gp_priors)
+                else:
+                    break
         X.append(point)
         y.append(score)
         noise.append(error)
