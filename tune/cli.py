@@ -425,7 +425,10 @@ def local(  # noqa: C901
                     _, best_std = opt.gp.predict(
                         opt.space.transform([best_point]), return_std=True
                     )
-                root_logger.info(f"Current optimum:\n{best_point_dict}")
+                root_logger.info("Running validation match")
+                root_logger.info(
+                    f"Current optimum to use for validation match:\n{best_point_dict}"
+                )
                 root_logger.info(
                     f"Estimated value: {np.around(best_value, 4)} +- "
                     f"{np.around(best_std, 4).item()}"
@@ -450,7 +453,7 @@ def local(  # noqa: C901
                 )
 
                 point_dict = dict(zip(param_ranges.keys(), best_point))
-                root_logger.info("Testing {}".format(point_dict))
+                root_logger.info("Validating {}".format(point_dict))
 
                 engine_json = prepare_engines_json(
                     commands=commands, fixed_params=fixed_params
@@ -473,7 +476,9 @@ def local(  # noqa: C901
                 out_exp = "".join(out_exp)
                 later = datetime.now()
                 difference = (later - now).total_seconds()
-                root_logger.info(f"Experiment finished ({difference}s elapsed).")
+                root_logger.info(
+                    f"Validation experiment finished ({difference}s elapsed)."
+                )
 
                 score, error = parse_experiment_result(out_exp, **settings)
                 validation_points.append((iteration, score, error))
@@ -486,6 +491,8 @@ def local(  # noqa: C901
                     yerr=[vp[2] for vp in validation_points],
                     label="Score",
                 )
+                ax.set_xlabel("Iteration count")
+                ax.set_ylabel("Score")
                 plotpath = pathlib.Path(settings.get("plot_path", plot_path))
                 plotpath.mkdir(parents=True, exist_ok=True)
                 timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -493,7 +500,7 @@ def local(  # noqa: C901
                 plt.savefig(
                     full_plotpath, dpi=300, facecolor="#36393f",
                 )
-                root_logger.info(f"Saving a plot to {full_plotpath}.")
+                root_logger.info(f"Saving a validation plot to {full_plotpath}.")
                 plt.close(fig)
 
                 root_logger.info(f"Validation ELO: {score} +- {error}")
