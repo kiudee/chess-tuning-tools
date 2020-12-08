@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "chess-tuning-tools"
-version = "0.7.0"
+version = "0.7.1"
 description = "A collection of tools for local and distributed tuning of chess engines."
 authors = ["Karlson Pfannschmidt <kiudee@mail.upb.de>"]
 license = "Apache-2.0"
