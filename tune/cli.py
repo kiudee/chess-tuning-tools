@@ -456,8 +456,8 @@ def local(  # noqa: C901
         difference = (later - now).total_seconds()
         root_logger.info(f"Experiment finished ({difference}s elapsed).")
 
-        score, error = parse_experiment_result(out_exp, **settings)
-        root_logger.info("Got score: {} +- {}".format(score, error))
+        score, error_variance = parse_experiment_result(out_exp, **settings)
+        root_logger.info("Got score: {} +- {}".format(score, np.sqrt(error_variance)))
         root_logger.info("Updating model")
         while True:
             try:
@@ -472,7 +472,7 @@ def local(  # noqa: C901
                 opt.tell(
                     point,
                     score,
-                    noise_vector=error,
+                    noise_vector=error_variance,
                     n_samples=n_samples,
                     gp_samples=gp_samples,
                     gp_burnin=gp_burnin,
@@ -506,7 +506,7 @@ def local(  # noqa: C901
                 break
         X.append(point)
         y.append(score)
-        noise.append(error)
+        noise.append(error_variance)
         iteration = len(X)
 
         with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
