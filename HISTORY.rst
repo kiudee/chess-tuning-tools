@@ -2,6 +2,11 @@
 History
 =======
 
+0.7.1 (2020-12-08)
+------------------
+* Fix incorrectly outputting the variance instead of the standard deviation for
+  the estimated error around the score estimate.
+
 0.7.0 (2020-11-22)
 ------------------
 * Fix a bug where the model was not informed about the estimated noise variance
