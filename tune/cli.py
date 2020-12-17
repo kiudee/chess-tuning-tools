@@ -371,15 +371,15 @@ def local(  # noqa: C901
                     )
                 root_logger.info(f"Current optimum:\n{best_point_dict}")
                 root_logger.info(
-                    f"Estimated value: {np.around(best_value, 4)} +- "
-                    f"{np.around(best_std, 4).item()}"
+                    f"Estimated Elo: {np.around(-best_value * 100, 4)} +- "
+                    f"{np.around(best_std * 100, 4).item()}"
                 )
                 confidence_val = settings.get("confidence", confidence)
                 confidence_mult = erfinv(confidence_val) * np.sqrt(2)
                 root_logger.info(
                     f"{confidence_val * 100}% confidence interval of the value: "
-                    f"({np.around(best_value - confidence_mult * best_std, 4).item()}, "
-                    f"{np.around(best_value + confidence_mult * best_std, 4).item()})"
+                    f"({np.around(-best_value * 100 - confidence_mult * best_std * 100, 4).item()}, "
+                    f"{np.around(-best_value * 100 + confidence_mult * best_std * 100, 4).item()})"
                 )
                 confidence_out = confidence_intervals(
                     optimizer=opt,
@@ -457,7 +457,7 @@ def local(  # noqa: C901
         root_logger.info(f"Experiment finished ({difference}s elapsed).")
 
         score, error_variance = parse_experiment_result(out_exp, **settings)
-        root_logger.info("Got score: {} +- {}".format(score, np.sqrt(error_variance)))
+        root_logger.info("Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100))
         root_logger.info("Updating model")
         while True:
             try:
