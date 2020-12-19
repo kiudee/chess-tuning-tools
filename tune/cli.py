@@ -377,7 +377,7 @@ def local(  # noqa: C901
                 confidence_val = settings.get("confidence", confidence)
                 confidence_mult = erfinv(confidence_val) * np.sqrt(2)
                 root_logger.info(
-                    f"{confidence_val * 100}% confidence interval of the value: "
+                    f"{confidence_val * 100}% confidence interval of the Elo value: "
                     f"({np.around(-best_value * 100 - confidence_mult * best_std * 100, 4).item()}, "
                     f"{np.around(-best_value * 100 + confidence_mult * best_std * 100, 4).item()})"
                 )
