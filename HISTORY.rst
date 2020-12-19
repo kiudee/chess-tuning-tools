@@ -1,17 +1,19 @@
 =======
 History
 =======
-0.7.0-beta.2 (2020-10-13)
--------------------------
-* Revert default acquisition function back to ``"mes"``.
 
-0.7.0-beta.1 (2020-10-13)
--------------------------
+0.7.1 (2020-12-08)
+------------------
+* Fix incorrectly outputting the variance instead of the standard deviation for
+  the estimated error around the score estimate.
+
+0.7.0 (2020-11-22)
+------------------
+* Fix a bug where the model was not informed about the estimated noise variance
+  of the current match.
+* Revert default acquisition function back to ``"mes"``.
 * Remove noise from the calculation of the confidence interval of the optimum
   value.
-
-0.7.0-beta.0 (2020-09-26)
--------------------------
 * Log cutechess-cli output continuously.
 * Add ``"debug_mode"`` parameter which will pass ``-debug`` to cutechess-cli.
 * Add support for pondering using ``engineX_ponder``.
