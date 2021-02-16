@@ -18,7 +18,7 @@ def test_parse_experiment_result():
     score, error = parse_experiment_result(
         teststr, n_dirichlet_samples=1000, random_state=0
     )
-    assert_almost_equal(score, 0.0)
+    assert_almost_equal(score, 0.020911252464146674)
     assert_almost_equal(error, 0.887797821633887)
 
     # Test cutechess 1.2.0 output:
@@ -43,7 +43,7 @@ def test_parse_experiment_result():
     score, error = parse_experiment_result(
         teststr, n_dirichlet_samples=1000, random_state=0
     )
-    assert_almost_equal(score, 0.38764005203222596)
+    assert_almost_equal(score, 0.37790743267692595)
     assert_almost_equal(error, 0.6255020676255081)
 
     teststr = """Indexing opening suite...
@@ -81,7 +81,7 @@ def test_parse_experiment_result():
     score, error = parse_experiment_result(
         teststr, n_dirichlet_samples=1000, random_state=0
     )
-    assert_almost_equal(score, -2.7958800173440745)
+    assert_almost_equal(score, -3.2141142610031594)
     assert_almost_equal(error, 1.9952678343378125)
 
 
