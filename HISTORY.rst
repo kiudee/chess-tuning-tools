@@ -2,6 +2,11 @@
 History
 =======
 
+0.7.2 (unreleased)
+------------------
+* Fix computation of the score estimate. This should help in tunes with a low
+  number of rounds.
+
 0.7.1 (2020-12-08)
 ------------------
 * Fix incorrectly outputting the variance instead of the standard deviation for
