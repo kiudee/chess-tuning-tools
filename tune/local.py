@@ -149,11 +149,12 @@ def parse_experiment_result(
         raise ValueError("Argument prior_counts should contain 5 elements.")
     dist = dirichlet(alpha=counts_array + prior_counts)
     scores = [0.0, 0.25, 0.5, 0.75, 1.0]
-    score = prob_to_elo(dist.mean().dot(scores), k=score_scale)
-    error = prob_to_elo(
+    samples = prob_to_elo(
         dist.rvs(n_dirichlet_samples, random_state=random_state).dot(scores),
         k=score_scale,
-    ).var()
+    )
+    score = samples.mean()
+    error = samples.var()
     return score, error
 
 
