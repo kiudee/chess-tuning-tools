@@ -2,6 +2,12 @@
 History
 =======
 
+0.7.2 (unreleased)
+------------------
+* Print user facing scores using the more common Elo scale, instead of negative
+  downscaled values used internally.
+* Internal constants set to improved values.
+
 0.7.1 (2020-12-08)
 ------------------
 * Fix incorrectly outputting the variance instead of the standard deviation for
