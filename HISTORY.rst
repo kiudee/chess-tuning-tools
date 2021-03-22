@@ -7,6 +7,7 @@ History
 * Print user facing scores using the more common Elo scale, instead of negative
   downscaled values used internally.
 * Internal constants set to improved values.
+* Always send ``uci`` first before sending ``setoption`` commands to the engine.
 
 0.7.1 (2020-12-08)
 ------------------

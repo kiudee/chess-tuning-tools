@@ -47,6 +47,8 @@ class InitStrings(MutableMapping):
 
     def __getitem__(self, key):
         for s in self._init_strings:
+            if s == "uci":
+                continue
             name, value = uci_tuple(s)
             if key == name:
                 return value
@@ -54,6 +56,8 @@ class InitStrings(MutableMapping):
 
     def __setitem__(self, key, value):
         for i, s in enumerate(self._init_strings):
+            if s == "uci":
+                continue
             name, _ = uci_tuple(s)
             if key == name:
                 self._init_strings[i] = _set_option(key, value)
@@ -63,6 +67,8 @@ class InitStrings(MutableMapping):
     def __delitem__(self, key):
         elem = -1
         for i, s in enumerate(self._init_strings):
+            if s == "uci":
+                continue
             name, _ = uci_tuple(s)
             if key == name:
                 elem = i
@@ -74,6 +80,8 @@ class InitStrings(MutableMapping):
 
     def __contains__(self, key):
         for s in self._init_strings:
+            if s == "uci":
+                continue
             name, _ = uci_tuple(s)
             if key == name:
                 return True
@@ -81,6 +89,8 @@ class InitStrings(MutableMapping):
 
     def __iter__(self):
         for s in self._init_strings:
+            if s == "uci":
+                continue
             name, _ = uci_tuple(s)
             yield name
 
@@ -192,7 +202,7 @@ def load_tuning_config(json_dict):
 
 def prepare_engines_json(commands, fixed_params):
     result_list = [
-        {"command": c, "name": f"engine{i+1}", "initStrings": [], "protocol": "uci"}
+        {"command": c, "name": f"engine{i+1}", "initStrings": ["uci"], "protocol": "uci"}
         for i, c in enumerate(commands)
     ]
     for r, fp in zip(result_list, fixed_params):
