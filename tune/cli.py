@@ -281,7 +281,7 @@ def local(  # noqa: C901
     random_state = np.random.RandomState(np.random.MT19937(ss.spawn(1)[0]))
     gp_kwargs = dict(
         # TODO: Due to a bug in scikit-learn 0.23.2, we set normalize_y=False:
-        normalize_y=False,
+        normalize_y=True,
         warp_inputs=settings.get("warp_inputs", warp_inputs),
     )
     opt = Optimizer(
@@ -292,7 +292,7 @@ def local(  # noqa: C901
         gp_kwargs=gp_kwargs,
         # gp_priors=priors,  # TODO: Let user pass in priors
         acq_func=settings.get("acq_function", acq_function),
-        acq_func_kwargs=dict(alpha="inf", n_thompson=20),
+        acq_func_kwargs=dict(alpha=1.96, n_thompson=500),
         random_state=random_state,
     )
     X = []
