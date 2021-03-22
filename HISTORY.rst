@@ -2,7 +2,7 @@
 History
 =======
 
-0.7.2 (unreleased)
+0.7.2 (2021-03-22)
 ------------------
 * Print user facing scores using the more common Elo scale, instead of negative
   downscaled values used internally.
