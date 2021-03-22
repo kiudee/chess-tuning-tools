@@ -9,13 +9,19 @@ from datetime import datetime
 import click
 import matplotlib.pyplot as plt
 import numpy as np
-from atomicwrites import AtomicWriter
+import pandas as pd
 from bask.optimizer import Optimizer
 from scipy.special import erfinv
 from skopt.utils import create_result
 
 from tune.db_workers import TuningClient, TuningServer
-from tune.io import load_tuning_config, prepare_engines_json, write_engines_json
+from tune.io import (
+    import_data_file,
+    load_tuning_config,
+    prepare_engines_json,
+    write_data_file,
+    write_engines_json,
+)
 from tune.local import parse_experiment_result, reduce_ranges, run_match
 from tune.plots import plot_objective
 from tune.summary import confidence_intervals
@@ -132,8 +138,8 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 @click.option(
     "-d",
     "--data-path",
-    default="data.npz",
-    help="Save the evaluated points to this file.",
+    default="data.h5",
+    help="Save the evaluated points to this hdf5 file.",
     type=click.Path(exists=False),
     show_default=True,
 )
@@ -302,14 +308,18 @@ def local(  # noqa: C901
 
     # 3.1 Resume from existing data:
     if data_path is None:
-        data_path = "data.npz"
+        data_path = "data.h5"
+    data_path = pathlib.Path(data_path)
     if resume:
-        path = pathlib.Path(data_path)
-        if path.exists():
-            with np.load(path) as importa:
-                X = importa["arr_0"].tolist()
-                y = importa["arr_1"].tolist()
-                noise = importa["arr_2"].tolist()
+        if data_path.exists():
+            X, y, noise = import_data_file(data_path)
+            if data_path.suffix != ".h5":
+                root_logger.info(
+                    f"Converted old data format. Will proceed to write "
+                    f"to {data_path.with_suffix('.h5')}. Remember to "
+                    f"change --data_path to the new path!"
+                )
+                data_path = data_path.with_suffix(".h5")
             if len(X[0]) != opt.space.n_dims:
                 root_logger.error(
                     "The number of parameters are not matching the number of "
@@ -321,8 +331,8 @@ def local(  # noqa: C901
                 X, y, noise, opt.space
             )
             if reduction_needed:
-                backup_path = path.parent / (
-                    path.stem + f"_backup_{int(time.time())}" + path.suffix
+                backup_path = data_path.parent / (
+                    data_path.stem + f"_backup_{int(time.time())}" + data_path.suffix
                 )
                 root_logger.warning(
                     f"The parameter ranges are smaller than the existing data. "
@@ -330,8 +340,11 @@ def local(  # noqa: C901
                     f"The original {len(X)} data points will be saved to "
                     f"{backup_path}"
                 )
-                np.savez_compressed(
-                    backup_path, np.array(X), np.array(y), np.array(noise)
+                write_data_file(
+                    path=backup_path,
+                    X=pd.DataFrame(X, columns=list(param_ranges.keys())),
+                    y=pd.Series(y),
+                    noise=pd.Series(noise),
                 )
                 X = X_reduced
                 y = y_reduced
@@ -509,8 +522,12 @@ def local(  # noqa: C901
         noise.append(error_variance)
         iteration = len(X)
 
-        with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
-            np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
+        write_data_file(
+            path=data_path,
+            X=pd.DataFrame(X, columns=list(param_ranges.keys())),
+            y=pd.Series(y),
+            noise=pd.Series(noise),
+        )
 
 
 if __name__ == "__main__":

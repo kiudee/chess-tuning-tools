@@ -5,8 +5,11 @@ from ast import literal_eval
 from collections.abc import MutableMapping
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 import skopt.space as skspace
 from skopt.space.space import check_dimension
+from tables import HDF5ExtError
 
 __all__ = [
     "InitStrings",
@@ -217,3 +220,33 @@ def write_engines_json(engine_json, point_dict):
     initstr.update(point_dict)
     with open(Path() / "engines.json", "w") as file:
         json.dump(engine_json, file, sort_keys=True, indent=4)
+
+
+def import_data_file(path):
+    try:
+        with pd.HDFStore(path) as store:
+            X = store["X"].values.tolist()
+            y = store["y"].values.tolist()
+            noise = store["noise"].values.tolist()
+    except HDF5ExtError:
+        # The file is not a valid hdf5 file.
+        # We assume that it is a compressed numpy file.
+        try:
+            with np.load(path) as importa:
+                X = importa["arr_0"].tolist()
+                y = importa["arr_1"].tolist()
+                noise = importa["arr_2"].tolist()
+        except (OSError, ValueError):
+            raise ValueError(
+                f"Data file {str(path)} is neither a valid hdf5 nor a valid numpy file."
+            )
+        pass
+
+    return X, y, noise
+
+
+def write_data_file(path, X, y, noise):
+    with pd.HDFStore(path.with_suffix(".h5")) as store:
+        store["X"] = X
+        store["y"] = y
+        store["noise"] = noise
