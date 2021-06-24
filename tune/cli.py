@@ -239,7 +239,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 @click.option(
     "--model-path",
     default="model.pkl",
-    help="The current optimizer will be saved for resuming to this file.",
+    help="The current optimizer will be saved for fast resuming to this file.",
     type=click.Path(exists=False),
     show_default=True,
 )

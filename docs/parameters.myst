@@ -323,6 +323,17 @@ fitting process:
   - Let the optimizer resume, if it finds points it can use.
     [default: True]
 * -
+  - `--fast-resume / --no-fast-resume`
+  - If set, resume the tuning process with the model in the file specified by
+    the `--model-path`.
+    Note, that a full reinitialization will be performed, if the parameter
+    ranges have been changed.
+    [default: True]
+* -
+  - `--model-path PATH`
+  - The current optimizer will be saved for fast resuming to this file.
+    [default: model.pkl]
+* -
   - `-v --verbose`
   - Turn on debug output. `-vv` turns on the debug flag for cutechess-cli.
 ```
