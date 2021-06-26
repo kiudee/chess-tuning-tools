@@ -7,6 +7,8 @@ import sys
 from datetime import datetime
 from time import sleep
 
+import dill
+
 try:
     import joblib
 except ImportError:
@@ -102,6 +104,8 @@ class TuningServer(object):
         np.savez_compressed(
             path, np.array(self.opt.gp.pos_), np.array(self.opt.gp.chain_)
         )
+        with open("model.pkl", mode="wb") as file:
+            dill.dump(self.opt, file)
 
     def resume_tuning(self):
         path = os.path.join(
