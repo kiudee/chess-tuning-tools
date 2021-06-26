@@ -29,7 +29,14 @@ __all__ = ["TuningClient"]
 
 
 class TuningClient(object):
-    def __init__(self, dbconfig_path, terminate_after=0, clientconfig=None, **kwargs):
+    def __init__(
+        self,
+        dbconfig_path,
+        terminate_after=0,
+        clientconfig=None,
+        only_run_once=False,
+        **kwargs,
+    ):
         self.end_time = None
         if terminate_after != 0:
             start_time = time()
@@ -39,6 +46,7 @@ class TuningClient(object):
         self.sf_benchmark = None
         signal.signal(signal.SIGINT, self.interrupt_handler)
         self.interrupt_pressed = False
+        self.only_run_once = only_run_once
         if os.path.isfile(dbconfig_path):
             with open(dbconfig_path, "r") as config_file:
                 config = config_file.read().replace("\n", "")
@@ -298,6 +306,9 @@ class TuningClient(object):
                     .all()
                 )
                 if len(rows) == 0:
+                    if self.only_run_once:
+                        self.logger.warning("No job found. Terminating.")
+                        sys.exit(1)
                     sleep(30)  # TODO: maybe some sort of decay here
                     continue
 
@@ -377,3 +388,7 @@ class TuningClient(object):
                 else:  # LL
                     q.update({"ll_count": SqlResult.ll_count + 1})
                 self.logger.info("Uploaded match result to database.\n")
+
+                if self.only_run_once:
+                    self.logger.info("Shutting down after completing one job.")
+                    sys.exit(0)

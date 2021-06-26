@@ -37,10 +37,18 @@ def cli():
     "--terminate-after", default=0, help="Terminate the client after x minutes."
 )
 @click.option(
+    "--run-only-once",
+    default=False,
+    is_flag=True,
+    help="Terminate the client after x minutes.",
+)
+@click.option(
     "--clientconfig", default=None, help="Path to the client configuration file."
 )
 @click.argument("dbconfig")
-def run_client(verbose, logfile, terminate_after, clientconfig, dbconfig):
+def run_client(
+    verbose, logfile, terminate_after, run_only_once, clientconfig, dbconfig
+):
     """ Run the client to generate games for distributed tuning.
 
     In order to connect to the database you need to provide a valid DBCONFIG
@@ -58,6 +66,7 @@ def run_client(verbose, logfile, terminate_after, clientconfig, dbconfig):
         dbconfig_path=dbconfig,
         terminate_after=terminate_after,
         clientconfig=clientconfig,
+        run_only_once=run_only_once,
     )
     tc.run()
 
