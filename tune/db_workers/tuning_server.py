@@ -415,16 +415,22 @@ class TuningServer(object):
             self.logger.info("New jobs committed to database.")
             sleep(self.experiment.get("sleep_time", 60))
 
-            result_object = create_result(
-                Xi=X.tolist(), yi=y.tolist(), space=self.opt.space, models=[self.opt.gp]
-            )
-            try:
-                opt_x, opt_y = expected_ucb(result_object)
-                self.logger.info(
-                    f"Current optimum: {dict(zip(self.parameters, np.around(opt_x,4)))}"
+            if self.opt.gp.chain_ is not None:
+                result_object = create_result(
+                    Xi=X.tolist(),
+                    yi=y.tolist(),
+                    space=self.opt.space,
+                    models=[self.opt.gp],
                 )
-            except ValueError:
-                self.logger.info("Current optimum: None (optimizer errored out :( )")
+                try:
+                    opt_x, opt_y = expected_ucb(result_object)
+                    self.logger.info(
+                        f"Current optimum: {dict(zip(self.parameters, np.around(opt_x,4)))}"
+                    )
+                except ValueError:
+                    self.logger.info(
+                        "Current optimum: None (optimizer errored out :( )"
+                    )
 
     def deactivate(self):
         raise NotImplementedError
