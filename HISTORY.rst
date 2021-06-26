@@ -2,6 +2,11 @@
 History
 =======
 
+0.7.3 (2021-06-26)
+------------------
+* Fix the server for distributed tuning trying to compute the current optimum
+  before a model has been fit.
+
 0.7.2 (2021-03-22)
 ------------------
 * Print user facing scores using the more common Elo scale, instead of negative
