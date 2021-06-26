@@ -3,7 +3,7 @@ from importlib.metadata import version
 
 __author__ = """Karlson Pfannschmidt"""
 __email__ = "kiudee@mail.upb.de"
-__version__ = version(__name__)
+__version__ = version("chess-tuning-tools")
 
 from tune.io import InitStrings, load_tuning_config, parse_ranges
 from tune.local import (
