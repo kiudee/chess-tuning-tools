@@ -8,6 +8,9 @@ History
   functionality from disk (new default).
 * Add ``--run-only-once`` flag to distributed tuning client. If True, it will
   terminate after completing one job or immediately if no job is found.
+* Add ``--skip-benchmark`` flag to distributed tuning client. If True, it will
+  skip the calibration of the time control, which involves running a benchmark
+  for both engines.
 * Fix the match parser producing incorrect results, when concurrency > 1 is
   used for playing matches.
 * Fix the server for distributed tuning trying to compute the current optimum
