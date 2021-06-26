@@ -2,7 +2,7 @@
 History
 =======
 
-0.7.3 (2021-06-26)
+0.7.3 (2021-06-27)
 ------------------
 * Add ``--fast-resume`` switch to the tuner, which allows instant resume
   functionality from disk (new default).
@@ -11,6 +11,8 @@ History
 * Add ``--skip-benchmark`` flag to distributed tuning client. If True, it will
   skip the calibration of the time control, which involves running a benchmark
   for both engines.
+* Tuning server of the distributed tuning framework will now also save the
+  optimizer object.
 * Fix the match parser producing incorrect results, when concurrency > 1 is
   used for playing matches.
 * Fix the server for distributed tuning trying to compute the current optimum
