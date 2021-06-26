@@ -43,11 +43,23 @@ def cli():
     help="Terminate the client after x minutes.",
 )
 @click.option(
+    "--skip-benchmark",
+    default=False,
+    is_flag=True,
+    help="Skip calibrating the time control by running a benchmark.",
+)
+@click.option(
     "--clientconfig", default=None, help="Path to the client configuration file."
 )
 @click.argument("dbconfig")
 def run_client(
-    verbose, logfile, terminate_after, run_only_once, clientconfig, dbconfig
+    verbose,
+    logfile,
+    terminate_after,
+    run_only_once,
+    skip_benchmark,
+    clientconfig,
+    dbconfig,
 ):
     """ Run the client to generate games for distributed tuning.
 
@@ -67,6 +79,7 @@ def run_client(
         terminate_after=terminate_after,
         clientconfig=clientconfig,
         run_only_once=run_only_once,
+        skip_benchmark=skip_benchmark,
     )
     tc.run()
 

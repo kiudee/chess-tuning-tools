@@ -35,6 +35,7 @@ class TuningClient(object):
         terminate_after=0,
         clientconfig=None,
         only_run_once=False,
+        skip_benchmark=False,
         **kwargs,
     ):
         self.end_time = None
@@ -47,6 +48,7 @@ class TuningClient(object):
         signal.signal(signal.SIGINT, self.interrupt_handler)
         self.interrupt_pressed = False
         self.only_run_once = only_run_once
+        self.skip_benchmark = skip_benchmark
         if os.path.isfile(dbconfig_path):
             with open(dbconfig_path, "r") as config_file:
                 config = config_file.read().replace("\n", "")
@@ -337,29 +339,31 @@ class TuningClient(object):
                 with open("engines.json", "w") as file:
                     json.dump(engine_config, file, sort_keys=True, indent=4)
                 sleep(2)
-                # b) Adjust time control:
-                if self.lc0_benchmark is None:
-                    self.logger.info(
-                        "Running initial nodes/second benchmark to calibrate time "
-                        "controls. Ensure that your pc is idle to get a good reading."
+                orig_tc = time_control = sql_result.time_control.to_tuple()
+                if not self.skip_benchmark:
+                    # b) Adjust time control:
+                    if self.lc0_benchmark is None:
+                        self.logger.info(
+                            "Running initial nodes/second benchmark to calibrate time "
+                            "controls. Ensure that your pc is idle to get a good "
+                            "reading."
+                        )
+                        self.run_benchmark(config)
+                        self.logger.info(
+                            f"Benchmark complete. Results: lc0: {self.lc0_benchmark} "
+                            f"nps, sf: {self.sf_benchmark} nps"
+                        )
+                    else:
+                        self.logger.debug(
+                            f"Initial benchmark results: lc0: {self.lc0_benchmark} "
+                            f"nps, sf: {self.sf_benchmark} nps"
+                        )
+                    time_control = self.adjust_time_control(
+                        orig_tc, float(job.engine1_nps), float(job.engine2_nps),
                     )
-                    self.run_benchmark(config)
-                    self.logger.info(
-                        f"Benchmark complete. Results: lc0: {self.lc0_benchmark} nps, "
-                        f"sf: {self.sf_benchmark} nps"
-                    )
-                else:
                     self.logger.debug(
-                        f"Initial benchmark results: lc0: {self.lc0_benchmark} nps, "
-                        f"sf: {self.sf_benchmark} nps"
+                        f"Adjusted time control from {orig_tc} to {time_control}"
                     )
-                orig_tc = sql_result.time_control.to_tuple()
-                time_control = self.adjust_time_control(
-                    orig_tc, float(job.engine1_nps), float(job.engine2_nps),
-                )
-                self.logger.debug(
-                    f"Adjusted time control from {orig_tc} to {time_control}"
-                )
 
                 # 3. Run experiment (and block)
                 self.logger.info(f"Running match with time control\n{time_control}")
