@@ -293,8 +293,8 @@ class TuningClient(object):
                 rows = (
                     session.query(SqlJob, SqlResult)
                     .filter(
-                        SqlJob.id == SqlResult.job_id, SqlJob.active == True
-                    )  # noqa: E712
+                        SqlJob.id == SqlResult.job_id, SqlJob.active == True  # noqa
+                    )
                     .all()
                 )
                 if len(rows) == 0:

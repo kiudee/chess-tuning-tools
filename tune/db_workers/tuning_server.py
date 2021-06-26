@@ -282,7 +282,7 @@ class TuningServer(object):
     def insert_jobs(self, session, new_x):
         # First set all active jobs to inactive:
         session.query(SqlJob).filter(
-            SqlJob.active == True,
+            SqlJob.active == True,  # noqa: E712
             SqlJob.tune_id == self.experiment["tune_id"],  # noqa: E712
         ).update(
             {"active": False}
@@ -425,7 +425,8 @@ class TuningServer(object):
                 try:
                     opt_x, opt_y = expected_ucb(result_object)
                     self.logger.info(
-                        f"Current optimum: {dict(zip(self.parameters, np.around(opt_x,4)))}"
+                        f"Current optimum: "
+                        f"{dict(zip(self.parameters, np.around(opt_x,4)))}"
                     )
                 except ValueError:
                     self.logger.info(
