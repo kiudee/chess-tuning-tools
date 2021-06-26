@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 
 import click
+import dill
 import matplotlib.pyplot as plt
 import numpy as np
 from atomicwrites import AtomicWriter
@@ -226,6 +227,22 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     help="Let the optimizer resume, if it finds points it can use.",
     show_default=True,
 )
+@click.option(
+    "--fast-resume/--no-fast-resume",
+    default=True,
+    help="If set, resume the tuning process with the model in the file specified by"
+    " the --model-path. "
+    "Note, that a full reinitialization will be performed, if the parameter"
+    "ranges have been changed.",
+    show_default=True,
+)
+@click.option(
+    "--model-path",
+    default="model.pkl",
+    help="The current optimizer will be saved for fast resuming to this file.",
+    type=click.Path(exists=False),
+    show_default=True,
+)
 @click.option("--verbose", "-v", count=True, default=0, help="Turn on debug output.")
 @click.option(
     "--warp-inputs/--no-warp-inputs",
@@ -252,6 +269,8 @@ def local(  # noqa: C901
     random_seed=0,
     result_every=1,
     resume=True,
+    fast_resume=True,
+    model_path="model.pkl",
     verbose=0,
     warp_inputs=True,
 ):
@@ -278,6 +297,7 @@ def local(  # noqa: C901
     ss = np.random.SeedSequence(settings.get("random_seed", random_seed))
     # 2. Create kernel
     # 3. Create optimizer
+
     random_state = np.random.RandomState(np.random.MT19937(ss.spawn(1)[0]))
     gp_kwargs = dict(
         # TODO: Due to a bug in scikit-learn 0.23.2, we set normalize_y=False:
@@ -336,21 +356,43 @@ def local(  # noqa: C901
                 X = X_reduced
                 y = y_reduced
                 noise = noise_reduced
-
             iteration = len(X)
-            root_logger.info(
-                f"Importing {iteration} existing datapoints. This could take a while..."
-            )
-            opt.tell(
-                X,
-                y,
-                noise_vector=noise,
-                gp_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
-                gp_samples=settings.get("gp_initial_samples", gp_initial_samples),
-                n_samples=settings.get("n_samples", 1),
-                progress=True,
-            )
-            root_logger.info("Importing finished.")
+            reinitialize = True
+            if fast_resume:
+                path = pathlib.Path(model_path)
+                if path.exists():
+                    with open(model_path, mode="rb") as model_file:
+                        old_opt = dill.load(model_file)
+                        root_logger.info(
+                            f"Resuming from existing optimizer in {model_path}."
+                        )
+                    if opt.space == old_opt.space:
+                        old_opt.acq_func = opt.acq_func
+                        old_opt.acq_func_kwargs = opt.acq_func_kwargs
+                        opt = old_opt
+                        reinitialize = False
+                    else:
+                        root_logger.info(
+                            "Parameter ranges have been changed and the "
+                            "existing optimizer instance is no longer "
+                            "valid. Reinitializing now."
+                        )
+
+            if reinitialize:
+                root_logger.info(
+                    f"Importing {iteration} existing datapoints. "
+                    f"This could take a while..."
+                )
+                opt.tell(
+                    X,
+                    y,
+                    noise_vector=noise,
+                    gp_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
+                    gp_samples=settings.get("gp_initial_samples", gp_initial_samples),
+                    n_samples=settings.get("n_samples", 1),
+                    progress=True,
+                )
+                root_logger.info("Importing finished.")
 
     # 4. Main optimization loop:
     while True:
@@ -457,7 +499,9 @@ def local(  # noqa: C901
         root_logger.info(f"Experiment finished ({difference}s elapsed).")
 
         score, error_variance = parse_experiment_result(out_exp, **settings)
-        root_logger.info("Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100))
+        root_logger.info(
+            "Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
+        )
         root_logger.info("Updating model")
         while True:
             try:
@@ -511,6 +555,8 @@ def local(  # noqa: C901
 
         with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
             np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
+        with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
+            dill.dump(opt, f)
 
 
 if __name__ == "__main__":
