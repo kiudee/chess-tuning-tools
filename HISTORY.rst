@@ -4,6 +4,8 @@ History
 
 0.7.3 (2021-06-26)
 ------------------
+* Fix the match parser producing incorrect results, when concurrency > 1 is
+  used for playing matches.
 * Fix the server for distributed tuning trying to compute the current optimum
   before a model has been fit.
 
