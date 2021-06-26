@@ -1,8 +1,9 @@
 """Top-level package for Chess Tuning Tools."""
+from importlib.metadata import version
 
 __author__ = """Karlson Pfannschmidt"""
 __email__ = "kiudee@mail.upb.de"
-__version__ = "0.7.2"
+__version__ = version(__name__)
 
 from tune.io import InitStrings, load_tuning_config, parse_ranges
 from tune.local import (
