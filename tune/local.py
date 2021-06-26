@@ -126,6 +126,12 @@ def parse_experiment_result(
     )
     diffs = np.diff(array, axis=0, prepend=np.array([[0, 0, 0]]))
 
+    # Parse order of finished games to be able to compute the correct pentanomial scores
+    finished = np.array(
+        [int(x) - 1 for x in re.findall(r"Finished game ([0-9]+)", outstr)]
+    )
+    diffs = diffs[np.argsort(finished)]
+
     counts = {"WW": 0, "WD": 0, "WL/DD": 0, "LD": 0, "LL": 0}
     for i in range(0, len(diffs) - 1, 2):
         match = diffs[i] + diffs[i + 1]
