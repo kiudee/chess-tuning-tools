@@ -345,17 +345,18 @@ class TuningClient(object):
                     if self.lc0_benchmark is None:
                         self.logger.info(
                             "Running initial nodes/second benchmark to calibrate time "
-                            "controls. Ensure that your pc is idle to get a good reading."
+                            "controls. Ensure that your pc is idle to get a good "
+                            "reading."
                         )
                         self.run_benchmark(config)
                         self.logger.info(
-                            f"Benchmark complete. Results: lc0: {self.lc0_benchmark} nps, "
-                            f"sf: {self.sf_benchmark} nps"
+                            f"Benchmark complete. Results: lc0: {self.lc0_benchmark} "
+                            f"nps, sf: {self.sf_benchmark} nps"
                         )
                     else:
                         self.logger.debug(
-                            f"Initial benchmark results: lc0: {self.lc0_benchmark} nps, "
-                            f"sf: {self.sf_benchmark} nps"
+                            f"Initial benchmark results: lc0: {self.lc0_benchmark} "
+                            f"nps, sf: {self.sf_benchmark} nps"
                         )
                     time_control = self.adjust_time_control(
                         orig_tc, float(job.engine1_nps), float(job.engine2_nps),
