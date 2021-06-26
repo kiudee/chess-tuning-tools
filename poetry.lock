@@ -219,14 +219,6 @@ six = ">=1.9.0"
 webencodings = "*"
 
 [[package]]
-name = "bump2version"
-version = "1.0.1"
-description = "Version-bump your software with a single command!"
-category = "dev"
-optional = false
-python-versions = ">=3.5"
-
-[[package]]
 name = "cffi"
 version = "1.14.5"
 description = "Foreign Function Interface for Python calling C code."
@@ -1883,7 +1875,7 @@ docs = ["Sphinx", "sphinx-book-theme", "myst-nb"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "050ee835eef21c6b44ae9d1e6a4828209526a99b52608de8e2b06dc925935f88"
+content-hash = "408c337306febcee050c0e2df81a5ad34ad820f8030b63a2003a80a73e21b31b"
 
 [metadata.files]
 alabaster = [
@@ -1974,10 +1966,6 @@ black = [
 bleach = [
     {file = "bleach-3.3.0-py2.py3-none-any.whl", hash = "sha256:6123ddc1052673e52bab52cdc955bcb57a015264a1c57d37bea2f6b817af0125"},
     {file = "bleach-3.3.0.tar.gz", hash = "sha256:98b3170739e5e83dd9dc19633f074727ad848cbedb6026708c8ac2d3b697a433"},
-]
-bump2version = [
-    {file = "bump2version-1.0.1-py2.py3-none-any.whl", hash = "sha256:37f927ea17cde7ae2d7baf832f8e80ce3777624554a653006c9144f8017fe410"},
-    {file = "bump2version-1.0.1.tar.gz", hash = "sha256:762cb2bfad61f4ec8e2bdf452c7c267416f8c70dd9ecb1653fd0bbb01fa936e6"},
 ]
 cffi = [
     {file = "cffi-1.14.5-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:bb89f306e5da99f4d922728ddcd6f7fcebb3241fc40edebcb7284d7514741991"},
