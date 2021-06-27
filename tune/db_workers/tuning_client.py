@@ -138,10 +138,8 @@ class TuningClient(object):
             self.logger.error(string)
             self.logger.error(err_string)
             sys.exit(1)
-        lines = string.split("\n")
         self.logger.debug(f"Cutechess result string:\n{string}")
-        last_output = lines[-4]
-        result = re.findall(r"[0-9]\s-\s[0-9]\s-\s[0-9]", last_output)[0]
+        result = re.findall(r"Score of.*:\s*([0-9]+\s-\s[0-9]+\s-\s[0-9]+)", string)[-1]
         w, l, d = [float(x) for x in re.findall("[0-9]", result)]
         return MatchResult(wins=w, losses=l, draws=d)
 
