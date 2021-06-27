@@ -1,14 +1,17 @@
 import pathlib
 import re
 import subprocess
+from typing import Optional, Tuple, Union
 
 import numpy as np
+from numpy.random import RandomState
 from scipy.stats import dirichlet
 from skopt.space import Categorical, Integer, Real
 
 from tune.utils import TimeControl
 
 __all__ = [
+    "counts_to_penta",
     "run_match",
     "parse_experiment_result",
     "reduce_ranges",
@@ -67,6 +70,55 @@ def prob_to_elo(p, k=4.0):
     if k <= 0:
         raise ValueError("k must be positive")
     return k * np.log10(-p / (p - 1))
+
+
+def counts_to_penta(
+    counts: np.ndarray,
+    prior_counts: Optional[np.ndarray] = None,
+    n_dirichlet_samples: int = 1000000,
+    score_scale: float = 4.0,
+    random_state: Union[int, RandomState, None] = None,
+    **kwargs,
+) -> Tuple[float, float]:
+    """Compute mean Elo score and variance of the pentanomial model for a count array.
+
+    Parameters
+    ----------
+    counts : np.ndarray
+        Array of counts for WW, WD, WL/DD, LD and LL
+    prior_counts : np.ndarray or None, default=None
+        Pseudo counts to use for WW, WD, WL/DD, LD and LL in the
+        pentanomial model.
+    n_dirichlet_samples : int, default = 1 000 000
+        Number of samples to draw from the Dirichlet distribution in order to
+        estimate the standard error of the score.
+    score_scale : float, optional (default=4.0)
+        Scale of the logistic distribution used to calculate the score. Has to be a
+        positive real number
+    random_state : int, RandomState instance or None, optional (default: None)
+        The generator used to initialize the centers. If int, random_state is
+        the seed used by the random number generator; If RandomState instance,
+        random_state is the random number generator; If None, the random number
+        generator is the RandomState instance used by `np.random`.
+    kwargs : dict
+        Additional keyword arguments
+    Returns
+    -------
+    tuple (float, float)
+        Mean Elo score and corresponding variance
+    """
+    if prior_counts is None:
+        prior_counts = np.array([0.14, 0.19, 0.34, 0.19, 0.14]) * 2.5
+    elif len(prior_counts) != 5:
+        raise ValueError("Argument prior_counts should contain 5 elements.")
+    dist = dirichlet(alpha=counts + prior_counts)
+    scores = [0.0, 0.25, 0.5, 0.75, 1.0]
+    score = prob_to_elo(dist.mean().dot(scores), k=score_scale)
+    error = prob_to_elo(
+        dist.rvs(n_dirichlet_samples, random_state=random_state).dot(scores),
+        k=score_scale,
+    ).var()
+    return score, error
 
 
 def parse_experiment_result(
@@ -149,18 +201,14 @@ def parse_experiment_result(
         else:
             counts["LL"] += 1
     counts_array = np.array(list(counts.values()))
-    if prior_counts is None:
-        prior_counts = np.array([0.14, 0.19, 0.34, 0.19, 0.14]) * 2.5
-    elif len(prior_counts) != 5:
-        raise ValueError("Argument prior_counts should contain 5 elements.")
-    dist = dirichlet(alpha=counts_array + prior_counts)
-    scores = [0.0, 0.25, 0.5, 0.75, 1.0]
-    score = prob_to_elo(dist.mean().dot(scores), k=score_scale)
-    error = prob_to_elo(
-        dist.rvs(n_dirichlet_samples, random_state=random_state).dot(scores),
-        k=score_scale,
-    ).var()
-    return score, error
+    return counts_to_penta(
+        counts=counts_array,
+        prior_counts=prior_counts,
+        n_dirichlet_samples=n_dirichlet_samples,
+        score_scale=score_scale,
+        random_state=random_state,
+        **kwargs,
+    )
 
 
 def _construct_engine_conf(
