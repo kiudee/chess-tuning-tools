@@ -42,9 +42,9 @@ from tune.db_workers.utils import (
     TimeControl,
     create_sqlalchemy_engine,
     get_session_maker,
-    simple_penta_to_score,
 )
 from tune.io import InitStrings
+from tune.local import counts_to_penta
 from tune.priors import roundflat
 from tune.utils import expected_ucb
 
@@ -251,29 +251,30 @@ class TuningServer(object):
             .values
         )
         y = {tc: [] for tc in self.time_controls}
+        variances = {tc: [] for tc in self.time_controls}
         for job in jobs:
             for result in job.results:
                 tc = result.time_control.to_tuple()
                 if tc not in self.time_controls:
                     continue
-                draw_rate = float(result.time_control.draw_rate)
                 counts = np.array(
                     [
-                        result.ll_count,
-                        result.dl_count,
-                        result.wl_count + result.dd_count,
-                        result.wd_count,
                         result.ww_count,
+                        result.wd_count,
+                        result.wl_count + result.dd_count,
+                        result.dl_count,
+                        result.ll_count,
                     ]
                 )
-                score = simple_penta_to_score(
-                    draw_rate=draw_rate,
-                    counts=counts,
-                    prior_games=self.experiment.get("prior_games", 1),
-                    prior_elo=self.experiment.get("prior_elo", 0.0),
-                )
-                y[tc].append(-score)
-        return X, np.array(list(y.values())).mean(axis=0), samplesize_reached
+                score, variance = counts_to_penta(counts=counts, random_state=0)
+                y[tc].append(score)
+                variances[tc].append(variance)
+        return (
+            X,
+            np.array(list(y.values())).mean(axis=0),
+            np.array(list(variances.values())).mean(axis=0),
+            samplesize_reached,
+        )
 
     @staticmethod
     def change_engine_config(engine_config, params):
@@ -362,7 +363,9 @@ class TuningServer(object):
             # Check if minimum sample size and minimum wait time are reached, then query
             # data and update model:
             with self.sessionmaker() as session:
-                X, y, samplesize_reached = self.query_data(session, include_active=True)
+                X, y, variances, samplesize_reached = self.query_data(
+                    session, include_active=True
+                )
                 self.logger.debug(
                     f"Queried the database for data and got (last 5):\n"
                     f"{X[-5:]}\n{y[-5:]}"
@@ -391,6 +394,7 @@ class TuningServer(object):
             self.opt.tell(
                 X.tolist(),
                 y.tolist(),
+                noise_vector=variances.tolist(),
                 fit=True,
                 replace=True,
                 n_samples=self.tunecfg["n_samples"],
