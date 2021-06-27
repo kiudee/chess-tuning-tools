@@ -40,7 +40,8 @@ def cli():
     "--run-only-once",
     default=False,
     is_flag=True,
-    help="Terminate the client after x minutes.",
+    help="Terminate the client after one job has been completed or no job can be "
+    "found.",
 )
 @click.option(
     "--skip-benchmark",
@@ -78,7 +79,7 @@ def run_client(
         dbconfig_path=dbconfig,
         terminate_after=terminate_after,
         clientconfig=clientconfig,
-        run_only_once=run_only_once,
+        only_run_once=run_only_once,
         skip_benchmark=skip_benchmark,
     )
     tc.run()
