@@ -392,6 +392,6 @@ class TuningClient(object):
                     q.update({"ll_count": SqlResult.ll_count + 1})
                 self.logger.info("Uploaded match result to database.\n")
 
-                if self.only_run_once:
-                    self.logger.info("Shutting down after completing one job.")
-                    sys.exit(0)
+            if self.only_run_once:
+                self.logger.info("Shutting down after completing one job.")
+                sys.exit(0)
