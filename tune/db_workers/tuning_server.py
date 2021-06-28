@@ -203,7 +203,9 @@ class TuningServer(object):
                 "n_initial_points", 5 * len(self.dimensions)
             ),
             gp_kernel=self.kernel,
-            gp_kwargs=dict(normalize_y=True),
+            gp_kwargs=dict(
+                normalize_y=True, warp_inputs=self.tunecfg.get("warp_inputs", True)
+            ),
             gp_priors=self.priors,
             acq_func=self.tunecfg.get("acq_func", "ts"),
             acq_func_kwargs=self.tunecfg.get(
