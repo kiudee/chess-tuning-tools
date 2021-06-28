@@ -13,6 +13,8 @@ History
   for both engines.
 * Tuning server of the distributed tuning framework will now also save the
   optimizer object.
+* Tuning server now also uses the updated pentanomial model including
+  noise estimation.
 * Fix the match parser producing incorrect results, when concurrency > 1 is
   used for playing matches.
 * Fix the server for distributed tuning trying to compute the current optimum
