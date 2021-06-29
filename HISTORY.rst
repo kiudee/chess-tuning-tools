@@ -15,6 +15,7 @@ History
   optimizer object.
 * Tuning server now also uses the updated pentanomial model including
   noise estimation.
+* ``warp_inputs`` can now be passed via database to the tuning server.
 * Fix the match parser producing incorrect results, when concurrency > 1 is
   used for playing matches.
 * Fix the server for distributed tuning trying to compute the current optimum
