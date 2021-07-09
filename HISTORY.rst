@@ -4,8 +4,17 @@ History
 
 0.7.3 (2021-06-27)
 ------------------
+
+Local tuner
+~~~~~~~~~~~
+
 * Add ``--fast-resume`` switch to the tuner, which allows instant resume
   functionality from disk (new default).
+* Fix the match parser producing incorrect results, when concurrency > 1 is
+  used for playing matches.
+
+Distributed tuning framework
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * Add ``--run-only-once`` flag to distributed tuning client. If True, it will
   terminate after completing one job or immediately if no job is found.
 * Add ``--skip-benchmark`` flag to distributed tuning client. If True, it will
@@ -16,8 +25,8 @@ History
 * Tuning server now also uses the updated pentanomial model including
   noise estimation.
 * ``warp_inputs`` can now be passed via database to the tuning server.
-* Fix the match parser producing incorrect results, when concurrency > 1 is
-  used for playing matches.
+* Fix the server for distributed tuning not sorting the data by job id causing
+  the model to be fit with randomly permuted scores.
 * Fix the server for distributed tuning trying to compute the current optimum
   before a model has been fit.
 
