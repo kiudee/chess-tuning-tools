@@ -234,7 +234,7 @@ class TuningServer(object):
         if np.all(sample_sizes >= self.experiment.get("minimum_samplesize", 16)):
             samplesize_reached = True
 
-        q = session.query(SqlJob).filter(SqlJob.tune_id == tune_id)
+        q = session.query(SqlJob).filter(SqlJob.tune_id == tune_id).order_by(SqlJob.id)
         if not include_active:
             q = q.filter(SqlJob.active == False)  # noqa
         jobs = q.all()
@@ -268,7 +268,9 @@ class TuningServer(object):
                         result.ll_count,
                     ]
                 )
-                score, variance = counts_to_penta(counts=counts, random_state=0)
+                score, variance = counts_to_penta(
+                    counts=counts, random_state=0, n_dirichlet_samples=100000
+                )
                 y[tc].append(score)
                 variances[tc].append(variance)
         return (
