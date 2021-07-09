@@ -28,7 +28,7 @@ def cli():
     pass
 
 
-@cli.command(hidden=True, deprecated=True)
+@cli.command()
 @click.option(
     "--verbose", "-v", is_flag=True, default=False, help="Turn on debug output."
 )
@@ -85,7 +85,7 @@ def run_client(
     tc.run()
 
 
-@cli.command(hidden=True, deprecated=True)
+@cli.command()
 @click.option(
     "--verbose", "-v", is_flag=True, default=False, help="Turn on debug output."
 )
