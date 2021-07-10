@@ -120,10 +120,10 @@ A reminder for the maintainers on how to deploy.
 Make sure all your changes are committed (including an entry in HISTORY.rst).
 Then run::
 
-    $ bump2version patch # possible: major / minor / patch / release / build
+    $ poetry version x.y.z
+    $ git commit -m "Bump version to x.y.z"
     $ git push
-    $ git push --tags
 
-Travis will then deploy to PyPI if tests pass.
+Then create a new release on Github.
 
 .. _poetry: https://python-poetry.org/
