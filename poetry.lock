@@ -331,7 +331,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "emcee"
-version = "3.0.2"
+version = "3.1.0"
 description = "The Python ensemble sampling toolkit for MCMC"
 category = "main"
 optional = false
@@ -339,6 +339,10 @@ python-versions = "*"
 
 [package.dependencies]
 numpy = "*"
+
+[package.extras]
+extras = ["h5py", "scipy"]
+tests = ["pytest", "pytest-cov", "coverage"]
 
 [[package]]
 name = "entrypoints"
@@ -1875,7 +1879,7 @@ docs = ["Sphinx", "sphinx-book-theme", "myst-nb"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "408c337306febcee050c0e2df81a5ad34ad820f8030b63a2003a80a73e21b31b"
+content-hash = "c22a744cbe75f0b085ce0c7d182ab3c81078f3161df3a0ef0d41a890ead7f679"
 
 [metadata.files]
 alabaster = [
@@ -2090,8 +2094,8 @@ docutils = [
     {file = "docutils-0.17.1.tar.gz", hash = "sha256:686577d2e4c32380bb50cbb22f575ed742d58168cee37e99117a854bcd88f125"},
 ]
 emcee = [
-    {file = "emcee-3.0.2-py2.py3-none-any.whl", hash = "sha256:bffaa2e1830d90f4e2ae42ca8db9bef67b73eefe90bdedacf58c9a1977966184"},
-    {file = "emcee-3.0.2.tar.gz", hash = "sha256:035a44d7594fdd03efd10a522558cdfaa080e046ad75594d0bf2aec80ec35388"},
+    {file = "emcee-3.1.0-py2.py3-none-any.whl", hash = "sha256:b3195637280cc13efcbaaff8bbb0cac1eb43fc868cf85ccde8fc171e1b6da8ca"},
+    {file = "emcee-3.1.0.tar.gz", hash = "sha256:ce7dd8910989044ed6b752a41977eaa9fcc91703a6473b5f96289585b061ff56"},
 ]
 entrypoints = [
     {file = "entrypoints-0.3-py2.py3-none-any.whl", hash = "sha256:589f874b313739ad35be6e0cd7efde2a4e9b6fea91edcc34e58ecbb8dbe56d19"},
