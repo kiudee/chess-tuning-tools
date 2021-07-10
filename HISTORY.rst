@@ -15,6 +15,7 @@ Local tuner
 
 Distributed tuning framework
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* The distributed tuning framework is no longer deprecated.
 * Add ``--run-only-once`` flag to distributed tuning client. If True, it will
   terminate after completing one job or immediately if no job is found.
 * Add ``--skip-benchmark`` flag to distributed tuning client. If True, it will
