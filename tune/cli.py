@@ -312,11 +312,19 @@ def local(  # noqa: C901
     # Initialize/import data structures:
     if data_path is None:
         data_path = "data.npz"
-    X, y, noise, iteration = initialize_data(
-        parameter_ranges=list(param_ranges.values()),
-        resume=resume,
-        data_path=data_path,
-    )
+    try:
+        X, y, noise, iteration = initialize_data(
+            parameter_ranges=list(param_ranges.values()),
+            resume=resume,
+            data_path=data_path,
+        )
+    except ValueError:
+        root_logger.error(
+            "The number of parameters are not matching the number of "
+            "dimensions. Rename the existing data file or ensure that the "
+            "parameter ranges are correct."
+        )
+        sys.exit(1)
 
     # Initialize Optimizer object and if applicable, resume from existing
     # data/optimizer:

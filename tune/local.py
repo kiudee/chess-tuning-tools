@@ -240,6 +240,12 @@ def initialize_data(
     -------
     tuple consisting of list, list, list and int
         Returns the initialized data structures X, y, noise and iteration number.
+
+    Raises
+    ------
+    ValueError
+        If the number of specified parameters is not matching the existing number of
+        parameters in the data.
     """
     logger = logging.getLogger()
     X = y = noise = []
@@ -253,12 +259,10 @@ def initialize_data(
                 y = importa["arr_1"].tolist()
                 noise = importa["arr_2"].tolist()
             if len(X[0]) != space.n_dims:
-                logger.error(
-                    "The number of parameters are not matching the number of "
-                    "dimensions. Rename the existing data file or ensure that the "
-                    "parameter ranges are correct."
+                raise ValueError(
+                    f"Number of parameters ({len(X[0])}) are not matching "
+                    f"the number of dimensions ({space.n_dims})."
                 )
-                sys.exit(1)
             reduction_needed, X_reduced, y_reduced, noise_reduced = reduce_ranges(
                 X, y, noise, space
             )
