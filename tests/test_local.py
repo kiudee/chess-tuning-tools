@@ -1,9 +1,15 @@
 import numpy as np
 import pytest
+from bask import Optimizer
 from numpy.testing import assert_almost_equal
 from skopt.utils import normalize_dimensions
 
-from tune.local import initialize_data, parse_experiment_result, reduce_ranges
+from tune.local import (
+    initialize_data,
+    parse_experiment_result,
+    reduce_ranges,
+    update_model,
+)
 
 
 def test_parse_experiment_result():
@@ -172,3 +178,18 @@ def test_initialize_data(tmp_path):
         _ = initialize_data(
             parameter_ranges=[(0.0, 1.0)] * 2, data_path=testfile, resume=True,
         )
+
+
+def test_update_model():
+    opt = Optimizer(dimensions=[(0.0, 1.0)], n_points=10, random_state=0,)
+    points = [[0.0], [1.0], [0.5]]
+    scores = [-1.0, 1.0, 0.0]
+    variances = [0.3, 0.2, 0.4]
+    for p, s, v in zip(points, scores, variances):
+        update_model(
+            optimizer=opt, point=p, score=s, variance=v,
+        )
+    assert len(opt.Xi) == 3
+    assert np.allclose(opt.Xi, points)
+    assert np.allclose(opt.yi, scores)
+    assert np.allclose(opt.noisei, variances)
