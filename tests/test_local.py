@@ -1,3 +1,4 @@
+import dill
 import numpy as np
 import pytest
 from bask import Optimizer
@@ -6,6 +7,7 @@ from skopt.utils import normalize_dimensions
 
 from tune.local import (
     initialize_data,
+    initialize_optimizer,
     parse_experiment_result,
     reduce_ranges,
     update_model,
@@ -177,6 +179,66 @@ def test_initialize_data(tmp_path):
     with pytest.raises(ValueError):
         _ = initialize_data(
             parameter_ranges=[(0.0, 1.0)] * 2, data_path=testfile, resume=True,
+        )
+
+
+def test_initialize_optimizer(tmp_path):
+    # First test the minimal functionality without data and resume=False
+    opt = initialize_optimizer(
+        X=[], y=[], noise=[], parameter_ranges=[(0.0, 1.0)], resume=False,
+    )
+    assert len(opt.Xi) == 0
+
+    # Provide some data to test resume functionality, but do not provide a path:
+    opt = initialize_optimizer(
+        X=[[0.0], [0.5], [1.0]],
+        y=[1.0, -1.0, 1.0],
+        noise=[0.1, 0.1, 0.1],
+        n_initial_points=2,
+        gp_initial_burnin=0,
+        parameter_ranges=[(0.0, 1.0)],
+        resume=True,
+        # should only work with a given model_path, so should fall back:
+        fast_resume=True,
+        model_path=None,
+    )
+    assert len(opt.Xi) == 3
+    assert hasattr(opt.gp, "chain_")
+
+    # Save the optimizer from above to test fast resume:
+    model_path = tmp_path / "model.pkl"
+    with open(model_path, mode="wb") as f:
+        dill.dump(opt, f)
+    opt2 = initialize_optimizer(
+        X=[[0.0], [0.5], [1.0]],
+        y=[1.0, -1.0, 1.0],
+        noise=[0.1, 0.1, 0.1],
+        n_initial_points=2,
+        gp_initial_burnin=0,
+        parameter_ranges=[(0.0, 1.0)],
+        resume=True,
+        fast_resume=True,
+        model_path=model_path,
+    )
+    assert np.allclose(opt2.Xi, opt.Xi)
+    assert np.allclose(opt2.yi, opt.yi)
+    assert np.allclose(opt2.noisei, opt.noisei)
+    # Since fast_resume does not do a refit, these should be equal:
+    assert np.allclose(opt2.gp.chain_, opt.gp.chain_)
+
+    # Do a fast resume, but change the ranges. This is expected to raise a ValueError
+    # exception, since at this point the data is assumed to be filtered already:
+    with pytest.raises(ValueError):
+        _ = initialize_optimizer(
+            X=[[0.0], [0.5], [1.0]],
+            y=[1.0, -1.0, 1.0],
+            noise=[0.1, 0.1, 0.1],
+            n_initial_points=2,
+            gp_initial_burnin=0,
+            parameter_ranges=[(0.0, 0.5)],
+            resume=True,
+            fast_resume=True,
+            model_path=model_path,
         )
 
 
