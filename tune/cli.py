@@ -1,26 +1,27 @@
 """Console script for chess_tuning_tools."""
 import json
 import logging
-import pathlib
 import sys
-import time
 from datetime import datetime
 
 import click
 import dill
-import matplotlib.pyplot as plt
 import numpy as np
 from atomicwrites import AtomicWriter
-from bask.optimizer import Optimizer
-from scipy.special import erfinv
 from skopt.utils import create_result
 
 from tune.db_workers import TuningClient, TuningServer
 from tune.io import load_tuning_config, prepare_engines_json, write_engines_json
-from tune.local import parse_experiment_result, reduce_ranges, run_match
-from tune.plots import plot_objective
-from tune.summary import confidence_intervals
-from tune.utils import expected_ucb
+from tune.local import (
+    initialize_data,
+    initialize_optimizer,
+    parse_experiment_result,
+    plot_results,
+    print_results,
+    run_match,
+    setup_logger,
+    update_model,
+)
 
 
 @click.group()
@@ -303,216 +304,90 @@ def local(  # noqa: C901
     """
     json_dict = json.load(tuning_config)
     settings, commands, fixed_params, param_ranges = load_tuning_config(json_dict)
-    log_level = logging.DEBUG if verbose > 0 else logging.INFO
-    log_format = logging.Formatter("%(asctime)s %(levelname)-8s %(message)s")
-    root_logger = logging.getLogger("ChessTuner")
-    root_logger.setLevel(log_level)
-    root_logger.propagate = False
-    file_logger = logging.FileHandler(settings.get("logfile", logfile))
-    file_logger.setFormatter(log_format)
-    root_logger.addHandler(file_logger)
-    console_logger = logging.StreamHandler(sys.stdout)
-    console_logger.setFormatter(log_format)
-    root_logger.addHandler(console_logger)
-    logging.debug(f"Got the following tuning settings:\n{json_dict}")
-
-    # 1. Create seed sequence
-    ss = np.random.SeedSequence(settings.get("random_seed", random_seed))
-    # 2. Create kernel
-    # 3. Create optimizer
-
-    random_state = np.random.RandomState(np.random.MT19937(ss.spawn(1)[0]))
-    gp_kwargs = dict(
-        # TODO: Due to a bug in scikit-learn 0.23.2, we set normalize_y=False:
-        normalize_y=True,
-        warp_inputs=settings.get("warp_inputs", warp_inputs),
+    root_logger = setup_logger(
+        verbose=verbose, logfile=settings.get("logfile", logfile)
     )
-    opt = Optimizer(
-        dimensions=list(param_ranges.values()),
-        n_points=settings.get("n_points", n_points),
-        n_initial_points=settings.get("n_initial_points", n_initial_points),
-        # gp_kernel=kernel,  # TODO: Let user pass in different kernels
-        gp_kwargs=gp_kwargs,
-        # gp_priors=priors,  # TODO: Let user pass in priors
-        acq_func=settings.get("acq_function", acq_function),
-        acq_func_kwargs=dict(alpha=1.96, n_thompson=500),
-        random_state=random_state,
-    )
-    X = []
-    y = []
-    noise = []
-    iteration = 0
+    root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
 
-    # 3.1 Resume from existing data:
+    # Initialize/import data structures:
     if data_path is None:
         data_path = "data.npz"
-    if resume:
-        path = pathlib.Path(data_path)
-        if path.exists():
-            with np.load(path) as importa:
-                X = importa["arr_0"].tolist()
-                y = importa["arr_1"].tolist()
-                noise = importa["arr_2"].tolist()
-            if len(X[0]) != opt.space.n_dims:
-                root_logger.error(
-                    "The number of parameters are not matching the number of "
-                    "dimensions. Rename the existing data file or ensure that the "
-                    "parameter ranges are correct."
-                )
-                sys.exit(1)
-            reduction_needed, X_reduced, y_reduced, noise_reduced = reduce_ranges(
-                X, y, noise, opt.space
-            )
-            if reduction_needed:
-                backup_path = path.parent / (
-                    path.stem + f"_backup_{int(time.time())}" + path.suffix
-                )
-                root_logger.warning(
-                    f"The parameter ranges are smaller than the existing data. "
-                    f"Some points will have to be discarded. "
-                    f"The original {len(X)} data points will be saved to "
-                    f"{backup_path}"
-                )
-                np.savez_compressed(
-                    backup_path, np.array(X), np.array(y), np.array(noise)
-                )
-                X = X_reduced
-                y = y_reduced
-                noise = noise_reduced
-            iteration = len(X)
-            reinitialize = True
-            if fast_resume:
-                path = pathlib.Path(model_path)
-                if path.exists():
-                    with open(model_path, mode="rb") as model_file:
-                        old_opt = dill.load(model_file)
-                        root_logger.info(
-                            f"Resuming from existing optimizer in {model_path}."
-                        )
-                    if opt.space == old_opt.space:
-                        old_opt.acq_func = opt.acq_func
-                        old_opt.acq_func_kwargs = opt.acq_func_kwargs
-                        opt = old_opt
-                        reinitialize = False
-                    else:
-                        root_logger.info(
-                            "Parameter ranges have been changed and the "
-                            "existing optimizer instance is no longer "
-                            "valid. Reinitializing now."
-                        )
+    try:
+        X, y, noise, iteration = initialize_data(
+            parameter_ranges=list(param_ranges.values()),
+            resume=resume,
+            data_path=data_path,
+        )
+    except ValueError:
+        root_logger.error(
+            "The number of parameters are not matching the number of "
+            "dimensions. Rename the existing data file or ensure that the "
+            "parameter ranges are correct."
+        )
+        sys.exit(1)
 
-            if reinitialize:
-                root_logger.info(
-                    f"Importing {iteration} existing datapoints. "
-                    f"This could take a while..."
-                )
-                opt.tell(
-                    X,
-                    y,
-                    noise_vector=noise,
-                    gp_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
-                    gp_samples=settings.get("gp_initial_samples", gp_initial_samples),
-                    n_samples=settings.get("n_samples", 1),
-                    progress=True,
-                )
-                root_logger.info("Importing finished.")
+    # Initialize Optimizer object and if applicable, resume from existing
+    # data/optimizer:
+    opt = initialize_optimizer(
+        X=X,
+        y=y,
+        noise=noise,
+        parameter_ranges=list(param_ranges.values()),
+        random_seed=settings.get("random_seed", random_seed),
+        warp_inputs=settings.get("warp_inputs", warp_inputs),
+        n_points=settings.get("n_points", n_points),
+        n_initial_points=settings.get("n_initial_points", n_initial_points),
+        acq_function=settings.get("acq_function", acq_function),
+        acq_function_samples=settings.get("acq_function_samples", acq_function_samples),
+        resume=resume,
+        fast_resume=fast_resume,
+        model_path=model_path,
+        gp_initial_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
+        gp_initial_samples=settings.get("gp_initial_samples", gp_initial_samples),
+    )
 
-    # 4. Main optimization loop:
+    # Main optimization loop:
     while True:
         root_logger.info("Starting iteration {}".format(iteration))
+
+        # Print/plot results so far:
+        result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
         result_every_n = settings.get("result_every", result_every)
         if (
             result_every_n > 0
             and iteration % result_every_n == 0
             and opt.gp.chain_ is not None
         ):
-            result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
-            try:
-                best_point, best_value = expected_ucb(result_object, alpha=0.0)
-                best_point_dict = dict(zip(param_ranges.keys(), best_point))
-                with opt.gp.noise_set_to_zero():
-                    _, best_std = opt.gp.predict(
-                        opt.space.transform([best_point]), return_std=True
-                    )
-                root_logger.info(f"Current optimum:\n{best_point_dict}")
-                root_logger.info(
-                    f"Estimated Elo: {np.around(-best_value * 100, 4)} +- "
-                    f"{np.around(best_std * 100, 4).item()}"
-                )
-                confidence_val = settings.get("confidence", confidence)
-                confidence_mult = erfinv(confidence_val) * np.sqrt(2)
-                lower_bound = np.around(
-                    -best_value * 100 - confidence_mult * best_std * 100, 4
-                ).item()
-                upper_bound = np.around(
-                    -best_value * 100 + confidence_mult * best_std * 100, 4
-                ).item()
-                root_logger.info(
-                    f"{confidence_val * 100}% confidence interval of the Elo value: "
-                    f"({lower_bound}, "
-                    f"{upper_bound})"
-                )
-                confidence_out = confidence_intervals(
-                    optimizer=opt,
-                    param_names=list(param_ranges.keys()),
-                    hdi_prob=confidence_val,
-                    opt_samples=1000,
-                    multimodal=False,
-                )
-                root_logger.info(
-                    f"{confidence_val * 100}% confidence intervals of the parameters:"
-                    f"\n{confidence_out}"
-                )
-            except ValueError:
-                root_logger.info(
-                    "Computing current optimum was not successful. "
-                    "This can happen in rare cases and running the "
-                    "tuner again usually works."
-                )
+            print_results(
+                optimizer=opt,
+                result_object=result_object,
+                parameter_names=list(param_ranges.keys()),
+                confidence=settings.get("confidence", confidence),
+            )
         plot_every_n = settings.get("plot_every", plot_every)
         if (
             plot_every_n > 0
             and iteration % plot_every_n == 0
             and opt.gp.chain_ is not None
         ):
-            if opt.space.n_dims == 1:
-                root_logger.warning(
-                    "Plotting for only 1 parameter is not supported yet."
-                )
-            else:
-                root_logger.debug("Starting to compute the next plot.")
-                result_object = create_result(
-                    Xi=X, yi=y, space=opt.space, models=[opt.gp]
-                )
-                plt.style.use("dark_background")
-                fig, ax = plt.subplots(
-                    nrows=opt.space.n_dims,
-                    ncols=opt.space.n_dims,
-                    figsize=(3 * opt.space.n_dims, 3 * opt.space.n_dims),
-                )
-                fig.patch.set_facecolor("#36393f")
-                for i in range(opt.space.n_dims):
-                    for j in range(opt.space.n_dims):
-                        ax[i, j].set_facecolor("#36393f")
-                timestr = time.strftime("%Y%m%d-%H%M%S")
-                plot_objective(
-                    result_object, dimensions=list(param_ranges.keys()), fig=fig, ax=ax
-                )
-                plotpath = pathlib.Path(settings.get("plot_path", plot_path))
-                plotpath.mkdir(parents=True, exist_ok=True)
-                full_plotpath = plotpath / f"{timestr}-{iteration}.png"
-                plt.savefig(
-                    full_plotpath, dpi=300, facecolor="#36393f",
-                )
-                root_logger.info(f"Saving a plot to {full_plotpath}.")
-                plt.close(fig)
+            plot_results(
+                optimizer=opt,
+                result_object=result_object,
+                plot_path=settings.get("plot_path", plot_path),
+                parameter_names=list(param_ranges.keys()),
+            )
+
+        # Ask optimizer for next point:
         point = opt.ask()
         point_dict = dict(zip(param_ranges.keys(), point))
         root_logger.info("Testing {}".format(point_dict))
 
+        # Prepare engines.json file for cutechess-cli:
         engine_json = prepare_engines_json(commands=commands, fixed_params=fixed_params)
         root_logger.debug(f"engines.json is prepared:\n{engine_json}")
         write_engines_json(engine_json, point_dict)
+
+        # Run experiment:
         root_logger.info("Start experiment")
         now = datetime.now()
         settings["debug_mode"] = settings.get(
@@ -527,56 +402,29 @@ def local(  # noqa: C901
         difference = (later - now).total_seconds()
         root_logger.info(f"Experiment finished ({difference}s elapsed).")
 
+        # Parse cutechess-cli output and report results (Elo and standard deviation):
         score, error_variance = parse_experiment_result(out_exp, **settings)
         root_logger.info(
             "Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
         )
+
+        # Update model with the new data:
         root_logger.info("Updating model")
-        while True:
-            try:
-                now = datetime.now()
-                # We fetch kwargs manually here to avoid collisions:
-                n_samples = settings.get("acq_function_samples", acq_function_samples)
-                gp_burnin = settings.get("gp_burnin", gp_burnin)
-                gp_samples = settings.get("gp_samples", gp_samples)
-                if opt.gp.chain_ is None:
-                    gp_burnin = settings.get("gp_initial_burnin", gp_initial_burnin)
-                    gp_samples = settings.get("gp_initial_samples", gp_initial_samples)
-                opt.tell(
-                    point,
-                    score,
-                    noise_vector=error_variance,
-                    n_samples=n_samples,
-                    gp_samples=gp_samples,
-                    gp_burnin=gp_burnin,
-                )
-                later = datetime.now()
-                difference = (later - now).total_seconds()
-                root_logger.info(f"GP sampling finished ({difference}s)")
-                root_logger.debug(f"GP kernel: {opt.gp.kernel_}")
-                if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
-                    warp_params = dict(
-                        zip(
-                            param_ranges.keys(),
-                            zip(
-                                np.around(np.exp(opt.gp.warp_alphas_), 3),
-                                np.around(np.exp(opt.gp.warp_betas_), 3),
-                            ),
-                        )
-                    )
-                    root_logger.debug(
-                        f"Input warping was applied using the following parameters for "
-                        f"the beta distributions:\n"
-                        f"{warp_params}"
-                    )
-            except ValueError:
-                root_logger.warning(
-                    "Error encountered during fitting. Trying to sample chain a bit. "
-                    "If this problem persists, restart the tuner to reinitialize."
-                )
-                opt.gp.sample(n_burnin=11, priors=opt.gp_priors)
-            else:
-                break
+        update_model(
+            optimizer=opt,
+            point=point,
+            score=score,
+            variance=error_variance,
+            acq_function_samples=settings.get(
+                "acq_function_samples", acq_function_samples
+            ),
+            gp_burnin=settings.get("gp_burnin", gp_burnin),
+            gp_samples=settings.get("gp_samples", gp_samples),
+            gp_initial_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
+            gp_initial_samples=settings.get("gp_initial_samples", gp_initial_samples),
+        )
+
+        # Update data structures and persist to disk:
         X.append(point)
         y.append(score)
         noise.append(error_variance)

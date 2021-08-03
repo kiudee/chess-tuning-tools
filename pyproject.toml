@@ -55,6 +55,7 @@ myst-nb = "^0.9"
 sphinx-autobuild = "^0.7.1"
 nox = "^2021.6.12"
 nox-poetry = "^0.8.6"
+mypy = "^0.910"
 
 [tool.poetry.scripts]
 tune = "tune.cli:cli"
