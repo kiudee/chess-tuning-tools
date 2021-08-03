@@ -1,6 +1,11 @@
-import numpy as np
+import warnings
 
-__all__ = ["roundflat"]
+import numpy as np
+from scipy.optimize import curve_fit
+from scipy.stats import invgamma
+from scipy.stats._distn_infrastructure import rv_frozen  # noqa
+
+__all__ = ["make_invgamma_prior", "roundflat"]
 
 
 def roundflat(x, a_low=2.0, a_high=8.0, d_low=0.005, d_high=1.2):
@@ -24,3 +29,45 @@ def roundflat(x, a_low=2.0, a_high=8.0, d_low=0.005, d_high=1.2):
     if x <= 0:
         return -np.inf
     return -2 * ((x / d_low) ** (-2 * a_low) + (x / d_high) ** (2 * a_high))
+
+
+def make_invgamma_prior(
+    lower_bound: float = 0.1, upper_bound: float = 0.5
+) -> rv_frozen:
+    """Create an inverse gamma distribution prior with 98% density inside the bounds.
+
+    Not all combinations of (lower_bound, upper_bound) are feasible and some of them
+    could result in a RuntimeError.
+
+    Parameters
+    ----------
+    lower_bound : float, default=0.1
+        Lower bound at which 1 % of the cumulative density is reached.
+    upper_bound : float, default=0.5
+        Upper bound at which 99 % of the cumulative density is reached.
+
+    Returns
+    -------
+    scipy.stats._distn_infrastructure.rv_frozen
+        The frozen distribution with shape parameters already set.
+
+    Raises
+    ------
+    ValueError
+        Either if any of the bounds is 0 or negative, or if the upper bound is equal or
+        smaller than the lower bound.
+    """
+    if lower_bound <= 0 or upper_bound <= 0:
+        raise ValueError("The bounds cannot be equal to or smaller than 0.")
+    if lower_bound >= upper_bound:
+        raise ValueError(
+            "Lower bound needs to be strictly smaller than the upper " "bound."
+        )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        (a_out, scale_out), pcov = curve_fit(
+            lambda xdata, a, scale: invgamma.ppf(xdata, a=a, scale=scale),
+            [0.01, 0.99],
+            [lower_bound, upper_bound],
+        )
+    return invgamma(a=a_out, scale=scale_out)
