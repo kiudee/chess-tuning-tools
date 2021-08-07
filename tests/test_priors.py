@@ -1,7 +1,7 @@
 import numpy as np
 from pytest import approx, raises
 
-from tune.priors import make_invgamma_prior, roundflat
+from tune.priors import create_priors, make_invgamma_prior, roundflat
 
 
 def test_roundflat():
@@ -21,3 +21,13 @@ def test_make_invgamma_prior():
         make_invgamma_prior(upper_bound=-1e-10)
     with raises(ValueError):
         make_invgamma_prior(lower_bound=0.5, upper_bound=0.1)
+
+
+def test_create_priors():
+    priors = create_priors(n_parameters=3)
+    assert len(priors) == 5
+    assert priors[0](2.0) == approx(-1.536140897416146)
+    assert priors[1](2.0) == approx(-23.620792572134874)
+    assert priors[2](2.0) == approx(-23.620792572134874)
+    assert priors[3](2.0) == approx(-23.620792572134874)
+    assert priors[4](2.0) == approx(-10262570.41553909)
