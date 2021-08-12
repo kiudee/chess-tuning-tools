@@ -6,7 +6,7 @@ import sys
 import time
 from datetime import datetime
 from logging import Logger
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import Callable, List, Optional, Sequence, Tuple, Union
 
 import dill
 import matplotlib.pyplot as plt
@@ -321,6 +321,7 @@ def initialize_optimizer(
     model_path: Optional[str] = None,
     gp_initial_burnin: int = 100,
     gp_initial_samples: int = 300,
+    gp_priors: Optional[List[Callable[[float], float]]] = None,
 ) -> Optimizer:
     """Create an Optimizer object and if needed resume and/or reinitialize.
 
@@ -361,6 +362,12 @@ def initialize_optimizer(
         Number of burnin samples to use for reinitialization.
     gp_initial_samples : int, default=300
         Number of samples to use for reinitialization.
+    gp_priors : list of callables, default=None
+        List of priors to be used for the kernel hyperparameters. Specified in the
+        following order:
+        - signal magnitude prior
+        - lengthscale prior (x number of parameters)
+        - noise magnitude prior
 
     Returns
     -------
@@ -382,7 +389,7 @@ def initialize_optimizer(
         n_initial_points=n_initial_points,
         # gp_kernel=kernel,  # TODO: Let user pass in different kernels
         gp_kwargs=gp_kwargs,
-        # gp_priors=priors,  # TODO: Let user pass in priors
+        gp_priors=gp_priors,
         acq_func=acq_function,
         acq_func_kwargs=dict(alpha=1.96, n_thompson=500),
         random_state=random_state,
@@ -409,6 +416,8 @@ def initialize_optimizer(
                     "existing optimizer instance is no longer "
                     "valid. Reinitializing now."
                 )
+            if gp_priors is not None:
+                opt.gp_priors = gp_priors
 
     if reinitialize and len(X) > 0:
         logger.info(
