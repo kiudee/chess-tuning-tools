@@ -31,3 +31,8 @@ def test_create_priors():
     assert priors[2](2.0) == approx(-23.620792572134874)
     assert priors[3](2.0) == approx(-23.620792572134874)
     assert priors[4](2.0) == approx(-10262570.41553909)
+
+    with raises(ValueError):
+        create_priors(n_parameters=3, signal_scale=0.0)
+    with raises(ValueError):
+        create_priors(n_parameters=3, noise_scale=0.0)
