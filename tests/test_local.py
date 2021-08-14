@@ -142,6 +142,11 @@ def test_initialize_data(tmp_path):
     assert len(y) == 0
     assert len(noise) == 0
     assert iteration == 0
+    # Check if the created data structured are not exactly the same list:
+    X.append(0)
+    assert len(X) == 1
+    assert len(y) == 0
+    assert len(noise) == 0
 
     # Create a temporary file for testing:
     testfile = tmp_path / "data.npz"
