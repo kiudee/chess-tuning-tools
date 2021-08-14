@@ -350,32 +350,25 @@ def local(  # noqa: C901
     while True:
         root_logger.info("Starting iteration {}".format(iteration))
 
-        # Print/plot results so far:
-        result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
-        result_every_n = settings.get("result_every", result_every)
-        if (
-            result_every_n > 0
-            and iteration % result_every_n == 0
-            and opt.gp.chain_ is not None
-        ):
-            print_results(
-                optimizer=opt,
-                result_object=result_object,
-                parameter_names=list(param_ranges.keys()),
-                confidence=settings.get("confidence", confidence),
-            )
-        plot_every_n = settings.get("plot_every", plot_every)
-        if (
-            plot_every_n > 0
-            and iteration % plot_every_n == 0
-            and opt.gp.chain_ is not None
-        ):
-            plot_results(
-                optimizer=opt,
-                result_object=result_object,
-                plot_path=settings.get("plot_path", plot_path),
-                parameter_names=list(param_ranges.keys()),
-            )
+        # If a model has been fit, print/plot results so far:
+        if len(y) > 0 and opt.gp.chain_ is not None:
+            result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
+            result_every_n = settings.get("result_every", result_every)
+            if result_every_n > 0 and iteration % result_every_n == 0:
+                print_results(
+                    optimizer=opt,
+                    result_object=result_object,
+                    parameter_names=list(param_ranges.keys()),
+                    confidence=settings.get("confidence", confidence),
+                )
+            plot_every_n = settings.get("plot_every", plot_every)
+            if plot_every_n > 0 and iteration % plot_every_n == 0:
+                plot_results(
+                    optimizer=opt,
+                    result_object=result_object,
+                    plot_path=settings.get("plot_path", plot_path),
+                    parameter_names=list(param_ranges.keys()),
+                )
 
         # Ask optimizer for next point:
         point = opt.ask()
