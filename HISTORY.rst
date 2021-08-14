@@ -2,6 +2,21 @@
 History
 =======
 
+0.8.0 (2021-08-15)
+------------------
+
+Local tuner
+~~~~~~~~~~~
+
+* Replace default lengthscale priors by inverse-gamma distributions.
+* Add the following command line flags, which allow the user to override the
+  prior parameters:
+
+  - ``--gp-signal-prior-scale`` for the scale of the signal prior.
+  - ``--gp-noise-prior-scale`` for the scale of the noise prior.
+  - ``--gp-lengthscale-prior-lb`` for the lower bound of the lengthscale prior.
+  - ``--gp-lengthscale-prior-ub`` for the upper bound of the lengthscale prior.
+
 0.7.3 (2021-06-27)
 ------------------
 
