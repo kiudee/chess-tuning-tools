@@ -248,7 +248,9 @@ def initialize_data(
         parameters in the data.
     """
     logger = logging.getLogger()
-    X = y = noise = []
+    X = []
+    y = []
+    noise = []
     iteration = 0
     if data_path is not None and resume:
         space = normalize_dimensions(parameter_ranges)
