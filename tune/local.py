@@ -408,7 +408,7 @@ def initialize_optimizer(
                     "valid. Reinitializing now."
                 )
 
-    if reinitialize:
+    if reinitialize and len(X) > 0:
         logger.info(
             f"Importing {len(X)} existing datapoints. " f"This could take a while..."
         )
