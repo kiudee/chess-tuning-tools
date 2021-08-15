@@ -114,6 +114,32 @@ fitting process:
   - Number of model parameters to sample for the initial model. This is only
     used when resuming or for the first model. Should be a multiple of 100.
     [default: 300]
+* - `"gp_signal_prior_scale"`
+  - `--gp-signal-prior-scale FLOAT`
+  - Prior scale of the signal (standard deviation) magnitude which is used to
+    parametrize a half-normal distribution. Needs to be a number strictly
+    greater than 0.0.
+    [default: 4.0]
+* - `"gp_noise_prior_scale"`
+  - `--gp-noise-prior-scale FLOAT`
+  - Prior scale of the residual noise (standard deviation) which is used to
+    parametrize a half-normal distribution. Needs to be a number strictly
+    greater than 0.0.
+    [default: 0.0006]
+* - `"gp_lengthscale_prior_lb"`
+  - `--gp-lengthscale-prior-lb FLOAT`
+  - Lower bound for the inverse-gamma lengthscale prior.
+    It marks the point where the prior reaches 1% of the cumulative density.
+    Lower values favor non-smooth landscapes and higher values smooth ones.
+    Needs to be a number strictly greater than 0.0.
+    [default: 0.1]
+* - `"gp_lengthscale_prior_ub"`
+  - `--gp-lengthscale-prior-ub FLOAT`
+  - Upper bound for the inverse-gamma lengthscale prior.
+    It marks the point where the prior reaches 99% of the cumulative density.
+    Lower values favor non-smooth landscapes and higher values smooth ones.
+    Needs to be a number strictly greater than 0.0 and the lower bound.
+    [default: 0.5]
 * - `"n_initial_points"`
   - `--n-initial-points INTEGER`
   - Size of initial dense set of points to try before using the GP model to

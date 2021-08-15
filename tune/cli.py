@@ -22,6 +22,7 @@ from tune.local import (
     setup_logger,
     update_model,
 )
+from tune.priors import create_priors
 
 
 @click.group()
@@ -196,6 +197,42 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     show_default=True,
 )
 @click.option(
+    "--gp-signal-prior-scale",
+    default=4.0,
+    type=click.FloatRange(min=0.0),
+    help="Prior scale of the signal (standard deviation) magnitude which is used to"
+    "parametrize a half-normal distribution."
+    "Needs to be a number strictly greater than 0.0.",
+    show_default=True,
+)
+@click.option(
+    "--gp-noise-prior-scale",
+    default=0.0006,
+    type=click.FloatRange(min=0.0),
+    help="Prior scale of the noise (standard deviation) which is used to parametrize a "
+    "half-normal distribution."
+    "Needs to be a number strictly greater than 0.0.",
+    show_default=True,
+)
+@click.option(
+    "--gp-lengthscale-prior-lb",
+    default=0.1,
+    type=click.FloatRange(min=0.0),
+    help="Lower bound for the inverse-gamma lengthscale prior. "
+    "It marks the point where the prior reaches 1% of the cumulative density."
+    "Needs to be a number strictly greater than 0.0.",
+    show_default=True,
+)
+@click.option(
+    "--gp-lengthscale-prior-ub",
+    default=0.5,
+    type=click.FloatRange(min=0.0),
+    help="Upper bound for the inverse-gamma lengthscale prior. "
+    "It marks the point where the prior reaches 99% of the cumulative density."
+    "Needs to be a number strictly greater than 0.0 and the lower bound.",
+    show_default=True,
+)
+@click.option(
     "-l",
     "--logfile",
     default="log.txt",
@@ -285,6 +322,10 @@ def local(  # noqa: C901
     gp_samples=300,
     gp_initial_burnin=100,
     gp_initial_samples=300,
+    gp_signal_prior_scale=4.0,
+    gp_noise_prior_scale=0.0006,
+    gp_lengthscale_prior_lb=0.1,
+    gp_lengthscale_prior_ub=0.5,
     logfile="log.txt",
     n_initial_points=16,
     n_points=500,
@@ -328,6 +369,17 @@ def local(  # noqa: C901
 
     # Initialize Optimizer object and if applicable, resume from existing
     # data/optimizer:
+    gp_priors = create_priors(
+        n_parameters=len(param_ranges),
+        signal_scale=settings.get("gp_signal_prior_scale", gp_signal_prior_scale),
+        lengthscale_lower_bound=settings.get(
+            "gp_lengthscale_prior_lb", gp_lengthscale_prior_lb
+        ),
+        lengthscale_upper_bound=settings.get(
+            "gp_lengthscale_prior_ub", gp_lengthscale_prior_ub
+        ),
+        noise_scale=settings.get("gp_noise_prior_scale", gp_noise_prior_scale),
+    )
     opt = initialize_optimizer(
         X=X,
         y=y,
@@ -344,6 +396,7 @@ def local(  # noqa: C901
         model_path=model_path,
         gp_initial_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
         gp_initial_samples=settings.get("gp_initial_samples", gp_initial_samples),
+        gp_priors=gp_priors,
     )
 
     # Main optimization loop:
