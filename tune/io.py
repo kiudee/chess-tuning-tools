@@ -278,6 +278,6 @@ def combine_nested_parameters(d: dict) -> dict:
 def write_engines_json(engine_json, point_dict):
     engine = engine_json[0]
     initstr = InitStrings(engine["initStrings"])
-    initstr.update(point_dict)
+    initstr.update(combine_nested_parameters(point_dict))
     with open(Path() / "engines.json", "w") as file:
         json.dump(engine_json, file, sort_keys=True, indent=4)
