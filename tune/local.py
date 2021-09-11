@@ -643,8 +643,6 @@ def run_match(
         Number of games to run in parallel. Be careful when running time control
         games, since the engines can negatively impact each other when running
         in parallel.
-    debug_mode : bool, default=False
-        If True, pass ``-debug`` to cutechess-cli.
 
     Yields
     -------
@@ -728,8 +726,7 @@ def run_match(
     string_array.extend(("-games", "2"))
     string_array.append("-repeat")
     string_array.append("-recover")
-    if debug_mode:
-        string_array.append("-debug")
+    string_array.append("-debug")
     string_array.extend(("-pgnout", "out.pgn"))
 
     with subprocess.Popen(
