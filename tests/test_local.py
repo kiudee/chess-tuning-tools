@@ -6,8 +6,10 @@ from numpy.testing import assert_almost_equal
 from skopt.utils import normalize_dimensions
 
 from tune.local import (
+    check_log_for_errors,
     initialize_data,
     initialize_optimizer,
+    is_debug_log,
     parse_experiment_result,
     reduce_ranges,
     update_model,
@@ -260,3 +262,72 @@ def test_update_model():
     assert np.allclose(opt.Xi, points)
     assert np.allclose(opt.yi, scores)
     assert np.allclose(opt.noisei, variances)
+
+
+@pytest.mark.parametrize(
+    "log_line,expected",
+    [
+        (
+            "3287 <engine1(0): info depth 1 seldepth 1 time 2 nodes 1 score cp -8502 "
+            "tbhits 0 pv a7a8n",
+            True,
+        ),
+        ("2018 >lc0(1): ucinewgame", True),
+        ("Finished game 1 (engine1 vs engine2): 0-1 {White loses on time}", False),
+        ("Finished game 3287 <engine1(0): ", False),
+        ("...      White vs Black: 0 - 1 - 0  [0.000] 1", False),
+    ],
+)
+def test_is_debug_log(log_line, expected):
+    assert is_debug_log(log_line) == expected
+
+
+def test_check_log_for_errors(caplog):
+
+    # Test loss on time:
+    teststr = """Started game 1 of 2 (SFDev vs Lc0.11198)
+    Finished game 1 (SFDev vs Lc0.11198): 1-0 {Black loses on time}
+    Score of SFDev vs Lc0.11198: 1 - 0 - 0  [1.000] 1
+    Started game 2 of 2 (Lc0.11198 vs SFDev)
+    Finished game 2 (Lc0.11198 vs SFDev): 0-1 {White loses on time}
+    Score of SFDev vs Lc0.11198: 2 - 0 - 0  [1.000] 2
+    Elo difference: inf +/- nan
+    Finished match"""
+
+    check_log_for_errors(teststr.split("\n"))
+    assert "Engine Lc0.11198 lost on time as Black." in caplog.text
+
+    # Test crash/termination of engine:
+    teststr = """Terminating process of engine lc0(0)
+    16994 >lc0(1): isready
+    16994 <lc0(1): readyok
+    ...      lc0 playing White: 0 - 1 - 0  [0.000] 1
+    ...      White vs Black: 0 - 1 - 0  [0.000] 1
+    Elo difference: -inf +/- nan, LOS: 15.9 %, DrawRatio: 0.0 %
+    Finished match
+    Finished game 1 (lc0 vs lc0): 0-1 {White's connection stalls}
+    Score of lc0 vs lc0: 0 - 1 - 0  [0.000] 1
+    ...      lc0 playing White: 0 - 1 - 0  [0.000] 1
+    ...      White vs Black: 0 - 1 - 0  [0.000] 1
+    Elo difference: -inf +/- nan, LOS: 15.9 %, DrawRatio: 0.0 %
+    Finished match
+    16995 >lc0(1): quit"""
+    check_log_for_errors(teststr.split("\n"))
+    assert (
+        "lc0's connection stalled as White. Game result is unreliable." in caplog.text
+    )
+
+    # Test correct forward of error:
+    teststr = "797 <lc0(0): error The cuda backend requires a network file."
+    check_log_for_errors([teststr])
+    assert (
+        "cutechess-cli error: The cuda backend requires a network file." in caplog.text
+    )
+
+    # Test unknown UCI option:
+    teststr = "424 <lc0(1): error Unknown option: UnknownOption"
+    check_log_for_errors([teststr])
+    assert (
+        "UCI option UnknownOption was unknown to the engine. Check if the spelling "
+        "is correct." in caplog.text
+    )
