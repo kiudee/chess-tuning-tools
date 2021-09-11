@@ -73,6 +73,25 @@ Possible parameter specifications are:
 * `(val1, val2, ...)`: A categorical parameter which can only assume the
   specified values. The values can be of mixed type (e.g. `(42, 'foo', 'bar')`).
 
+Nested parameters can be specified as follows:
+
+```JSON
+{
+    "parameter_ranges": {
+        "TimeManager=legacy(steepness)": "Real(5.0, 10.0)",
+        "TimeManager=legacy(midpoint-move)": "Real(30.0, 80.0)"
+    }
+}
+```
+
+Here ``TimeManager`` is the UCI parameter, ``legacy`` its value,
+``steepness`` and ``midpoint-move`` are (sub-)parameters for ``legacy``.
+For example, the following UCI will be send to the engine:
+
+```
+setoption name TimeManager value legacy(steepness=7.5,midpoint-move=42.0)
+```
+
 The remaining parameters of the optimizer are optional and described below.
 
 ## Model-related parameters
