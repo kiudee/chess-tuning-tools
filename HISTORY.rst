@@ -14,6 +14,7 @@ Local tuner
   - An engine loses on time
   - The connection to an engine stalls (usually a crash)
   - Any other error captured by cutechess-cli
+* Add support for specifying nested parameters.
 
 0.8.0 (2021-08-15)
 ------------------

@@ -9,6 +9,7 @@ import skopt.space as skspace
 from skopt.space.space import check_dimension
 
 __all__ = [
+    "combine_nested_parameters",
     "InitStrings",
     "uci_tuple",
     "parse_ranges",
@@ -216,9 +217,67 @@ def prepare_engines_json(commands, fixed_params):
     return result_list
 
 
+def combine_nested_parameters(d: dict) -> dict:
+    """Combine all nested parameters in the given dict into one parameter each.
+
+    The correct syntax for specifying nested parameters is
+    ``"Parameter=value(sub-parameter)"``
+    where ``Parameter`` is the name of the UCI parameter, ``value`` is the value the
+    UCI parameter is set to and ``sub-parameter`` is one parameter for ``value``.
+
+    Parameters
+    ----------
+    d : dict
+        Dictionary mapping parameter names to values.
+
+    Returns
+    -------
+    dict
+        Dictionary with nested parameters merged.
+
+    Examples
+    --------
+    >>> d = {
+    ...     "UCIParameter1=composite(sub-parameter1)": 0.0,
+    ...     "UCIParameter1=composite(sub-parameter2)": 1.0,
+    ... }
+    >>> combine_nested_parameters(d)
+    {'UCIParameter1': 'composite(sub-parameter1=0.0,sub-parameter2=1.0)'}
+    """
+    re_pattern = r"(\S+|\S.*\S)=(.+)\((.+)\)"
+    result = dict()
+    nested_params = dict()
+    for k, v in d.items():
+        match = re.search(pattern=re_pattern, string=k)
+        if match is None:
+            result[k] = v
+        else:
+            name, value, sub_param = match.groups()
+            if name not in nested_params:
+                nested_params[name] = (value, dict())
+            else:
+                existing_value = nested_params[name][0]
+                if existing_value != value:
+                    raise ValueError(
+                        f"UCI parameter {name} is set to different values "
+                        f"({existing_value} != {value})."
+                    )
+            nested_params[name][1][sub_param] = v
+
+    for param, (value, sub_values) in nested_params.items():
+        string = f"{value}("
+        for i, (k, v) in enumerate(sub_values.items()):
+            string += f"{k}={v}"
+            if i != len(sub_values) - 1:
+                string += ","
+        string += ")"
+        result[param] = string
+    return result
+
+
 def write_engines_json(engine_json, point_dict):
     engine = engine_json[0]
     initstr = InitStrings(engine["initStrings"])
-    initstr.update(point_dict)
+    initstr.update(combine_nested_parameters(point_dict))
     with open(Path() / "engines.json", "w") as file:
         json.dump(engine_json, file, sort_keys=True, indent=4)
