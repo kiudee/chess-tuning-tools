@@ -2,6 +2,19 @@
 History
 =======
 
+0.8.1 (2021-09-11)
+------------------
+
+Local tuner
+~~~~~~~~~~~
+
+* Emit errors and warnings for common cutechess-cli problems:
+
+  - Unknown UCI parameters
+  - An engine loses on time
+  - The connection to an engine stalls (usually a crash)
+  - Any other error captured by cutechess-cli
+
 0.8.0 (2021-08-15)
 ------------------
 
