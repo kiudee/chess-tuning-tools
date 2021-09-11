@@ -27,6 +27,8 @@ __all__ = [
     "counts_to_penta",
     "initialize_optimizer",
     "run_match",
+    "is_debug_log",
+    "check_log_for_errors",
     "parse_experiment_result",
     "print_results",
     "plot_results",
@@ -735,6 +737,76 @@ def run_match(
     ) as popen:
         for line in iter(popen.stdout.readline, ""):
             yield line
+
+
+def is_debug_log(cutechess_line: str,) -> bool:
+    """Check if the provided cutechess log line is a debug mode line.
+
+    Parameters
+    ----------
+    cutechess_line : str
+        One line from a cutechess log.
+
+    Returns
+    -------
+    bool
+        True, if the given line is a debug mode line, False otherwise.
+    """
+    if re.match(r"[0-9]+ [<>]", cutechess_line) is not None:
+        return True
+    return False
+
+
+def check_log_for_errors(cutechess_output: List[str],) -> None:
+    """Parse the log output produced by cutechess-cli and scan for important errors.
+
+    Parameters
+    ----------
+    cutechess_output : list of str
+        String containing the log output produced by cutechess-cli.
+    """
+    logger = logging.getLogger(LOGGER)
+    for line in cutechess_output:
+
+        # Check for forwarded errors:
+        pattern = r"[0-9]+ [<>].+: error (.+)"
+        match = re.search(pattern=pattern, string=line)
+        if match is not None:
+            logger.warning(f"cutechess-cli error: {match.group(1)}")
+
+        # Check for unknown UCI option
+        pattern = r"Unknown (?:option|command): (.+)"
+        match = re.search(pattern=pattern, string=line)
+        if match is not None:
+            logger.error(
+                f"UCI option {match.group(1)} was unknown to the engine. "
+                f"Check if the spelling is correct."
+            )
+            continue
+
+        # Check for loss on time
+        pattern = (
+            r"Finished game [0-9]+ \((.+) vs (.+)\): [0-9]-[0-9] {(\S+) "
+            r"(?:loses on time)}"
+        )
+        match = re.search(pattern=pattern, string=line)
+        if match is not None:
+            engine = match.group(1) if match.group(3) == "White" else match.group(2)
+            logger.warning(f"Engine {engine} lost on time as {match.group(3)}.")
+            continue
+
+        # Check for connection stall:
+        pattern = (
+            r"Finished game [0-9]+ \((.+) vs (.+)\): [0-9]-[0-9] {(\S+)'s "
+            r"(?:connection stalls)}"
+        )
+        match = re.search(pattern=pattern, string=line)
+        if match is not None:
+            engine = match.group(1) if match.group(3) == "White" else match.group(2)
+            logger.error(
+                f"{engine}'s connection stalled as {match.group(3)}. "
+                f"Game result is unreliable."
+            )
 
 
 def parse_experiment_result(
