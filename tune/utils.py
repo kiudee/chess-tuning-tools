@@ -4,8 +4,15 @@ from decimal import Decimal
 
 import numpy as np
 from scipy.optimize import minimize
+from scipy.special import erfinv
 
-__all__ = ["expected_ucb", "parse_timecontrol", "TimeControl", "TimeControlBag"]
+__all__ = [
+    "confidence_to_mult",
+    "expected_ucb",
+    "parse_timecontrol",
+    "TimeControl",
+    "TimeControlBag",
+]
 
 
 def expected_ucb(res, n_random_starts=100, alpha=1.96, random_state=None):
@@ -106,3 +113,28 @@ class TimeControlBag(object):
             sorted_bag = sorted(tmp_bag)
             self.bag = [x[1] for x in sorted_bag]
         return self.bag.pop()
+
+
+def confidence_to_mult(confidence: float) -> float:
+    """Convert a confidence level to a multiplier for a standard deviation.
+
+    This assumes an underlying normal distribution.
+
+    Parameters
+    ----------
+    confidence: float [0, 1]
+        The confidence level to convert.
+
+    Returns
+    -------
+    float
+        The multiplier.
+
+    Raises
+    ------
+    ValueError
+        If the confidence level is not in the range [0, 1].
+    """
+    if confidence < 0 or confidence > 1:
+        raise ValueError("Confidence level must be in the range [0, 1].")
+    return erfinv(confidence) * np.sqrt(2)
