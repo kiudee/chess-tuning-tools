@@ -14,7 +14,6 @@ import numpy as np
 from bask import Optimizer
 from numpy.random import RandomState
 from scipy.optimize import OptimizeResult
-from scipy.special import erfinv
 from scipy.stats import dirichlet
 from skopt.space import Categorical, Dimension, Integer, Real, Space
 from skopt.utils import normalize_dimensions
@@ -470,7 +469,7 @@ def print_results(
             f"Estimated Elo: {np.around(-best_value * 100, 4)} +- "
             f"{np.around(best_std * 100, 4).item()}"
         )
-        confidence_mult = erfinv(confidence) * np.sqrt(2)
+        confidence_mult = confidence_to_mult(confidence)
         lower_bound = np.around(
             -best_value * 100 - confidence_mult * best_std * 100, 4
         ).item()
