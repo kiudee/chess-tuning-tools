@@ -1,11 +1,16 @@
+from typing import Optional, Sequence, Tuple, Union
+
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 from matplotlib.ticker import LogLocator
+from scipy.optimize import OptimizeResult
 from skopt.plots import _format_scatter_plot_axes
 
-from tune.utils import expected_ucb
+from tune.utils import confidence_to_mult, expected_ucb
 
-__all__ = ["partial_dependence", "plot_objective"]
+__all__ = ["partial_dependence", "plot_objective", "plot_objective_1d"]
 
 
 def _evenly_sample(dim, n_points):
@@ -150,6 +155,125 @@ def partial_dependence(
             zi.append(row)
 
         return xi, yi, np.array(zi).T
+
+
+def plot_objective_1d(
+    result: OptimizeResult,
+    parameter_name: Optional[str] = None,
+    n_points: int = 500,
+    n_random_restarts: int = 100,
+    confidence: float = 0.9,
+    figsize: Tuple[float, float] = (10, 6),
+    fig: Optional[Figure] = None,
+    ax: Optional[Axes] = None,
+    colors: Optional[Sequence[Union[tuple, str]]] = None,
+) -> Tuple[Figure, Axes]:
+    """Plot the 1D objective function.
+
+    Parameters
+    ----------
+    result : OptimizeResult
+        The current optimization result.
+    parameter_name : str, optional
+        The name of the parameter to plot. If None, no x-axis label is shown.
+    n_points : int (default=500)
+        The number of points to use for prediction of the Gaussian process.
+    n_random_restarts : int (default=100)
+        The number of random restarts to employ to find the optima.
+    confidence : float (default=0.9)
+        The confidence interval to plot around the mean prediction.
+    figsize : tuple (default=(10, 6))
+        The size of the figure.
+    fig : Figure, optional
+        The figure to use. If None, a new figure is created.
+    ax : Axes, optional
+        The axes to use. If None, new axes are created.
+    colors : Sequence of colors, optional
+        The colors to use for different elements in the plot.
+        Can be tuples or strings.
+
+    Returns
+    -------
+    fig : Figure
+        The figure.
+    ax : Axes
+        The axes.
+
+    """
+    if colors is None:
+        colors = plt.cm.get_cmap("Set3").colors
+
+    if fig is None:
+        plt.style.use("dark_background")
+        gs_kw = dict(width_ratios=(1,), height_ratios=[5, 1], hspace=0.05)
+        fig, ax = plt.subplots(figsize=figsize, nrows=2, gridspec_kw=gs_kw, sharex=True)
+        for a in ax:
+            a.set_facecolor("#36393f")
+        fig.patch.set_facecolor("#36393f")
+    gp = result.models[-1]
+
+    # Compute the optima of the objective function:
+    failures = 0
+    while True:
+        try:
+            with gp.noise_set_to_zero():
+                min_x = expected_ucb(
+                    result, alpha=0.0, n_random_starts=n_random_restarts
+                )[0]
+                min_ucb = expected_ucb(result, n_random_starts=n_random_restarts)[0]
+        except ValueError:
+            failures += 1
+            if failures == 10:
+                break
+            continue
+        else:
+            break
+
+    # Regardless of the range of the parameter to be plotted, the model always operates
+    # in [0, 1]:
+    x_gp = np.linspace(0, 1, num=n_points)
+    x_orig = np.array(result.space.inverse_transform(x_gp[:, None])).flatten()
+    with gp.noise_set_to_zero():
+        y, y_err = gp.predict(x_gp[:, None], return_std=True)
+    y = -y * 100
+    y_err = y_err * 100
+    confidence_mult = confidence_to_mult(confidence)
+
+    (mean_plot,) = ax[0].plot(x_orig, y, zorder=4, color=colors[0])
+    err_plot = ax[0].fill_between(
+        x_orig,
+        y - y_err * confidence_mult,
+        y + y_err * confidence_mult,
+        alpha=0.3,
+        zorder=0,
+        color=colors[0],
+    )
+    opt_plot = ax[0].axvline(x=min_x, zorder=3, color=colors[3])
+    pess_plot = ax[0].axvline(x=min_ucb, zorder=2, color=colors[5])
+    if parameter_name is not None:
+        ax[1].set_xlabel(parameter_name)
+    dim = result.space.dimensions[0]
+    ax[0].set_xlim(dim.low, dim.high)
+    match_plot = ax[1].scatter(
+        x=result.x_iters,
+        y=-result.func_vals * 100,
+        zorder=1,
+        marker=".",
+        s=0.6,
+        color=colors[0],
+    )
+    ax[0].set_ylabel("Elo")
+    ax[1].set_ylabel("Elo")
+    fig.legend(
+        (mean_plot, err_plot, opt_plot, pess_plot, match_plot),
+        ("Mean", f"{confidence:.0%} CI", "Optimum", "Conservative Optimum", "Matches"),
+        loc="lower center",
+        ncol=5,
+        bbox_to_anchor=(0.5, -0.03),
+        frameon=False,
+    )
+
+    return fig, ax
 
 
 def plot_objective(

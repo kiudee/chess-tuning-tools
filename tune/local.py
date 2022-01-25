@@ -12,16 +12,16 @@ import dill
 import matplotlib.pyplot as plt
 import numpy as np
 from bask import Optimizer
+from matplotlib.transforms import Bbox
 from numpy.random import RandomState
 from scipy.optimize import OptimizeResult
-from scipy.special import erfinv
 from scipy.stats import dirichlet
 from skopt.space import Categorical, Dimension, Integer, Real, Space
 from skopt.utils import normalize_dimensions
 
-from tune.plots import plot_objective
+from tune.plots import plot_objective, plot_objective_1d
 from tune.summary import confidence_intervals
-from tune.utils import TimeControl, expected_ucb
+from tune.utils import TimeControl, confidence_to_mult, expected_ucb
 
 __all__ = [
     "counts_to_penta",
@@ -470,7 +470,7 @@ def print_results(
             f"Estimated Elo: {np.around(-best_value * 100, 4)} +- "
             f"{np.around(best_std * 100, 4).item()}"
         )
-        confidence_mult = erfinv(confidence) * np.sqrt(2)
+        confidence_mult = confidence_to_mult(confidence)
         lower_bound = np.around(
             -best_value * 100 - confidence_mult * best_std * 100, 4
         ).item()
@@ -506,6 +506,7 @@ def plot_results(
     result_object: OptimizeResult,
     plot_path: str,
     parameter_names: Sequence[str],
+    confidence: float = 0.9,
 ) -> None:
     """Plot the current results of the optimizer.
 
@@ -519,30 +520,38 @@ def plot_results(
         Path to the directory to which the plots should be saved.
     parameter_names : Sequence of str
         Names of the parameters to use for plotting.
+    confidence : float
+        The confidence level of the normal distribution to plot in the 1d plot.
     """
     logger = logging.getLogger(LOGGER)
-    if optimizer.space.n_dims == 1:
-        logger.warning("Plotting for only 1 parameter is not supported yet.")
-        return
     logger.debug("Starting to compute the next plot.")
-    plt.style.use("dark_background")
-    fig, ax = plt.subplots(
-        nrows=optimizer.space.n_dims,
-        ncols=optimizer.space.n_dims,
-        figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
-    )
-    fig.patch.set_facecolor("#36393f")
-    for i in range(optimizer.space.n_dims):
-        for j in range(optimizer.space.n_dims):
-            ax[i, j].set_facecolor("#36393f")
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    plot_objective(result_object, dimensions=parameter_names, fig=fig, ax=ax)
+    dark_gray = "#36393f"
+    save_params = dict()
+    if optimizer.space.n_dims == 1:
+        fig, ax = plot_objective_1d(
+            result=result_object,
+            parameter_name=parameter_names[0],
+            confidence=confidence,
+        )
+        save_params["bbox_inches"] = Bbox([[0.5, -0.2], [9.25, 5.5]])
+    else:
+        plt.style.use("dark_background")
+        fig, ax = plt.subplots(
+            nrows=optimizer.space.n_dims,
+            ncols=optimizer.space.n_dims,
+            figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
+        )
+        for i in range(optimizer.space.n_dims):
+            for j in range(optimizer.space.n_dims):
+                ax[i, j].set_facecolor(dark_gray)
+        fig.patch.set_facecolor(dark_gray)
+        plot_objective(result_object, dimensions=parameter_names, fig=fig, ax=ax)
     plotpath = pathlib.Path(plot_path)
     plotpath.mkdir(parents=True, exist_ok=True)
     full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}.png"
-    plt.savefig(
-        full_plotpath, dpi=300, facecolor="#36393f",
-    )
+    dpi = 150 if optimizer.space.n_dims == 1 else 300
+    plt.savefig(full_plotpath, dpi=dpi, facecolor=dark_gray, **save_params)
     logger.info(f"Saving a plot to {full_plotpath}.")
     plt.close(fig)
 

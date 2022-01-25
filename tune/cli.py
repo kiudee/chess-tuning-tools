@@ -423,6 +423,7 @@ def local(  # noqa: C901
                     result_object=result_object,
                     plot_path=settings.get("plot_path", plot_path),
                     parameter_names=list(param_ranges.keys()),
+                    confidence=settings.get("confidence", confidence),
                 )
 
         # Ask optimizer for next point:
