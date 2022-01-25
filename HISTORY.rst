@@ -2,6 +2,14 @@
 History
 =======
 
+0.8.2 (unreleased)
+------------------
+
+Local tuner
+~~~~~~~~~~~
+
+* Add support for plotting one-dimensional optimization landscapes (#34).
+
 0.8.1 (2021-09-11)
 ------------------
 
