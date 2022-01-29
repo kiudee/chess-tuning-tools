@@ -1,5 +1,8 @@
 """Top-level package for Chess Tuning Tools."""
-from importlib.metadata import version
+try:
+    from importlib.metadata import version
+except ImportError:
+    from importlib_metadata import version
 
 __author__ = """Karlson Pfannschmidt"""
 __email__ = "kiudee@mail.upb.de"
