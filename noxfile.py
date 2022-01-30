@@ -7,7 +7,7 @@ from nox_poetry import session
 
 locations = "tune", "noxfile.py"
 nox.options.sessions = ("pre-commit", "tests")
-python_versions = ["3.8", "3.9"]
+python_versions = ["3.7", "3.8", "3.9"]
 
 
 def activate_virtualenv_in_precommit_hooks(session):
