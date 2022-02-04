@@ -356,7 +356,7 @@ def local(  # noqa: C901
     if data_path is None:
         data_path = "data.npz"
     try:
-        X, y, noise, iteration = initialize_data(
+        X, y, noise, iteration, optima, performance = initialize_data(
             parameter_ranges=list(param_ranges.values()),
             resume=resume,
             data_path=data_path,
@@ -410,12 +410,17 @@ def local(  # noqa: C901
             result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
             result_every_n = settings.get("result_every", result_every)
             if result_every_n > 0 and iteration % result_every_n == 0:
-                print_results(
-                    optimizer=opt,
-                    result_object=result_object,
-                    parameter_names=list(param_ranges.keys()),
-                    confidence=settings.get("confidence", confidence),
-                )
+                try:
+                    current_optimum, estimated_elo, estimated_std = print_results(
+                        optimizer=opt,
+                        result_object=result_object,
+                        parameter_names=list(param_ranges.keys()),
+                        confidence=settings.get("confidence", confidence),
+                    )
+                    optima.append(current_optimum)
+                    performance.append([iteration, estimated_elo, estimated_std])
+                except ValueError:
+                    pass
             plot_every_n = settings.get("plot_every", plot_every)
             if plot_every_n > 0 and iteration % plot_every_n == 0:
                 plot_results(
@@ -484,7 +489,14 @@ def local(  # noqa: C901
         iteration = len(X)
 
         with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
-            np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
+            np.savez_compressed(
+                f,
+                np.array(X),
+                np.array(y),
+                np.array(noise),
+                np.array(optima),
+                np.array(performance),
+            )
         with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
             dill.dump(opt, f)
 

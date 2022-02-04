@@ -224,7 +224,7 @@ def initialize_data(
     parameter_ranges: Sequence[Union[Sequence, Dimension]],
     data_path: Optional[str] = None,
     resume: bool = True,
-) -> Tuple[list, list, list, int]:
+) -> Tuple[list, list, list, int, list, list]:
     """Initialize data structures needed for tuning. Either empty or resumed from disk.
 
     Parameters
@@ -253,6 +253,8 @@ def initialize_data(
     X = []
     y = []
     noise = []
+    optima = []
+    performance = []
     iteration = 0
     if data_path is not None and resume:
         space = normalize_dimensions(parameter_ranges)
@@ -262,6 +264,10 @@ def initialize_data(
                 X = importa["arr_0"].tolist()
                 y = importa["arr_1"].tolist()
                 noise = importa["arr_2"].tolist()
+                if "arr_3" in importa:
+                    optima = importa["arr_3"].tolist()
+                if "arr_4" in importa:
+                    performance = importa["arr_4"].tolist()
             if len(X[0]) != space.n_dims:
                 raise ValueError(
                     f"Number of parameters ({len(X[0])}) are not matching "
@@ -287,7 +293,7 @@ def initialize_data(
                 y = y_reduced
                 noise = noise_reduced
             iteration = len(X)
-    return X, y, noise, iteration
+    return X, y, noise, iteration, optima, performance
 
 
 def setup_random_state(seed: int) -> np.random.RandomState:
@@ -443,7 +449,7 @@ def print_results(
     result_object: OptimizeResult,
     parameter_names: Sequence[str],
     confidence: float = 0.9,
-) -> None:
+) -> Tuple[np.ndarray, float, float]:
     """ Log the current results of the optimizer.
 
     Parameters
@@ -456,6 +462,11 @@ def print_results(
         Names of the parameters to use for printing.
     confidence : float, default=0.9
         Confidence used for the confidence intervals.
+
+    Raises
+    ------
+    ValueError
+        If computation of the optimum was not successful due to numerical reasons.
     """
     logger = logging.getLogger(LOGGER)
     try:
@@ -466,8 +477,9 @@ def print_results(
                 optimizer.space.transform([best_point]), return_std=True
             )
         logger.info(f"Current optimum:\n{best_point_dict}")
+        estimated_elo = -best_value * 100
         logger.info(
-            f"Estimated Elo: {np.around(-best_value * 100, 4)} +- "
+            f"Estimated Elo: {np.around(estimated_elo, 4)} +- "
             f"{np.around(best_std * 100, 4).item()}"
         )
         confidence_mult = confidence_to_mult(confidence)
@@ -493,12 +505,14 @@ def print_results(
             f"{confidence * 100}% confidence intervals of the parameters:"
             f"\n{confidence_out}"
         )
-    except ValueError:
+        return best_point, estimated_elo, float(best_std * 100)
+    except ValueError as e:
         logger.info(
             "Computing current optimum was not successful. "
             "This can happen in rare cases and running the "
             "tuner again usually works."
         )
+        raise e
 
 
 def plot_results(
