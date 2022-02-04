@@ -2,6 +2,15 @@
 History
 =======
 
+0.9.0 (unreleased)
+------------------
+
+Local tuner
+~~~~~~~~~~~
+
+- Tuner saves optima and their Elo performance (including standard deviation)
+  to disk now (#171).
+
 0.8.3 (2022-01-30)
 ------------------
 
