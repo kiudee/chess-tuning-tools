@@ -1,3 +1,4 @@
+import itertools
 from typing import Optional, Sequence, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -7,10 +8,11 @@ from matplotlib.figure import Figure
 from matplotlib.ticker import LogLocator
 from scipy.optimize import OptimizeResult
 from skopt.plots import _format_scatter_plot_axes
+from skopt.space import Space
 
 from tune.utils import confidence_to_mult, expected_ucb
 
-__all__ = ["partial_dependence", "plot_objective", "plot_objective_1d"]
+__all__ = ["partial_dependence", "plot_objective", "plot_objective_1d", "plot_optima"]
 
 
 def _evenly_sample(dim, n_points):
@@ -443,3 +445,173 @@ def plot_objective(
         plot_dims=plot_dims,
         dim_labels=dimensions,
     )
+
+
+def plot_optima(
+    iterations: np.ndarray,
+    optima: np.ndarray,
+    space: Optional[Space] = None,
+    parameter_names: Optional[Sequence[str]] = None,
+    plot_width: float = 8,
+    aspect_ratio: float = 0.4,
+    fig: Optional[Figure] = None,
+    ax: Optional[Union[Axes, np.ndarray]] = None,
+    colors: Optional[Sequence[Union[tuple, str]]] = None,
+) -> Tuple[Figure, np.ndarray]:
+    """Plot the optima found by the tuning algorithm.
+
+    Parameters
+    ----------
+    iterations : np.ndarray
+        The iterations at which the optima were found.
+    optima : np.ndarray
+        The optima found recorded at the given iterations.
+    space : Space, optional
+        The optimization space for the parameters. If provided, it will be used to
+        scale the y-axes and to apply log-scaling, if the parameter is optimized on
+        a log-scale.
+    parameter_names : Sequence[str], optional
+        The names of the parameters. If not provided, no y-axis labels will be shown.
+    plot_width : int, optional
+        The width of each plot in inches. The total width of the plot will be larger
+        depending on the number of parameters and how they are arranged.
+    aspect_ratio : float, optional
+        The aspect ratio of the subplots. The default is 0.4, which means that the
+        height of each subplot will be 40% of the width.
+    fig : Figure, optional
+        The figure to plot on. If not provided, a new figure in the style of
+        chess-tuning-tools will be created.
+    ax : np.ndarray or Axes, optional
+        The axes to plot on. If not provided, new axes will be created.
+        If provided, the axes will be filled. Thus, the number of axes should be at
+        least as large as the number of parameters.
+    colors : Sequence[Union[tuple, str]], optional
+        The colors to use for the plots. If not provided, the color scheme 'Set3' of
+        matplotlib will be used.
+
+    Returns
+    -------
+    Figure
+        The figure containing the plots.
+    np.ndarray
+        A two-dimensional array containing the axes.
+
+    Raises
+    ------
+    ValueError
+        - if the number of parameters does not match the number of parameter names
+        - if the number of axes is smaller than the number of parameters
+        - if the number of iterations is not matching the number of optima
+        - if a fig, but no ax is passed
+    """
+    n_points, n_parameters = optima.shape
+    if n_points != len(iterations):
+        raise ValueError("Iteration array does not match optima array.")
+    if parameter_names is not None and len(parameter_names) != n_parameters:
+        raise ValueError(
+            "Number of parameter names does not match the number of parameters."
+        )
+    if colors is None:
+        colors = plt.cm.get_cmap("Set3").colors
+    n_colors = len(colors)
+    if fig is None:
+        plt.style.use("dark_background")
+        n_cols = int(np.floor(np.sqrt(n_parameters)))
+        n_rows = int(np.ceil(n_parameters / n_cols))
+        figsize = (n_cols * plot_width, aspect_ratio * plot_width * n_rows)
+        fig, ax = plt.subplots(
+            figsize=figsize, nrows=n_rows, ncols=n_cols, sharex=True,
+        )
+
+        margin_left = 1.0
+        margin_right = 0.1
+        margin_bottom = 0.5
+        margin_top = 0.4
+        wspace = 1
+        hspace = 0.3
+        plt.subplots_adjust(
+            left=margin_left / figsize[0],
+            right=1 - margin_right / figsize[0],
+            bottom=margin_bottom / figsize[1],
+            top=1 - margin_top / figsize[1],
+            hspace=n_rows * hspace / figsize[1],
+            wspace=n_cols * wspace / figsize[0],
+        )
+        ax = np.atleast_2d(ax).reshape(n_rows, n_cols)
+        for a in ax.reshape(-1):
+            a.set_facecolor("#36393f")
+            a.grid(which="major", color="#ffffff", alpha=0.1)
+        fig.patch.set_facecolor("#36393f")
+        fig.suptitle(
+            "Predicted best parameters over time",
+            y=1 - 0.5 * margin_top / figsize[1],
+            va="center",
+        )
+    else:
+        if ax is None:
+            raise ValueError("Axes must be specified if a figure is provided.")
+        if not hasattr(ax, "__len__"):
+            n_rows = n_cols = 1
+        elif ax.ndim == 1:
+            n_rows = len(ax)
+            n_cols = 1
+        else:
+            n_rows, n_cols = ax.shape
+        if n_rows * n_cols < n_parameters:
+            raise ValueError("Not enough axes to plot all parameters.")
+        ax = np.atleast_2d(ax).reshape(n_rows, n_cols)
+
+    for i, (j, k) in enumerate(itertools.product(range(n_rows), range(n_cols))):
+        a = ax[j, k]
+        if i >= n_parameters:
+            fig.delaxes(a)
+            continue
+        # If the axis is the last one in the current column, then set the xlabel:
+        if (j + 1) * n_cols + k + 1 > n_parameters:
+            a.set_xlabel("Iteration")
+            # Since hspace=0, we have to fix the xaxis label and tick labels here:
+            a.xaxis.set_label_coords(0.5, -0.12)
+            a.xaxis.set_tick_params(labelbottom=True)
+
+        # If the user supplied an optimization space, we can use that information to
+        # scale the yaxis and apply log-scaling, where necessary:
+        if space is not None:
+            dim = space.dimensions[i]
+            a.set_ylim(*dim.bounds)
+            if dim.prior == "log-uniform":
+                a.set_yscale("log")
+        a.plot(
+            iterations,
+            optima[:, i],
+            color=colors[i % n_colors],
+            zorder=10,
+            linewidth=1.3,
+        )
+        a.axhline(
+            y=optima[-1, i],
+            color=colors[i % n_colors],
+            zorder=9,
+            linewidth=0.5,
+            ls="--",
+            alpha=0.6,
+        )
+        min_y, max_y = np.abs(a.get_ylim())
+        with np.errstate(divide="ignore"):
+            if min_y < 1e-4 or max_y / min_y > 1e3:
+                s = np.format_float_scientific(optima[-1, i], precision=2)
+            else:
+                s = f"{optima[-1, i]:.2f}"
+        a.text(
+            x=a.get_xlim()[0] + 0.01 * len(iterations),
+            y=optima[-1, i] - 0.01 * (a.get_ylim()[1] - a.get_ylim()[0]),
+            s=s,
+            horizontalalignment="left",
+            verticalalignment="top",
+            color=colors[i % n_colors],
+            zorder=11,
+        )
+
+        if parameter_names is not None:
+            a.set_ylabel(parameter_names[i])
+
+    return fig, ax
