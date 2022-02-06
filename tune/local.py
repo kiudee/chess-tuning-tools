@@ -19,7 +19,7 @@ from scipy.stats import dirichlet
 from skopt.space import Categorical, Dimension, Integer, Real, Space
 from skopt.utils import normalize_dimensions
 
-from tune.plots import plot_objective, plot_objective_1d
+from tune.plots import plot_objective, plot_objective_1d, plot_optima
 from tune.summary import confidence_intervals
 from tune.utils import TimeControl, confidence_to_mult, expected_ucb
 
@@ -518,6 +518,8 @@ def print_results(
 def plot_results(
     optimizer: Optimizer,
     result_object: OptimizeResult,
+    iterations: np.ndarray,
+    optima: np.ndarray,
     plot_path: str,
     parameter_names: Sequence[str],
     confidence: float = 0.9,
@@ -530,6 +532,10 @@ def plot_results(
         Fitted Optimizer object.
     result_object : scipy.optimize.OptimizeResult
         Result object containing the data and the last fitted model.
+    iterations : np.ndarray
+        Array containing the iterations at which optima were collected.
+    optima : np.ndarray
+        Array containing the predicted optimal parameters.
     plot_path : str
         Path to the directory to which the plots should be saved.
     parameter_names : Sequence of str
@@ -541,6 +547,8 @@ def plot_results(
     logger.debug("Starting to compute the next plot.")
     timestr = time.strftime("%Y%m%d-%H%M%S")
     dark_gray = "#36393f"
+
+    # First save the landscape:
     save_params = dict()
     if optimizer.space.n_dims == 1:
         fig, ax = plot_objective_1d(
@@ -567,6 +575,17 @@ def plot_results(
     dpi = 150 if optimizer.space.n_dims == 1 else 300
     plt.savefig(full_plotpath, dpi=dpi, facecolor=dark_gray, **save_params)
     logger.info(f"Saving a plot to {full_plotpath}.")
+    plt.close(fig)
+
+    # Now plot the history of optima:
+    fig, ax = plot_optima(
+        iterations=iterations,
+        optima=optima,
+        space=optimizer.space,
+        parameter_names=parameter_names,
+    )
+    full_plotpath = plotpath / f"optima-{timestr}-{len(optimizer.Xi)}.png"
+    fig.savefig(full_plotpath, dpi=150, facecolor=dark_gray)
     plt.close(fig)
 
 
