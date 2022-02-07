@@ -8,6 +8,8 @@ History
 Local tuner
 ~~~~~~~~~~~
 
+- Add a plot which shows the optima predicted by the tuner across the
+  iterations (#172). This can be useful to gauge convergence.
 - Tuner saves optima and their Elo performance (including standard deviation)
   to disk now (#171).
 
