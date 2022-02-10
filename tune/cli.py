@@ -427,6 +427,7 @@ def local(  # noqa: C901
                     optimizer=opt,
                     result_object=result_object,
                     iterations=np.array(performance)[:, 0],
+                    elos=np.array(performance)[:, 1:],
                     optima=np.array(optima),
                     plot_path=settings.get("plot_path", plot_path),
                     parameter_names=list(param_ranges.keys()),

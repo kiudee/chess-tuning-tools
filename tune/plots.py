@@ -12,7 +12,13 @@ from skopt.space import Space
 
 from tune.utils import confidence_to_mult, expected_ucb
 
-__all__ = ["partial_dependence", "plot_objective", "plot_objective_1d", "plot_optima"]
+__all__ = [
+    "partial_dependence",
+    "plot_objective",
+    "plot_objective_1d",
+    "plot_optima",
+    "plot_performance",
+]
 
 
 def _evenly_sample(dim, n_points):

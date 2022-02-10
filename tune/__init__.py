@@ -16,7 +16,7 @@ from tune.local import (
     reduce_ranges,
     run_match,
 )
-from tune.plots import partial_dependence, plot_objective, plot_optima
+from tune.plots import partial_dependence, plot_objective, plot_optima, plot_performance
 from tune.priors import roundflat
 from tune.utils import TimeControl, TimeControlBag, expected_ucb, parse_timecontrol
 
@@ -31,6 +31,7 @@ __all__ = [
     "partial_dependence",
     "plot_objective",
     "plot_optima",
+    "plot_performance",
     "prob_to_elo",
     "reduce_ranges",
     "roundflat",
