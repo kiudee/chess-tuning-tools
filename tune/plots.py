@@ -601,7 +601,8 @@ def plot_optima(
             ls="--",
             alpha=0.6,
         )
-        min_y, max_y = np.abs(a.get_ylim())
+        abs_optima = np.abs(optima[:, i])
+        min_y, max_y = np.min(abs_optima), np.max(abs_optima)
         with np.errstate(divide="ignore"):
             if min_y < 1e-4 or max_y / min_y > 1e3:
                 s = np.format_float_scientific(optima[-1, i], precision=2)
