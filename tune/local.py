@@ -19,7 +19,7 @@ from scipy.stats import dirichlet
 from skopt.space import Categorical, Dimension, Integer, Real, Space
 from skopt.utils import normalize_dimensions
 
-from tune.plots import plot_objective, plot_objective_1d, plot_optima
+from tune.plots import plot_objective, plot_objective_1d, plot_optima, plot_performance
 from tune.summary import confidence_intervals
 from tune.utils import TimeControl, confidence_to_mult, expected_ucb
 
@@ -519,6 +519,7 @@ def plot_results(
     optimizer: Optimizer,
     result_object: OptimizeResult,
     iterations: np.ndarray,
+    elos: np.ndarray,
     optima: np.ndarray,
     plot_path: str,
     parameter_names: Sequence[str],
@@ -534,6 +535,8 @@ def plot_results(
         Result object containing the data and the last fitted model.
     iterations : np.ndarray
         Array containing the iterations at which optima were collected.
+    elos : np.ndarray, shape=(n_iterations, 2)
+        Array containing the estimated Elo of the optima and the standard error.
     optima : np.ndarray
         Array containing the predicted optimal parameters.
     plot_path : str
@@ -570,21 +573,30 @@ def plot_results(
         fig.patch.set_facecolor(dark_gray)
         plot_objective(result_object, dimensions=parameter_names, fig=fig, ax=ax)
     plotpath = pathlib.Path(plot_path)
-    plotpath.mkdir(parents=True, exist_ok=True)
-    full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}.png"
+    for subdir in ["landscapes", "elo", "optima"]:
+        (plotpath / subdir).mkdir(parents=True, exist_ok=True)
+    full_plotpath = plotpath / f"landscapes/landscape-{timestr}-{len(optimizer.Xi)}.png"
     dpi = 150 if optimizer.space.n_dims == 1 else 300
     plt.savefig(full_plotpath, dpi=dpi, facecolor=dark_gray, **save_params)
     logger.info(f"Saving a plot to {full_plotpath}.")
     plt.close(fig)
 
-    # Now plot the history of optima:
+    # Plot the history of optima:
     fig, ax = plot_optima(
         iterations=iterations,
         optima=optima,
         space=optimizer.space,
         parameter_names=parameter_names,
     )
-    full_plotpath = plotpath / f"optima-{timestr}-{len(optimizer.Xi)}.png"
+    full_plotpath = plotpath / f"optima/optima-{timestr}-{len(optimizer.Xi)}.png"
+    fig.savefig(full_plotpath, dpi=150, facecolor=dark_gray)
+    plt.close(fig)
+
+    # Plot the predicted Elo performance of the optima:
+    fig, ax = plot_performance(
+        performance=np.hstack([iterations[:, None], elos]), confidence=confidence
+    )
+    full_plotpath = plotpath / f"elo/elo-{timestr}-{len(optimizer.Xi)}.png"
     fig.savefig(full_plotpath, dpi=150, facecolor=dark_gray)
     plt.close(fig)
 

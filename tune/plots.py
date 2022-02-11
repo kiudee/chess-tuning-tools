@@ -12,7 +12,13 @@ from skopt.space import Space
 
 from tune.utils import confidence_to_mult, expected_ucb
 
-__all__ = ["partial_dependence", "plot_objective", "plot_objective_1d", "plot_optima"]
+__all__ = [
+    "partial_dependence",
+    "plot_objective",
+    "plot_objective_1d",
+    "plot_optima",
+    "plot_performance",
+]
 
 
 def _evenly_sample(dim, n_points):
@@ -613,5 +619,115 @@ def plot_optima(
 
         if parameter_names is not None:
             a.set_ylabel(parameter_names[i])
+    return fig, ax
+
+
+def plot_performance(
+    performance: np.ndarray,
+    confidence: float = 0.9,
+    plot_width: float = 8,
+    aspect_ratio: float = 0.7,
+    fig: Optional[Figure] = None,
+    ax: Optional[Axes] = None,
+    colors: Optional[Sequence[Union[tuple, str]]] = None,
+) -> Tuple[Figure, np.ndarray]:
+    """Plot the estimated Elo of the Optima predicted by the tuning algorithm.
+
+    Parameters
+    ----------
+    performance : np.ndarray, shape=(n_iterations, 3)
+        Array containing the iteration numbers, the estimated Elo of the predicted
+        optimum, and the estimated standard error of the estimated Elo.
+    confidence : float, optional (default=0.9)
+        The confidence interval to plot around the estimated Elo.
+    plot_width : int, optional (default=8)
+        The width of each plot in inches. The total width of the plot will be larger
+        depending on the number of parameters and how they are arranged.
+    aspect_ratio : float, optional (default=0.7)
+        The aspect ratio of the subplots. The default is 0.4, which means that the
+        height of each subplot will be 40% of the width.
+    fig : Figure, optional
+        The figure to plot on. If not provided, a new figure in the style of
+        chess-tuning-tools will be created.
+    ax : np.ndarray or Axes, optional
+        The axes to plot on. If not provided, new axes will be created.
+        If provided, the axes will be filled. Thus, the number of axes should be at
+        least as large as the number of parameters.
+    colors : Sequence[Union[tuple, str]], optional
+        The colors to use for the plots. If not provided, the color scheme 'Set3' of
+        matplotlib will be used.
+
+    Returns
+    -------
+    Figure
+        The figure containing the plots.
+    np.ndarray
+        A two-dimensional array containing the axes.
+
+    Raises
+    ------
+    ValueError
+        - if the number of parameters does not match the number of parameter names
+        - if the number of axes is smaller than the number of parameters
+        - if the number of iterations is not matching the number of optima
+        - if a fig, but no ax is passed
+    """
+    iterations, elo, elo_std = performance.T
+    if colors is None:
+        colors = plt.cm.get_cmap("Set3").colors
+    if fig is None:
+        plt.style.use("dark_background")
+        figsize = (plot_width, aspect_ratio * plot_width)
+        fig, ax = plt.subplots(figsize=figsize)
+
+        margin_left = 0.8
+        margin_right = 0.1
+        margin_bottom = 0.7
+        margin_top = 0.3
+        plt.subplots_adjust(
+            left=margin_left / figsize[0],
+            right=1 - margin_right / figsize[0],
+            bottom=margin_bottom / figsize[1],
+            top=1 - margin_top / figsize[1],
+        )
+        ax.set_facecolor("#36393f")
+        ax.grid(which="major", color="#ffffff", alpha=0.1)
+        fig.patch.set_facecolor("#36393f")
+        ax.set_title("Elo of the predicted best parameters over time")
+    elif ax is None:
+        raise ValueError("Axes must be specified if a figure is provided.")
+
+    ax.plot(
+        iterations,
+        elo,
+        color=colors[0],
+        zorder=10,
+        linewidth=1.3,
+        label="Predicted Elo",
+    )
+    confidence_mult = confidence_to_mult(confidence)
+    ax.fill_between(
+        iterations,
+        elo - confidence_mult * elo_std,
+        elo + confidence_mult * elo_std,
+        color=colors[0],
+        linewidth=0,
+        zorder=9,
+        alpha=0.25,
+        label=f"{confidence:.0%} confidence interval",
+    )
+    ax.axhline(
+        y=elo[-1],
+        linestyle="--",
+        zorder=8,
+        color=colors[0],
+        label="Last prediction",
+        linewidth=1,
+        alpha=0.3,
+    )
+    ax.legend(loc="upper center", frameon=False, bbox_to_anchor=(0.5, -0.08), ncol=3)
+    ax.set_xlabel("Iteration")
+    ax.set_ylabel("Elo")
+    ax.set_xlim(min(iterations), max(iterations))
 
     return fig, ax
