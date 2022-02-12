@@ -1,5 +1,5 @@
 
-.. image:: https://i.imgur.com/bSNnxkC.png
+.. image:: https://raw.githubusercontent.com/kiudee/chess-tuning-tools/master/docs/_static/CTT-Plots.png
    
 .. raw:: html
 
