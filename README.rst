@@ -1,13 +1,9 @@
 
-.. image:: https://raw.githubusercontent.com/kiudee/chess-tuning-tools/master/docs/_static/logo.png
+.. image:: https://i.imgur.com/bSNnxkC.png
+   
+.. raw:: html
 
-|
-
-.. image:: https://img.shields.io/pypi/v/chess-tuning-tools.svg?style=flat-square
-        :target: https://pypi.python.org/pypi/chess-tuning-tools
-
-.. image:: https://img.shields.io/travis/com/kiudee/chess-tuning-tools?style=flat-square
-        :target: https://travis-ci.com/github/kiudee/chess-tuning-tools
+   <img src="https://raw.githubusercontent.com/kiudee/chess-tuning-tools/master/docs/_static/logo.png" align="right">
 
 .. image:: https://readthedocs.org/projects/chess-tuning-tools/badge/?version=latest&style=flat-square
         :target: https://chess-tuning-tools.readthedocs.io/en/latest/?badge=latest
@@ -26,6 +22,8 @@ A collection of tools for local and distributed tuning of chess engines.
 
 Features
 --------
+
+
 
 * Optimization of chess engines using state-of-the-art `Bayesian optimization <https://github.com/kiudee/bayes-skopt>`_.
 * Support for automatic visualization of the optimization landscape.
