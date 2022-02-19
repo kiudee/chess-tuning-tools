@@ -167,6 +167,10 @@ def latest_iterations(
     Tuple[np.ndarray, ...]
         The arrays with the duplicate rows removed.
     """
+    # First check that all arrays have the same length
+    for array in arrays:
+        if array.shape[0] != iterations.shape[0]:
+            raise ValueError("Arrays must have the same length.")
     unique_iterations = np.unique(iterations)
     if len(unique_iterations) == len(iterations):
         return (iterations, *arrays)
