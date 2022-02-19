@@ -24,7 +24,7 @@ Installation on Windows
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 To get chess-tuning-tools to work on Windows, the easiest way is to install
-the `Miniconda <https://www.continuum.io/downloads>`_ distribution.
+the `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_ distribution.
 Then, create a new environment and install chess-tuning-tools::
 
    conda create -n myenv python=3.9 scikit-learn=0.23
