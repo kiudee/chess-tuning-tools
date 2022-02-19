@@ -1,6 +1,7 @@
 import itertools
 from collections import namedtuple
 from decimal import Decimal
+from typing import Tuple
 
 import numpy as np
 from scipy.optimize import minimize
@@ -12,6 +13,7 @@ __all__ = [
     "parse_timecontrol",
     "TimeControl",
     "TimeControlBag",
+    "latest_iterations",
 ]
 
 
@@ -138,3 +140,40 @@ def confidence_to_mult(confidence: float) -> float:
     if confidence < 0 or confidence > 1:
         raise ValueError("Confidence level must be in the range [0, 1].")
     return erfinv(confidence) * np.sqrt(2)
+
+
+def latest_iterations(
+    iterations: np.ndarray, *arrays: np.ndarray
+) -> Tuple[np.ndarray, ...]:
+    """Remove rows with duplicate iteration numbers and only keep the latest.
+
+    Example
+    -------
+    >>> iterations = np.array([1, 2, 3, 3, 5, 6])
+    >>> arrays = (np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6]), )
+    >>> latest_iterations(iterations, *arrays)
+    (array([1, 2, 3, 5, 6]), array([0.1, 0.2, 0.4, 0.5, 0.6]))
+
+
+    Parameters
+    ----------
+    iterations: np.ndarray
+        The array containing the iteration numbers.
+    *arrays: np.ndarray
+        Additional arrays of the same length which correspond to the rows of data.
+
+    Returns
+    -------
+    Tuple[np.ndarray, ...]
+        The arrays with the duplicate rows removed.
+    """
+    unique_iterations = np.unique(iterations)
+    if len(unique_iterations) == len(iterations):
+        return (iterations, *arrays)
+    else:
+        # Compute the indices of the latest unique iterations:
+        indices = np.searchsorted(iterations, unique_iterations, side="right") - 1
+        return (
+            iterations[indices],
+            *(a[indices] for a in arrays),
+        )
