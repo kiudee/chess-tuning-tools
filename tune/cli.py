@@ -418,7 +418,7 @@ def local(  # noqa: C901
                         confidence=settings.get("confidence", confidence),
                     )
                     optima.append(current_optimum)
-                    performance.append([iteration, estimated_elo, estimated_std])
+                    performance.append((int(iteration), estimated_elo, estimated_std))
                 except ValueError:
                     pass
             plot_every_n = settings.get("plot_every", plot_every)
@@ -432,6 +432,7 @@ def local(  # noqa: C901
                     plot_path=settings.get("plot_path", plot_path),
                     parameter_names=list(param_ranges.keys()),
                     confidence=settings.get("confidence", confidence),
+                    current_iteration=iteration,
                 )
 
         # Ask optimizer for next point:
@@ -489,7 +490,7 @@ def local(  # noqa: C901
         X.append(point)
         y.append(score)
         noise.append(error_variance)
-        iteration = len(X)
+        iteration += 1
 
         with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
             np.savez_compressed(
@@ -499,6 +500,7 @@ def local(  # noqa: C901
                 np.array(noise),
                 np.array(optima),
                 np.array(performance),
+                np.array(iteration),
             )
         with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
             dill.dump(opt, f)
