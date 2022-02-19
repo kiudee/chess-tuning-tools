@@ -159,7 +159,10 @@ def test_initialize_data(tmp_path):
     noise_in = np.array([0.3, 0.2, 0.5])
     optima_in = np.array([[0.3]])
     performance_in = np.array([[2.0, 30.0, 20.0]])
-    np.savez_compressed(testfile, X_in, y_in, noise_in, optima_in, performance_in)
+    iteration_in = np.array([5])
+    np.savez_compressed(
+        testfile, X_in, y_in, noise_in, optima_in, performance_in, iteration_in
+    )
 
     # Check if resume=False is recognized correctly
     # (outputs should be empty despite data_path being given):
@@ -172,7 +175,7 @@ def test_initialize_data(tmp_path):
     X, y, noise, iteration, optima, performance = initialize_data(
         parameter_ranges=[(0.0, 1.0)], data_path=testfile, resume=True,
     )
-    assert iteration == 3
+    assert int(iteration) == 5
     assert np.allclose(X, X_in)
     assert np.allclose(y, y_in)
     assert np.allclose(noise, noise_in)
@@ -183,7 +186,7 @@ def test_initialize_data(tmp_path):
     X, y, noise, iteration, _, _ = initialize_data(
         parameter_ranges=[(0.0, 0.5)], data_path=testfile, resume=True,
     )
-    assert iteration == 2
+    assert int(iteration) == 5
     assert np.allclose(X, np.array([[0.0], [0.5]]))
     assert np.allclose(y, np.array([1.0, -1.0]))
     assert np.allclose(noise, np.array([0.3, 0.2]))

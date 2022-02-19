@@ -268,6 +268,10 @@ def initialize_data(
                     optima = importa["arr_3"].tolist()
                 if "arr_4" in importa:
                     performance = importa["arr_4"].tolist()
+                if "arr_5" in importa:
+                    iteration = importa["arr_5"]
+                else:
+                    iteration = len(X)
             if len(X[0]) != space.n_dims:
                 raise ValueError(
                     f"Number of parameters ({len(X[0])}) are not matching "
@@ -292,7 +296,6 @@ def initialize_data(
                 X = X_reduced
                 y = y_reduced
                 noise = noise_reduced
-            iteration = len(X)
     return X, y, noise, iteration, optima, performance
 
 
@@ -524,6 +527,7 @@ def plot_results(
     plot_path: str,
     parameter_names: Sequence[str],
     confidence: float = 0.9,
+    current_iteration: Optional[int] = None,
 ) -> None:
     """Plot the current results of the optimizer.
 
@@ -545,11 +549,17 @@ def plot_results(
         Names of the parameters to use for plotting.
     confidence : float
         The confidence level of the normal distribution to plot in the 1d plot.
+    current_iteration : int, default=None
+        The current iteration of the optimization process.
+        If None, the current iteration is assumed to be the amount of points collected.
     """
     logger = logging.getLogger(LOGGER)
     logger.debug("Starting to compute the next plot.")
     timestr = time.strftime("%Y%m%d-%H%M%S")
     dark_gray = "#36393f"
+
+    if current_iteration is None:
+        current_iteration = len(optimizer.Xi)
 
     # First save the landscape:
     save_params = dict()
@@ -575,7 +585,7 @@ def plot_results(
     plotpath = pathlib.Path(plot_path)
     for subdir in ["landscapes", "elo", "optima"]:
         (plotpath / subdir).mkdir(parents=True, exist_ok=True)
-    full_plotpath = plotpath / f"landscapes/landscape-{timestr}-{len(optimizer.Xi)}.png"
+    full_plotpath = plotpath / f"landscapes/landscape-{timestr}-{current_iteration}.png"
     dpi = 150 if optimizer.space.n_dims == 1 else 300
     plt.savefig(full_plotpath, dpi=dpi, facecolor=dark_gray, **save_params)
     logger.info(f"Saving a plot to {full_plotpath}.")
@@ -588,7 +598,7 @@ def plot_results(
         space=optimizer.space,
         parameter_names=parameter_names,
     )
-    full_plotpath = plotpath / f"optima/optima-{timestr}-{len(optimizer.Xi)}.png"
+    full_plotpath = plotpath / f"optima/optima-{timestr}-{current_iteration}.png"
     fig.savefig(full_plotpath, dpi=150, facecolor=dark_gray)
     plt.close(fig)
 
@@ -596,7 +606,7 @@ def plot_results(
     fig, ax = plot_performance(
         performance=np.hstack([iterations[:, None], elos]), confidence=confidence
     )
-    full_plotpath = plotpath / f"elo/elo-{timestr}-{len(optimizer.Xi)}.png"
+    full_plotpath = plotpath / f"elo/elo-{timestr}-{current_iteration}.png"
     fig.savefig(full_plotpath, dpi=150, facecolor=dark_gray)
     plt.close(fig)
 
