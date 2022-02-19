@@ -20,6 +20,17 @@ This is the preferred method to install Chess Tuning Tools, as it will always in
 If you don't have `pip`_ installed, this `Python installation guide`_ can guide
 you through the process.
 
+Installation on Windows
+^^^^^^^^^^^^^^^^^^^^^^^
+
+To get chess-tuning-tools to work on Windows, the easiest way is to install
+the `Miniconda <https://www.continuum.io/downloads>`_ distribution.
+Then, create a new environment and install chess-tuning-tools::
+
+   conda create -n myenv python=3.9 scikit-learn=0.23
+   activate myenv
+   pip install chess-tuning-tools
+
 .. _pip: https://pip.pypa.io
 .. _Python installation guide: http://docs.python-guide.org/en/latest/starting/installation/
 
