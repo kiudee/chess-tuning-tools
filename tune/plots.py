@@ -580,13 +580,6 @@ def plot_optima(
             a.xaxis.set_label_coords(0.5, -0.12)
             a.xaxis.set_tick_params(labelbottom=True)
 
-        # If the user supplied an optimization space, we can use that information to
-        # scale the yaxis and apply log-scaling, where necessary:
-        if space is not None:
-            dim = space.dimensions[i]
-            a.set_ylim(*dim.bounds)
-            if dim.prior == "log-uniform":
-                a.set_yscale("log")
         a.plot(
             iterations,
             optima[:, i],
@@ -602,13 +595,16 @@ def plot_optima(
             ls="--",
             alpha=0.6,
         )
-        abs_optima = np.abs(optima[:, i])
-        min_y, max_y = np.min(abs_optima), np.max(abs_optima)
-        with np.errstate(divide="ignore"):
-            if min_y < 1e-4 or max_y / min_y > 1e3:
+        # If the user supplied an optimization space, we can use that information to
+        # scale the yaxis and apply log-scaling, where necessary:
+        s = f"{optima[-1, i]:.2f}"
+        if space is not None:
+            dim = space.dimensions[i]
+            a.set_ylim(*dim.bounds)
+            if dim.prior == "log-uniform":
+                a.set_yscale("log")
                 s = np.format_float_scientific(optima[-1, i], precision=2)
-            else:
-                s = f"{optima[-1, i]:.2f}"
+
         a.text(
             x=a.get_xlim()[0] + 0.01 * len(iterations),
             y=optima[-1, i] - 0.01 * (a.get_ylim()[1] - a.get_ylim()[0]),
