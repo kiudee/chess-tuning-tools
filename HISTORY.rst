@@ -2,6 +2,15 @@
 History
 =======
 
+0.9.1 (unreleased)
+------------------
+
+Local tuner
+~~~~~~~~~~~
+
+- Fix a bug where the Elo and optima plots were showing incorrect iterations,
+  if the user reduced parameter ranges (#183).
+
 0.9.0 (2022-02-11)
 ------------------
 
