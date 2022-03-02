@@ -605,10 +605,23 @@ def plot_optima(
                 a.set_yscale("log")
                 s = np.format_float_scientific(optima[-1, i], precision=2)
 
+        # Label the horizontal line of the current optimal value:
+        # First convert the y-value to normalized axes coordinates:
+        point = a.get_xlim()[0], optima[-1, i]
+        transformed_point = a.transAxes.inverted().transform(
+            a.transData.transform(point)
+        )
         a.text(
-            x=a.get_xlim()[0] + 0.01 * len(iterations),
-            y=optima[-1, i] - 0.01 * (a.get_ylim()[1] - a.get_ylim()[0]),
+            x=transformed_point[0] + 0.01,
+            y=transformed_point[1] - 0.02,
             s=s,
+            bbox=dict(
+                facecolor="#36393f",
+                edgecolor="None",
+                alpha=0.5,
+                boxstyle="square,pad=0.1",
+            ),
+            transform=a.transAxes,
             horizontalalignment="left",
             verticalalignment="top",
             color=colors[i % n_colors],
