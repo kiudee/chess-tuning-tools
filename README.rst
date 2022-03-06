@@ -1,9 +1,7 @@
 
 .. image:: https://raw.githubusercontent.com/kiudee/chess-tuning-tools/master/docs/_static/CTT-Plots.png
 
-.. raw:: html
-
-   <img src="https://raw.githubusercontent.com/kiudee/chess-tuning-tools/master/docs/_static/logo.png" align="right">
+.. image:: https://raw.githubusercontent.com/kiudee/chess-tuning-tools/master/docs/_static/logo.png
 
 .. image:: https://readthedocs.org/projects/chess-tuning-tools/badge/?version=latest&style=flat-square
         :target: https://chess-tuning-tools.readthedocs.io/en/latest/?badge=latest
