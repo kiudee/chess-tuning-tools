@@ -50,12 +50,82 @@ Here are a few examples:
 * Do you think that the overall landscape is not explored well enough? Then switch
 to ``"vr"`` for a few iterations.
 * Do you think the tuner has found the rough location of the optimum and you want
-to refine it? Then switch to ``"mes"`` for the final iterations.
+to refine it? Then switch to ``"mes"``, ``"ei"`` or even ``"mean"`` for the
+final iterations.
+
+### How many iterations should I run? How many rounds should I run per iteration?
+The answer to this questions depends on a variety of factors: The number of
+parameters you want to tune, the overall effect the parameters have on the
+Elo performance, and how close in Elo performance you want to be to the global
+optimum.
+If you are familiar with the [Stockfish Testing Queue](https://tests.stockfishchess.org),
+you already know that it takes many games to confidently decide whether a new
+patch improves the Elo performance of an engine.
+When you are tuning, you can think of this number of games as the lower bound,
+because now you have to basically test a large space of configurations.
+Due to the smoothness of this space, we can get away with fewer games, since
+similar configurations will likely have similar Elo performance.
+
+A rough rule of thumb is that you should run at least `30000 * n_params` games.
+The volume of the search space blows up exponentially with the number of
+parameters, which is why you likely need slightly more with more parameters.
+You can adjust this number based on your specific parameters. If your parameters
+are not very optimized, expect them to have a large impact on the Elo performance
+and only want a ballpark estimate of the optimum, you can run fewer games.
+If your parameters are well-optimized already, and the potential Elo gain is
+in the single digits, you should run more games.
+
+Regarding the number of rounds per iteration, consider that the computing overhead
+of the tuner will ramp up with the number of rounds. A good rule of thumb is to
+aim for 1000 to 1500 iterations in total. So, for example, if your goal is to
+run 100k games, and want to run the tuner for 1000 iterations, then you should
+set ``"rounds"`` to ``100000 / 1000 / 2 = 50``.
+
+In any case, you should monitor the suite of plots and the log output, to make
+sure that the tuning process has converged.
+
 
 ### Can I increase the number of games per iteration later in the tune?
 It is possible, but it will bias the estimated Elo values to slightly more
 extreme ones. This could lead the model to temporarily over-/underevalute
 certain regions until enough new data points were collected.
+
+## Problems while tuning
+
+### The computational overhead of the tuner has become too high? What can I do?
+There are a few things the tuner computes, that cause computational overhead.
+In general, the model the tuner uses (a Gaussian process) computation-wise scales
+cubicly with the number of iterations.
+Here is the list of the things which can cause a slowdown:
+
+1. The estimation process of the kernel hyperparameters.
+2. The computation of the predicted global optimum.
+3. The computation of the optimization landscape plot.
+
+To reduce the impact of (1.) you can reduce ``"gp_burnin"`` to a lower value
+(say 1-5, even 0 late in the tuning process).
+During later iterations, the model is quite sure about the kernel
+hyperparameters, so it is not necessary to have a high burnin value anymore.
+In the same vain, you can reduce ``"gp_samples"`` to the lowest value of 100.
+
+Regarding (2.), you can reduce the frequency of how often the current tuning
+results are reported, by setting ``"result_every"`` to a higher value or even
+to 0. You can later on interrupt the tuner, and re-run it with the setting set
+to 1, to force it to compute the current global optimum.
+
+Similarly, you can reduce the frequency of the plots (3.),
+by setting ``"plot_every"`` to a higher value or to 0.
+
+A few other settings have a minor impact on the computational overhead, and
+could also be changed to speed up the tuning process. This will degrade the
+quality of the tuning process however:
+
+- Turning off ``"warp_inputs"`` will greatly reduce the number of hyperparameters
+to infer, but it will also make the model less able to fit optimization
+landscapes with varying noise levels.
+- Reducing the number of points ``"n_points"`` will reduce the
+overhead of computing the acquisition function, but it will also make the tuning
+process more noisy.
 
 ## Plots
 ```{figure} _static/plot_example.png
