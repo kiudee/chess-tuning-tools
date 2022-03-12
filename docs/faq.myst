@@ -84,6 +84,21 @@ set ``"rounds"`` to ``100000 / 1000 / 2 = 50``.
 In any case, you should monitor the suite of plots and the log output, to make
 sure that the tuning process has converged.
 
+### How do I know if the tuning process has converged?
+There are several indicators that can be used to check whether the tuning process
+has converged:
+
+- Check the optima plots to see if the predicted optimal parameter values do not
+  have a visible trend and roughly follow a tight random walk.
+  There should also no jumps between different local optima anymore.
+- Check the landscape plot to see if the sampled points have formed a
+  concentrated distribution around the optimum.
+  The orange and red dots (corresponding to the global optimum and the
+  conservative optimum) should be close to each other.
+- Check the log output to see if the confidence intervals for the parameters
+  are not too wide.
+- Ensure that the confidence interval of the predicted Elo performance aligns
+  roughly with the targeted optimality.
 
 ### Can I increase the number of games per iteration later in the tune?
 It is possible, but it will bias the estimated Elo values to slightly more
