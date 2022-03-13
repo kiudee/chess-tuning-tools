@@ -105,6 +105,31 @@ It is possible, but it will bias the estimated Elo values to slightly more
 extreme ones. This could lead the model to temporarily over-/underevalute
 certain regions until enough new data points were collected.
 
+### How can I pass my own points to the tuner to evaluate?
+```{note}
+:class: margin
+The parameter values have to be within the bounds specified in the config file.
+```
+Starting with 0.9.2, you can pass your own points to the tuner to evaluate.
+To do this, you need to create a .csv file using the ``--evaluate-points``
+option (``-p`` for short).
+Each row in the file should contain the parameters
+in the same order as specified in the config file of the tune.
+It is also possible to add an additional integer column to the file, which
+will indicate the number of rounds to run each point for.
+
+Here is an example of how a .csv file for a three parameter tune could look
+like:
+
+    0.3,125,0.0,25
+    0.4,1000,0.5,50
+    0.5,1000,0.0,50
+
+The first point would be evaluated using 25 rounds (50 games), while the
+second and third point would be evaluated using 50 rounds (100 games).
+
+
+
 ## Problems while tuning
 
 ### The computational overhead of the tuner has become too high? What can I do?
