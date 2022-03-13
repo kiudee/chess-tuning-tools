@@ -6,11 +6,12 @@ import sys
 import time
 from datetime import datetime
 from logging import Logger
-from typing import Callable, List, Optional, Sequence, Tuple, Union
+from typing import Callable, List, Optional, Sequence, TextIO, Tuple, Union
 
 import dill
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from bask import Optimizer
 from matplotlib.transforms import Bbox
 from numpy.random import RandomState
@@ -171,6 +172,69 @@ def setup_logger(verbose: int = 0, logfile: str = "log.txt") -> Logger:
     console_logger.setFormatter(log_format)
     logger.addHandler(console_logger)
     return logger
+
+
+def load_points_to_evaluate(
+    space: Space, csv_file: Optional[TextIO] = None, rounds: int = 10
+) -> List[Tuple[List, int]]:
+    """Load extra points to evaluate from a csv file.
+
+    Parameters
+    ----------
+    space : Space
+        Optimization space containing the parameters to tune.
+    csv_file : TextIO, optional (default=None)
+        Comma-separated text file containing the points to evaluate. If an extra column
+        is present, it will be used as the number of rounds to play.
+    rounds : int, optional (default=10)
+        Number of rounds to play for each point. Will be used if no extra column is
+        present.
+
+    Returns
+    -------
+    List[Tuple[List, int]]
+        List of points to evaluate and number of rounds to play each point.
+
+    Raises
+    ------
+    ValueError
+        If the values in the csv file are out of the optimization bounds or if the
+        number of columns is not equal to the number of parameters (+1 in the case the
+        sample size is provided).
+    """
+
+    if csv_file is None:
+        # No file given, do not load any points:
+        return []
+
+    # Open csv file using pandas:
+    df = pd.read_csv(csv_file, header=None)
+
+    # First check if number of columns is correct:
+    n_dim = len(space.dimensions)
+    if len(df.columns) not in (n_dim, n_dim + 1):
+        raise ValueError(
+            f"Number of columns in csv file ({len(df.columns)}) does not match number"
+            f" of dimensions ({n_dim})."
+        )
+
+    # Check if the given points are within the lower and upper bounds of the space:
+    for i, dim in enumerate(space.dimensions):
+        if not (df.iloc[:, i].between(dim.low, dim.high).all()):
+            raise ValueError(
+                "Some points in the csv file are outside of the specified bounds."
+                " Please check the csv file and your configuration."
+            )
+
+    # If there is an extra column, extract it as the number of rounds for each point:
+    if len(df.columns) == n_dim + 1:
+        rounds_column = df.iloc[:, n_dim].values
+        df = df.iloc[:, :n_dim]
+    else:
+        rounds_column = np.full(len(df), rounds)
+
+    # All points are within the bounds, add them to the list of points to evaluate:
+    return [(x, r) for x, r in zip(df.values.tolist(), rounds_column)]
 
 
 def reduce_ranges(

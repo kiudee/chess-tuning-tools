@@ -219,6 +219,14 @@ fitting process:
   - The number of random points to consider as possible next point. Less points
     reduce the computation time per iteration, but reduce the coverage of the
     space. [default: 500]
+* -
+  - `-p --evaluate-points CSVFILE`
+  - Evaluate the given points first, before continuing with the points selected
+    by the tuner. The points are given as the rows of a CSV file with the
+    following format:
+    `x1,x2,...,xn[,samplesize]`. The first row should *not* be a header.
+    The last column is optional and contains the number of rounds to run each
+    point for. If not given, the default is whatever `"rounds"` is set to..
 ```
 
 ## Match-related parameters
