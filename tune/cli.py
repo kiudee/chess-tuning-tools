@@ -10,6 +10,7 @@ import numpy as np
 from atomicwrites import AtomicWriter
 from skopt.utils import create_result
 
+import tune
 from tune.db_workers import TuningClient, TuningServer
 from tune.io import load_tuning_config, prepare_engines_json, write_engines_json
 from tune.local import (
@@ -345,11 +346,14 @@ def local(  # noqa: C901
 
     Parameters defined in the `tuning_config` file always take precedence.
     """
+
     json_dict = json.load(tuning_config)
     settings, commands, fixed_params, param_ranges = load_tuning_config(json_dict)
     root_logger = setup_logger(
         verbose=verbose, logfile=settings.get("logfile", logfile)
     )
+    # First log the version of chess-tuning-tools:
+    root_logger.info(f"chess-tuning-tools version: {tune.__version__}")
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
 
     # Initialize/import data structures:
