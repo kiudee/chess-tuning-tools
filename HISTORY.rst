@@ -2,6 +2,18 @@
 History
 =======
 
+0.9.2 (2022-03-13)
+------------------
+
+Local tuner
+~~~~~~~~~~~
+
+- Add CLI flag ``--evaluate-points -p CSVFILE`` which allows the user to supply
+  a CSV file with points the tuner should try before resuming normal operation.
+  An optional integer column can be specified, which will be used to indicate
+  the number of rounds to run each point for (#91).
+- Log version of the tuner in the log output (#191).
+
 0.9.1 (2022-03-06)
 ------------------
 
