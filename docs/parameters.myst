@@ -199,14 +199,29 @@ fitting process:
       configuration, but to fit the optimization landscape very precisely.
       Useful, if you are interested in how the parameters interact.
       Also worthwhile to use as intermediate exploration.
+      Has the tendency to sample points away from the edges of the space.
     * `"ts"`: Thompson sampling picks a random optimization landscape consistent
       with the data and returns the optimum of that landscape. This criterion
       explores a lot and only slowly concentrates on the optimum. Especially in
-      high dimensions. This makes it a very robust acquisition function.
+      high dimensions. However, it is the only criterion, which incorporates the
+      uncertainty of the smoothness of the optimization landscape.
+      This makes it a very robust acquisition function.
     * `"ei"`: Expected improvement is a classic search strategy which picks the
       point which produces the biggest expected improvement over the current
-      best optimum. Skews heavily on the exploitative side. Can quickly run
-      into local optima, if used by itself.
+      best optimum. Skews heavily on the exploitative side, since the version
+      here is geared towards optimizing deterministic functions and chess is
+      very noisy. Can therefore quickly run into local optima, if used by
+      itself.
+    * `"ttei"`: Top-two expected improvement is a variant of expected improvement
+      which picks the second best point with respect to expected improvement.
+      In principle this improves the exploration of the space, but since the
+      library optimizes acquisition functions over a random sample of points,
+      `"ei"` is already exploring the vicinity of its preferred point.
+    * `"lcb"`: Picks the point with the lowest lower confidence bound of the
+      negative Elo estimate. It is therefore an optimistic strategy.
+    * `"mean"`: Picks the point with the highest estimated Elo. This is a purely
+      exploitative strategy. It is prone to get stuck in local optima and should
+      only be used for finetuning.
 * - `"acq_function_samples"`
   - `--acq-function-samples INTEGER`
   - Number of GP samples to average the acquisition function over. More samples

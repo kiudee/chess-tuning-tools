@@ -141,7 +141,8 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "--acq-function",
     default="mes",
     help="Acquisition function to use for selecting points to try. "
-    "Can be {mes, pvrs, ei, ts, vr}.",
+    "Can be one of: {mes, pvrs, ei, ts, vr, lcb, mean, ttei} "
+    "Consult the parameter reference and the FAQ for more information.",
     show_default=True,
 )
 @click.option(
