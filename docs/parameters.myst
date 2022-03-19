@@ -330,6 +330,10 @@ fitting process:
   - Resign score threshold in centipawns. The score of the engine has to stay
     below -resign_score for at least resign_movecount moves for it to be
     adjudicated as a loss. [default: 550]
+* - `"resign_twosided"`
+  -
+  - If True, the absolute score for both engines has to above resign_score
+    before the game is adjudicated. [default: False]
 * - `"adjudicate_tb"`
   -
   - Allow cutechess-cli to adjudicate games based on Syzygy tablebases. If true,

@@ -704,6 +704,7 @@ def run_match(
     adjudicate_resign: bool = False,
     resign_movecount: int = 3,
     resign_score: int = 550,
+    resign_twosided: bool = False,
     adjudicate_tb: bool = False,
     tb_path: Optional[str] = None,
     concurrency: int = 1,
@@ -772,6 +773,9 @@ def run_match(
         Resign score threshold in centipawns. The score of the engine has to
         stay below -resign_score for at least resign_movecount moves for it to
         be adjudicated as a loss.
+    resign_twosided : bool, default=False
+        If True, the absolute score for both engines has to above resign_score before
+        the game is adjudicated.
     adjudicate_tb : bool, default=False
         Allow cutechess-cli to adjudicate games based on Syzygy tablebases.
         If true, tb_path has to be set.
@@ -848,7 +852,12 @@ def run_match(
         )
     if adjudicate_resign:
         string_array.extend(
-            ("-resign", f"movecount={resign_movecount}", f"score={resign_score}")
+            (
+                "-resign",
+                f"movecount={resign_movecount}",
+                f"score={resign_score}",
+                f"twosided={str(resign_twosided).lower()}",
+            )
         )
     if adjudicate_tb:
         if tb_path is None:
