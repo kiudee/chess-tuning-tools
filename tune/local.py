@@ -6,7 +6,17 @@ import sys
 import time
 from datetime import datetime
 from logging import Logger
-from typing import Callable, List, Optional, Sequence, TextIO, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    TextIO,
+    Tuple,
+    Union,
+)
 
 import dill
 import matplotlib.pyplot as plt
@@ -676,30 +686,30 @@ def plot_results(
 
 
 def run_match(
-    rounds=10,
-    engine1_tc=None,
-    engine2_tc=None,
-    engine1_st=None,
-    engine2_st=None,
-    engine1_npm=None,
-    engine2_npm=None,
-    engine1_ponder=False,
-    engine2_ponder=False,
-    timemargin=None,
-    opening_file=None,
-    adjudicate_draws=False,
-    draw_movenumber=1,
-    draw_movecount=10,
-    draw_score=8,
-    adjudicate_resign=False,
-    resign_movecount=3,
-    resign_score=550,
-    adjudicate_tb=False,
-    tb_path=None,
-    concurrency=1,
-    debug_mode=False,
-    **kwargs,
-):
+    rounds: int = 10,
+    engine1_tc: Optional[Union[str, TimeControl]] = None,
+    engine2_tc: Optional[Union[str, TimeControl]] = None,
+    engine1_st: Optional[Union[str, int]] = None,
+    engine2_st: Optional[Union[str, int]] = None,
+    engine1_npm: Optional[Union[str, int]] = None,
+    engine2_npm: Optional[Union[str, int]] = None,
+    engine1_ponder: bool = False,
+    engine2_ponder: bool = False,
+    timemargin: Optional[Union[str, int]] = None,
+    opening_file: Optional[str] = None,
+    adjudicate_draws: bool = False,
+    draw_movenumber: int = 1,
+    draw_movecount: int = 10,
+    draw_score: int = 8,
+    adjudicate_resign: bool = False,
+    resign_movecount: int = 3,
+    resign_score: int = 550,
+    adjudicate_tb: bool = False,
+    tb_path: Optional[str] = None,
+    concurrency: int = 1,
+    debug_mode: bool = False,
+    **kwargs: Any,
+) -> Iterator[str]:
     """Run a cutechess-cli match of two engines with paired random openings.
 
     Parameters
@@ -860,8 +870,11 @@ def run_match(
     with subprocess.Popen(
         string_array, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
     ) as popen:
-        for line in iter(popen.stdout.readline, ""):
-            yield line
+        if popen.stdout is not None:
+            for line in iter(popen.stdout.readline, ""):
+                yield line
+        else:
+            raise ValueError("No stdout found.")
 
 
 def is_debug_log(cutechess_line: str,) -> bool:
