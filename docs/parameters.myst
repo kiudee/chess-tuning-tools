@@ -287,6 +287,14 @@ fitting process:
 * - `"engine2_ponder"`
   -
   - See `engine1_ponder`.
+* - `"engine1_restart"`
+  -
+  - Restart mode for engine1. Can be `"auto"` (default, engine decides), `"on"`
+    (engine is always restarted between games), `"off"` (engine is never
+    restarted).
+* - `"engine2_restart"`
+  -
+  - See `engine1_restart`.
 * - `"timemargin"`
   -
   -  Allowed number of milliseconds the engines are allowed to go over the time

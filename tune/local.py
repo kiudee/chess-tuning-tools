@@ -695,6 +695,8 @@ def run_match(
     engine2_npm: Optional[Union[str, int]] = None,
     engine1_ponder: bool = False,
     engine2_ponder: bool = False,
+    engine1_restart: str = "auto",
+    engine2_restart: str = "auto",
     timemargin: Optional[Union[str, int]] = None,
     opening_file: Optional[str] = None,
     adjudicate_draws: bool = False,
@@ -738,6 +740,11 @@ def run_match(
         If True, allow engine1 to ponder.
     engine2_ponder : bool, default=False
         See engine1_ponder.
+    engine1_restart : str, default="auto"
+        Restart mode for engine1. Can be "auto" (default, engine decides), "on" (engine
+        is always restarted between games), "off" (engine is never restarted).
+    engine2_restart : str, default="auto"
+        See engine1_restart.
     timemargin : str or int, default=None
         Allowed number of milliseconds the engines are allowed to go over the time
         limit. If None, the margin is 0.
@@ -805,6 +812,7 @@ def run_match(
             engine_tc=engine1_tc,
             engine_st=engine1_st,
             engine_ponder=engine1_ponder,
+            engine_restart=engine1_restart,
             timemargin=timemargin,
         )
     )
@@ -815,6 +823,7 @@ def run_match(
             engine_tc=engine2_tc,
             engine_st=engine2_st,
             engine_ponder=engine2_ponder,
+            engine_restart=engine2_restart,
             timemargin=timemargin,
         )
     )
@@ -1114,14 +1123,15 @@ def update_model(
 
 
 def _construct_engine_conf(
-    id,
-    engine_npm=None,
-    engine_tc=None,
-    engine_st=None,
-    engine_ponder=False,
-    timemargin=None,
-):
-    result = ["-engine", f"conf=engine{id}"]
+    id: int,
+    engine_npm: Optional[Union[int, str]] = None,
+    engine_tc: Optional[Union[str, TimeControl]] = None,
+    engine_st: Optional[Union[int, str]] = None,
+    engine_ponder: bool = False,
+    engine_restart: str = "auto",
+    timemargin: Optional[Union[int, str]] = None,
+) -> List[str]:
+    result = ["-engine", f"conf=engine{id}", f"restart={engine_restart}"]
     if engine_npm is not None:
         result.extend(("tc=inf", f"nodes={engine_npm}"))
         return result
