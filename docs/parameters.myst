@@ -262,24 +262,33 @@ fitting process:
   - Time control to use for the first engine. Can be a non-increment time
     control like "10" (10 seconds) or an increment time control like "5+1.5"
     (5 seconds total with 1.5 seconds increment).
-    If none, it is assumed that engine1_npm is provided. [default: none]
+    If none, it is assumed that any of the other time controls is provided.
+    [default: none]
 * - `"engine2_tc"`
   -
   - See `engine1_tc`.
 * - `"engine1_st"`
   -
-  - Time limit in seconds for each move. If none, it is assumed that
-    engine1_tc or engine1_npm is provided.
+  - Time limit in seconds for each move. If none, it is assumed that any of the
+    other time controls is provided.
+    [default: none]
 * - `"engine2_st"`
   -
   - See `engine1_st`.
 * - `"engine1_npm"`
   -
   - Number of nodes per move the engine is allowed to search. If none, it is
-    assumed that engine1_tc is provided
+    assumed that any of the other time controls is provided.
 * - `"engine2_npm"`
   -
   - See `engine1_npm`.
+* - `"engine1_depth"`
+  -
+  - Depth to search for each move. If none, it is assumed that any of the other
+    time controls is provided.
+* - `"engine2_depth"`
+  -
+  - See `engine1_depth`.
 * - `"engine1_ponder"`
   -
   - Whether the engine is allowed to ponder the next move during the opponent

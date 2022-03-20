@@ -693,6 +693,8 @@ def run_match(
     engine2_st: Optional[Union[str, int]] = None,
     engine1_npm: Optional[Union[str, int]] = None,
     engine2_npm: Optional[Union[str, int]] = None,
+    engine1_depth: Optional[Union[str, int]] = None,
+    engine2_depth: Optional[Union[str, int]] = None,
     engine1_ponder: bool = False,
     engine2_ponder: bool = False,
     engine1_restart: str = "auto",
@@ -723,19 +725,26 @@ def run_match(
         Time control to use for the first engine. If str, it can be a
         non-increment time control like "10" (10 seconds) or an increment
         time control like "5+1.5" (5 seconds total with 1.5 seconds increment).
-        If None, it is assumed that engine1_npm or engine1_st is provided.
+        If None, it is assumed that engine1_npm, engine1_st or engine1_depth is
+        provided.
     engine2_tc : str or TimeControl object, default=None
         See engine1_tc.
     engine1_st : str or int, default=None
         Time limit in seconds for each move.
-        If None, it is assumed that engine1_tc or engine1_npm is provided.
+        If None, it is assumed that engine1_tc, engine1_npm or engine1_depth is
+        provided.
     engine2_st : str or TimeControl object, default=None
         See engine1_tc.
     engine1_npm : str or int, default=None
         Number of nodes per move the engine is allowed to search.
-        If None, it is assumed that engine1_tc or engine1_st is provided.
+        If None, it is assumed that engine1_tc, engine1_st or engine1_depth is provided.
     engine2_npm : str or int, default=None
         See engine1_npm.
+    engine1_depth : str or int, default=None
+        Depth the engine is allowed to search.
+        If None, it is assumed that engine1_tc, engine1_st or engine1_npm is provided.
+    engine2_depth : str or int, default=None
+        See engine1_depth.
     engine1_ponder : bool, default=False
         If True, allow engine1 to ponder.
     engine2_ponder : bool, default=False
@@ -801,8 +810,16 @@ def run_match(
     string_array = ["cutechess-cli"]
     string_array.extend(("-concurrency", str(concurrency)))
 
-    if (engine1_npm is None and engine1_tc is None and engine1_st is None) or (
-        engine2_npm is None and engine2_tc is None and engine2_st is None
+    if (
+        engine1_npm is None
+        and engine1_tc is None
+        and engine1_st is None
+        and engine1_depth is None
+    ) or (
+        engine2_npm is None
+        and engine2_tc is None
+        and engine2_st is None
+        and engine2_depth is None
     ):
         raise ValueError("A valid time control or nodes configuration is required.")
     string_array.extend(
@@ -811,6 +828,7 @@ def run_match(
             engine_npm=engine1_npm,
             engine_tc=engine1_tc,
             engine_st=engine1_st,
+            engine_depth=engine1_depth,
             engine_ponder=engine1_ponder,
             engine_restart=engine1_restart,
             timemargin=timemargin,
@@ -822,6 +840,7 @@ def run_match(
             engine_npm=engine2_npm,
             engine_tc=engine2_tc,
             engine_st=engine2_st,
+            engine_depth=engine2_depth,
             engine_ponder=engine2_ponder,
             engine_restart=engine2_restart,
             timemargin=timemargin,
@@ -1127,26 +1146,29 @@ def _construct_engine_conf(
     engine_npm: Optional[Union[int, str]] = None,
     engine_tc: Optional[Union[str, TimeControl]] = None,
     engine_st: Optional[Union[int, str]] = None,
+    engine_depth: Optional[Union[int, str]] = None,
     engine_ponder: bool = False,
     engine_restart: str = "auto",
     timemargin: Optional[Union[int, str]] = None,
 ) -> List[str]:
     result = ["-engine", f"conf=engine{id}", f"restart={engine_restart}"]
+    if timemargin is not None:
+        result.append(f"timemargin={timemargin}")
+    if engine_ponder:
+        result.append("ponder")
     if engine_npm is not None:
         result.extend(("tc=inf", f"nodes={engine_npm}"))
         return result
-    if engine_st is not None:
+    elif engine_st is not None:
         result.append(f"st={str(engine_st)}")
-        if timemargin is not None:
-            result.append(f"timemargin={str(timemargin)}")
-        if engine_ponder:
-            result.append("ponder")
         return result
-    if isinstance(engine_tc, str):
-        engine_tc = TimeControl.from_string(engine_tc)
-    result.append(f"tc={str(engine_tc)}")
-    if timemargin is not None:
-        result.append(f"timemargin={str(timemargin)}")
-    if engine_ponder:
-        result.append("ponder")
-    return result
+    elif engine_depth is not None:
+        result.extend(("tc=inf", f"depth={str(engine_depth)}"))
+        return result
+    elif engine_tc is not None:
+        if isinstance(engine_tc, str):
+            engine_tc = TimeControl.from_string(engine_tc)
+        result.append(f"tc={str(engine_tc)}")
+        return result
+    else:
+        raise ValueError(f"No engine time control specified for engine {id}.")
