@@ -2,6 +2,19 @@
 History
 =======
 
+0.9.3 (unreleased)
+------------------
+
+Local tuner
+~~~~~~~~~~~
+- Add support for twosided resign adjudication. If set to true, both engines
+  have to report an absolute score higher than the ``resign_score`` threshold
+  (#95).
+- Add support for ``engineX_restart`` (default "auto") which allows one to set
+  the restart mode used by cutechess (#95).
+- Add depth-based time control using ``engineX_depth`` (#95).
+
+
 0.9.2 (2022-03-13)
 ------------------
 
