@@ -6,7 +6,17 @@ import sys
 import time
 from datetime import datetime
 from logging import Logger
-from typing import Callable, List, Optional, Sequence, TextIO, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    TextIO,
+    Tuple,
+    Union,
+)
 
 import dill
 import matplotlib.pyplot as plt
@@ -676,30 +686,35 @@ def plot_results(
 
 
 def run_match(
-    rounds=10,
-    engine1_tc=None,
-    engine2_tc=None,
-    engine1_st=None,
-    engine2_st=None,
-    engine1_npm=None,
-    engine2_npm=None,
-    engine1_ponder=False,
-    engine2_ponder=False,
-    timemargin=None,
-    opening_file=None,
-    adjudicate_draws=False,
-    draw_movenumber=1,
-    draw_movecount=10,
-    draw_score=8,
-    adjudicate_resign=False,
-    resign_movecount=3,
-    resign_score=550,
-    adjudicate_tb=False,
-    tb_path=None,
-    concurrency=1,
-    debug_mode=False,
-    **kwargs,
-):
+    rounds: int = 10,
+    engine1_tc: Optional[Union[str, TimeControl]] = None,
+    engine2_tc: Optional[Union[str, TimeControl]] = None,
+    engine1_st: Optional[Union[str, int]] = None,
+    engine2_st: Optional[Union[str, int]] = None,
+    engine1_npm: Optional[Union[str, int]] = None,
+    engine2_npm: Optional[Union[str, int]] = None,
+    engine1_depth: Optional[Union[str, int]] = None,
+    engine2_depth: Optional[Union[str, int]] = None,
+    engine1_ponder: bool = False,
+    engine2_ponder: bool = False,
+    engine1_restart: str = "auto",
+    engine2_restart: str = "auto",
+    timemargin: Optional[Union[str, int]] = None,
+    opening_file: Optional[str] = None,
+    adjudicate_draws: bool = False,
+    draw_movenumber: int = 1,
+    draw_movecount: int = 10,
+    draw_score: int = 8,
+    adjudicate_resign: bool = False,
+    resign_movecount: int = 3,
+    resign_score: int = 550,
+    resign_twosided: bool = False,
+    adjudicate_tb: bool = False,
+    tb_path: Optional[str] = None,
+    concurrency: int = 1,
+    debug_mode: bool = False,
+    **kwargs: Any,
+) -> Iterator[str]:
     """Run a cutechess-cli match of two engines with paired random openings.
 
     Parameters
@@ -710,23 +725,35 @@ def run_match(
         Time control to use for the first engine. If str, it can be a
         non-increment time control like "10" (10 seconds) or an increment
         time control like "5+1.5" (5 seconds total with 1.5 seconds increment).
-        If None, it is assumed that engine1_npm or engine1_st is provided.
+        If None, it is assumed that engine1_npm, engine1_st or engine1_depth is
+        provided.
     engine2_tc : str or TimeControl object, default=None
         See engine1_tc.
     engine1_st : str or int, default=None
         Time limit in seconds for each move.
-        If None, it is assumed that engine1_tc or engine1_npm is provided.
+        If None, it is assumed that engine1_tc, engine1_npm or engine1_depth is
+        provided.
     engine2_st : str or TimeControl object, default=None
         See engine1_tc.
     engine1_npm : str or int, default=None
         Number of nodes per move the engine is allowed to search.
-        If None, it is assumed that engine1_tc or engine1_st is provided.
+        If None, it is assumed that engine1_tc, engine1_st or engine1_depth is provided.
     engine2_npm : str or int, default=None
         See engine1_npm.
+    engine1_depth : str or int, default=None
+        Depth the engine is allowed to search.
+        If None, it is assumed that engine1_tc, engine1_st or engine1_npm is provided.
+    engine2_depth : str or int, default=None
+        See engine1_depth.
     engine1_ponder : bool, default=False
         If True, allow engine1 to ponder.
     engine2_ponder : bool, default=False
         See engine1_ponder.
+    engine1_restart : str, default="auto"
+        Restart mode for engine1. Can be "auto" (default, engine decides), "on" (engine
+        is always restarted between games), "off" (engine is never restarted).
+    engine2_restart : str, default="auto"
+        See engine1_restart.
     timemargin : str or int, default=None
         Allowed number of milliseconds the engines are allowed to go over the time
         limit. If None, the margin is 0.
@@ -762,6 +789,9 @@ def run_match(
         Resign score threshold in centipawns. The score of the engine has to
         stay below -resign_score for at least resign_movecount moves for it to
         be adjudicated as a loss.
+    resign_twosided : bool, default=False
+        If True, the absolute score for both engines has to above resign_score before
+        the game is adjudicated.
     adjudicate_tb : bool, default=False
         Allow cutechess-cli to adjudicate games based on Syzygy tablebases.
         If true, tb_path has to be set.
@@ -780,8 +810,16 @@ def run_match(
     string_array = ["cutechess-cli"]
     string_array.extend(("-concurrency", str(concurrency)))
 
-    if (engine1_npm is None and engine1_tc is None and engine1_st is None) or (
-        engine2_npm is None and engine2_tc is None and engine2_st is None
+    if (
+        engine1_npm is None
+        and engine1_tc is None
+        and engine1_st is None
+        and engine1_depth is None
+    ) or (
+        engine2_npm is None
+        and engine2_tc is None
+        and engine2_st is None
+        and engine2_depth is None
     ):
         raise ValueError("A valid time control or nodes configuration is required.")
     string_array.extend(
@@ -790,7 +828,9 @@ def run_match(
             engine_npm=engine1_npm,
             engine_tc=engine1_tc,
             engine_st=engine1_st,
+            engine_depth=engine1_depth,
             engine_ponder=engine1_ponder,
+            engine_restart=engine1_restart,
             timemargin=timemargin,
         )
     )
@@ -800,7 +840,9 @@ def run_match(
             engine_npm=engine2_npm,
             engine_tc=engine2_tc,
             engine_st=engine2_st,
+            engine_depth=engine2_depth,
             engine_ponder=engine2_ponder,
+            engine_restart=engine2_restart,
             timemargin=timemargin,
         )
     )
@@ -838,7 +880,12 @@ def run_match(
         )
     if adjudicate_resign:
         string_array.extend(
-            ("-resign", f"movecount={resign_movecount}", f"score={resign_score}")
+            (
+                "-resign",
+                f"movecount={resign_movecount}",
+                f"score={resign_score}",
+                f"twosided={str(resign_twosided).lower()}",
+            )
         )
     if adjudicate_tb:
         if tb_path is None:
@@ -860,8 +907,11 @@ def run_match(
     with subprocess.Popen(
         string_array, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
     ) as popen:
-        for line in iter(popen.stdout.readline, ""):
-            yield line
+        if popen.stdout is not None:
+            for line in iter(popen.stdout.readline, ""):
+                yield line
+        else:
+            raise ValueError("No stdout found.")
 
 
 def is_debug_log(cutechess_line: str,) -> bool:
@@ -1092,29 +1142,33 @@ def update_model(
 
 
 def _construct_engine_conf(
-    id,
-    engine_npm=None,
-    engine_tc=None,
-    engine_st=None,
-    engine_ponder=False,
-    timemargin=None,
-):
-    result = ["-engine", f"conf=engine{id}"]
+    id: int,
+    engine_npm: Optional[Union[int, str]] = None,
+    engine_tc: Optional[Union[str, TimeControl]] = None,
+    engine_st: Optional[Union[int, str]] = None,
+    engine_depth: Optional[Union[int, str]] = None,
+    engine_ponder: bool = False,
+    engine_restart: str = "auto",
+    timemargin: Optional[Union[int, str]] = None,
+) -> List[str]:
+    result = ["-engine", f"conf=engine{id}", f"restart={engine_restart}"]
+    if timemargin is not None:
+        result.append(f"timemargin={timemargin}")
+    if engine_ponder:
+        result.append("ponder")
     if engine_npm is not None:
         result.extend(("tc=inf", f"nodes={engine_npm}"))
         return result
-    if engine_st is not None:
+    elif engine_st is not None:
         result.append(f"st={str(engine_st)}")
-        if timemargin is not None:
-            result.append(f"timemargin={str(timemargin)}")
-        if engine_ponder:
-            result.append("ponder")
         return result
-    if isinstance(engine_tc, str):
-        engine_tc = TimeControl.from_string(engine_tc)
-    result.append(f"tc={str(engine_tc)}")
-    if timemargin is not None:
-        result.append(f"timemargin={str(timemargin)}")
-    if engine_ponder:
-        result.append("ponder")
-    return result
+    elif engine_depth is not None:
+        result.extend(("tc=inf", f"depth={str(engine_depth)}"))
+        return result
+    elif engine_tc is not None:
+        if isinstance(engine_tc, str):
+            engine_tc = TimeControl.from_string(engine_tc)
+        result.append(f"tc={str(engine_tc)}")
+        return result
+    else:
+        raise ValueError(f"No engine time control specified for engine {id}.")
