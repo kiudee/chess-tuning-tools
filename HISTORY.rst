@@ -13,6 +13,7 @@ Local tuner
 - Add support for ``engineX_restart`` (default "auto") which allows one to set
   the restart mode used by cutechess (#95).
 - Add depth-based time control using ``engineX_depth`` (#95).
+- Log the estimated draw rate of the current match (#197).
 
 
 0.9.2 (2022-03-13)
