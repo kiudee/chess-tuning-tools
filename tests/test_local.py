@@ -27,11 +27,12 @@ def test_parse_experiment_result():
     Elo difference: -31.4 +/- 57.1, LOS: 13.9 %, DrawRatio: 31.0 %
     Finished match
     """
-    score, error = parse_experiment_result(
+    score, error, draw_rate = parse_experiment_result(
         teststr, n_dirichlet_samples=1000, random_state=0
     )
     assert_almost_equal(score, 0.0)
     assert_almost_equal(error, 0.887797821633887)
+    assert_almost_equal(draw_rate, 1 / 4)
 
     # Test cutechess 1.2.0 output:
     teststr = """Started game 1 of 4 (engine1 vs engine2)
@@ -52,11 +53,12 @@ def test_parse_experiment_result():
     Elo difference: -88.7 +/- nan, LOS: 28.2 %, DrawRatio: 25.0 %
     Finished match
     """
-    score, error = parse_experiment_result(
+    score, error, draw_rate = parse_experiment_result(
         teststr, n_dirichlet_samples=1000, random_state=0
     )
     assert_almost_equal(score, 0.38764005203222596)
     assert_almost_equal(error, 0.6255020676255081)
+    assert_almost_equal(draw_rate, 1.5 / 5)
 
     teststr = """Indexing opening suite...
     Started game 1 of 40 (engine1 vs engine2)
@@ -90,11 +92,12 @@ def test_parse_experiment_result():
     Finished game 10 (engine2 vs engine1): 1/2-1/2 {Draw by adjudication}
     Score of engine1 vs engine2: 10 - 0 - 0  [0.450] 10
     """
-    score, error = parse_experiment_result(
+    score, error, draw_rate = parse_experiment_result(
         teststr, n_dirichlet_samples=1000, random_state=0
     )
     assert_almost_equal(score, -2.7958800173440745)
     assert_almost_equal(error, 1.9952678343378125)
+    assert_almost_equal(draw_rate, 1 / 8)
 
     # Test if the result is correct in case the order of finished games is not linear.
     # This can happen with concurrency > 1
@@ -116,11 +119,12 @@ def test_parse_experiment_result():
     Elo difference: -88.7 +/- nan, LOS: 28.2 %, DrawRatio: 25.0 %
     Finished match
     """
-    score, error = parse_experiment_result(
+    score, error, draw_rate = parse_experiment_result(
         teststr, n_dirichlet_samples=1000, random_state=0
     )
     assert_almost_equal(score, 0.38764005203222596)
     assert_almost_equal(error, 0.6255020676255081)
+    assert_almost_equal(draw_rate, 1.5 / 5)
 
 
 def test_reduce_ranges():

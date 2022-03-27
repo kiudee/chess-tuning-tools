@@ -502,10 +502,11 @@ def local(  # noqa: C901
         root_logger.info(f"Experiment finished ({difference}s elapsed).")
 
         # Parse cutechess-cli output and report results (Elo and standard deviation):
-        score, error_variance = parse_experiment_result(out_exp, **settings)
+        score, error_variance, draw_rate = parse_experiment_result(out_exp, **settings)
         root_logger.info(
             "Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
         )
+        root_logger.info("Estimated draw rate: {:.2%}".format(draw_rate))
 
         # Update model with the new data:
         root_logger.info("Updating model")
