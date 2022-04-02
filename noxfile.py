@@ -79,7 +79,7 @@ def black(session):
 def precommit(session):
     args = session.posargs or ["run", "--all-files", "--show-diff-on-failure"]
     session.install(
-        "pre-commit", "black", "flake8", "doc8", "zimports",
+        "pre-commit", "black", "click", "flake8", "doc8", "zimports",
     )
     session.run("pre-commit", *args)
     if args and args[0] == "install":

@@ -1,14 +1,20 @@
 repos:
-  - repo: https://github.com/psf/black
-    rev: 19.10b0
+  - repo: local
     hooks:
       - id: black
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.8.3
-    hooks:
+        name: black
+        entry: black
+        language: system
+        types: [python]
+        require_serial: true
+      - id: isort
+        name: isort
+        entry: isort
+        language: system
+        types: [python]
       - id: flake8
-        additional_dependencies: [flake8-bugbear]
-  - repo: https://github.com/timothycrosley/isort
-    rev: 5.4.2
-    hooks:
-        - id: isort
+        name: flake8
+        entry: flake8
+        language: system
+        types: [python]
+        require_serial: true

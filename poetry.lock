@@ -2098,7 +2098,7 @@ docs = ["Sphinx", "sphinx-book-theme", "myst-nb"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "fd6ae80e8b3420225b9894634b9398831c5798080f51ce3d06d76acf596ad98d"
+content-hash = "ae9a2937fd431e8bc407342d3723f6c290e1960648084d03cc64d48d1bfa9a61"
 
 [metadata.files]
 alabaster = [

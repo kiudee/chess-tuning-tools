@@ -20,7 +20,7 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.7"
 bask = ">=0.9.3,<1.0.0"
-Click = ">=7.1.2"
+Click = ">=7.1.2,<=8.0.4"
 numpy = ">=1.19.1"
 scipy = ">=1.5.2"
 scikit-optimize = "^0.8"
