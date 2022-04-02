@@ -142,7 +142,9 @@ def test_reduce_ranges():
 def test_initialize_data(tmp_path):
     # Test basic functionality without resume:
     X, y, noise, iteration, optima, performance = initialize_data(
-        parameter_ranges=[(0.0, 1.0)], data_path=None, resume=False,
+        parameter_ranges=[(0.0, 1.0)],
+        data_path=None,
+        resume=False,
     )
     assert len(X) == 0
     assert len(y) == 0
@@ -171,13 +173,17 @@ def test_initialize_data(tmp_path):
     # Check if resume=False is recognized correctly
     # (outputs should be empty despite data_path being given):
     X, _, _, _, _, _ = initialize_data(
-        parameter_ranges=[(0.0, 1.0)], data_path=testfile, resume=False,
+        parameter_ranges=[(0.0, 1.0)],
+        data_path=testfile,
+        resume=False,
     )
     assert len(X) == 0
 
     # Check if we get the data back we saved with resume=True:
     X, y, noise, iteration, optima, performance = initialize_data(
-        parameter_ranges=[(0.0, 1.0)], data_path=testfile, resume=True,
+        parameter_ranges=[(0.0, 1.0)],
+        data_path=testfile,
+        resume=True,
     )
     assert int(iteration) == 5
     assert np.allclose(X, X_in)
@@ -188,7 +194,9 @@ def test_initialize_data(tmp_path):
 
     # Check if we get the correct subset, if we reduce the parameter range:
     X, y, noise, iteration, _, _ = initialize_data(
-        parameter_ranges=[(0.0, 0.5)], data_path=testfile, resume=True,
+        parameter_ranges=[(0.0, 0.5)],
+        data_path=testfile,
+        resume=True,
     )
     assert int(iteration) == 5
     assert np.allclose(X, np.array([[0.0], [0.5]]))
@@ -198,14 +206,20 @@ def test_initialize_data(tmp_path):
     # Check if the ValueError is raised correctly:
     with pytest.raises(ValueError):
         _ = initialize_data(
-            parameter_ranges=[(0.0, 1.0)] * 2, data_path=testfile, resume=True,
+            parameter_ranges=[(0.0, 1.0)] * 2,
+            data_path=testfile,
+            resume=True,
         )
 
 
 def test_initialize_optimizer(tmp_path):
     # First test the minimal functionality without data and resume=False
     opt = initialize_optimizer(
-        X=[], y=[], noise=[], parameter_ranges=[(0.0, 1.0)], resume=False,
+        X=[],
+        y=[],
+        noise=[],
+        parameter_ranges=[(0.0, 1.0)],
+        resume=False,
     )
     assert len(opt.Xi) == 0
 
@@ -263,13 +277,20 @@ def test_initialize_optimizer(tmp_path):
 
 
 def test_update_model():
-    opt = Optimizer(dimensions=[(0.0, 1.0)], n_points=10, random_state=0,)
+    opt = Optimizer(
+        dimensions=[(0.0, 1.0)],
+        n_points=10,
+        random_state=0,
+    )
     points = [[0.0], [1.0], [0.5]]
     scores = [-1.0, 1.0, 0.0]
     variances = [0.3, 0.2, 0.4]
     for p, s, v in zip(points, scores, variances):
         update_model(
-            optimizer=opt, point=p, score=s, variance=v,
+            optimizer=opt,
+            point=p,
+            score=s,
+            variance=v,
         )
     assert len(opt.Xi) == 3
     assert np.allclose(opt.Xi, points)

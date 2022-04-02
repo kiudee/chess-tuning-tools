@@ -159,7 +159,7 @@ def parse_ranges(s):
 
 
 def load_tuning_config(json_dict):
-    """ Load the provided tuning configuration and split it up.
+    """Load the provided tuning configuration and split it up.
 
     Parameters
     ----------

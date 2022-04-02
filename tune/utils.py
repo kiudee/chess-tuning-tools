@@ -18,7 +18,7 @@ __all__ = [
 
 
 def expected_ucb(res, n_random_starts=100, alpha=1.96, random_state=None):
-    """ Compute the expected (pessimistic) optimum of the optimization result.
+    """Compute the expected (pessimistic) optimum of the optimization result.
 
     This will compute `gp_mean + alpha * gp_se` and find the optimum of that function.
 
@@ -70,7 +70,10 @@ def parse_timecontrol(tc_string):
     return (Decimal(tc_string),)
 
 
-TC = namedtuple("TimeControl", ["time", "increment"],)
+TC = namedtuple(
+    "TimeControl",
+    ["time", "increment"],
+)
 
 
 class TimeControl(TC):
@@ -78,7 +81,10 @@ class TimeControl(TC):
     def from_string(cls, tc_string):
         tc = parse_timecontrol(tc_string)
         inc = Decimal("0.0") if len(tc) == 1 else tc[1]
-        return cls(time=Decimal(tc[0]), increment=inc,)
+        return cls(
+            time=Decimal(tc[0]),
+            increment=inc,
+        )
 
     def __str__(self):
         if abs(self.increment) < 1e-10:

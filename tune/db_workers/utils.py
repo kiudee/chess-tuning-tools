@@ -130,7 +130,7 @@ def penta_to_score(draw_rate, counts, prior_games=10, prior_elo=0):
     score = (
         np.sqrt(2)
         * (s01 - 0.5)
-        / (probabilities.dot(np.power(np.linspace(0, 2, 5), 2)) - 4 * s01 ** 2)
+        / (probabilities.dot(np.power(np.linspace(0, 2, 5), 2)) - 4 * s01**2)
     )
     return score
 

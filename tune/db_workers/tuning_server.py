@@ -185,9 +185,9 @@ class TuningServer(object):
         self.priors = self.parse_priors(self.tunecfg["priors"])
 
         self.kernel = ConstantKernel(
-            constant_value=self.tunecfg.get("variance_value", 0.1 ** 2),
+            constant_value=self.tunecfg.get("variance_value", 0.1**2),
             constant_value_bounds=tuple(
-                self.tunecfg.get("variance_bounds", (0.01 ** 2, 0.5 ** 2))
+                self.tunecfg.get("variance_bounds", (0.01**2, 0.5**2))
             ),
         ) * Matern(
             length_scale=self.tunecfg.get("length_scale_value", 0.3),

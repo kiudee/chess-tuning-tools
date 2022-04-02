@@ -68,7 +68,7 @@ def run_client(
     clientconfig,
     dbconfig,
 ):
-    """ Run the client to generate games for distributed tuning.
+    """Run the client to generate games for distributed tuning.
 
     In order to connect to the database you need to provide a valid DBCONFIG
     json file. It contains the necessary parameters to connect to the database
@@ -418,7 +418,9 @@ def local(  # noqa: C901
         gp_priors=gp_priors,
     )
     extra_points = load_points_to_evaluate(
-        space=opt.space, csv_file=evaluate_points, rounds=settings.get("rounds", 10),
+        space=opt.space,
+        csv_file=evaluate_points,
+        rounds=settings.get("rounds", 10),
     )
     root_logger.debug(
         f"Loaded {len(extra_points)} extra points to evaluate: {extra_points}"

@@ -527,7 +527,10 @@ def plot_optima(
         n_rows = int(np.ceil(n_parameters / n_cols))
         figsize = (n_cols * plot_width, aspect_ratio * plot_width * n_rows)
         fig, ax = plt.subplots(
-            figsize=figsize, nrows=n_rows, ncols=n_cols, sharex=True,
+            figsize=figsize,
+            nrows=n_rows,
+            ncols=n_cols,
+            sharex=True,
         )
 
         margin_left = 1.0

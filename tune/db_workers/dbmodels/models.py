@@ -150,7 +150,6 @@ try:
                 f" dl={self.dl_count}, ll={self.ll_count})>"
             )
 
-
 except ImportError:
     SqlTune = None
     SqlJob = None

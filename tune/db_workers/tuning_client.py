@@ -360,7 +360,9 @@ class TuningClient(object):
                             f"nps, sf: {self.sf_benchmark} nps"
                         )
                     time_control = self.adjust_time_control(
-                        orig_tc, float(job.engine1_nps), float(job.engine2_nps),
+                        orig_tc,
+                        float(job.engine1_nps),
+                        float(job.engine2_nps),
                     )
                     self.logger.debug(
                         f"Adjusted time control from {orig_tc} to {time_control}"
