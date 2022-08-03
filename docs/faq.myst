@@ -21,7 +21,8 @@ Example 2
     Here it is useful to specify a range like
     `Real(1e-4, 1, prior=log-uniform)`.
     Without the prior, it will be almost impossible or the tuner to find an
-    optimum close to 0.
+    optimum close to 0. The lower bound needs to be a value strictly larger than 0 though,
+    otherwise applying the log-transform will result in `nan` values.
 ```
 ```{note}
 You can increase the ranges in your tuning configuration later in the process.
