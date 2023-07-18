@@ -12,9 +12,9 @@ jobs:
       with:
         python-version: '3.9'
         architecture: x64
-    - run: pip install nox==2021.6.12
-    - run: pip install nox-poetry==0.8.6
-    - run: pip install poetry==1.1.6
+    - run: pip install nox==2023.4.22
+    - run: pip install nox-poetry==1.0.3
+    - run: pip install poetry==1.5.1
     - run: nox
     - run: poetry build
     - run: poetry publish --username=__token__ --password=${{ secrets.PYPI_TOKEN }}

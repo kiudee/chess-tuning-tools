@@ -53,8 +53,8 @@ flake8-bugbear = ">=20.1.4"
 sphinx-book-theme = ">=0.0.35"
 myst-nb = ">=0.9"
 sphinx-autobuild = ">=0.7.1"
-nox = ">=2021.6.12"
-nox-poetry = ">=0.8.6"
+nox = ">=2023.4.22"
+nox-poetry = ">=1.0.3"
 mypy = ">=0.910"
 
 [tool.poetry.scripts]

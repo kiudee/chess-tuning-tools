@@ -2437,13 +2437,13 @@ cffi = {version = "*", markers = "implementation_name == \"pypy\""}
 
 [[package]]
 name = "referencing"
-version = "0.29.3"
+version = "0.30.0"
 description = "JSON Referencing + Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "referencing-0.29.3-py3-none-any.whl", hash = "sha256:7e059500cac23dc5d7d11687291ab60ba1e77ccdf9739b039c1177c06304e98c"},
-    {file = "referencing-0.29.3.tar.gz", hash = "sha256:ebd2f5fe533001edaca3eae6caf09de0d70b6a3c78ebe34c98d26526e6fad3aa"},
+    {file = "referencing-0.30.0-py3-none-any.whl", hash = "sha256:c257b08a399b6c2f5a3510a50d28ab5dbc7bbde049bcaf954d43c446f83ab548"},
+    {file = "referencing-0.30.0.tar.gz", hash = "sha256:47237742e990457f7512c7d27486394a9aadaf876cbfaa4be65b27b4f4d47c6b"},
 ]
 
 [package.dependencies]
@@ -3180,4 +3180,4 @@ docs = ["Sphinx", "myst-nb", "sphinx-book-theme"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "44cb96f9d161ff0a6e57f82322ba0adeacfdaa8c5f4962a8b4a352257a982f09"
+content-hash = "f07fb8f2deca560bb80163c43a03c770149869da6ac97f932d31b6eb1d100b4c"
