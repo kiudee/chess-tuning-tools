@@ -3180,4 +3180,4 @@ docs = ["Sphinx", "myst-nb", "sphinx-book-theme"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "f07fb8f2deca560bb80163c43a03c770149869da6ac97f932d31b6eb1d100b4c"
+content-hash = "5943f1212a30f30d681dfb8078c9d76aaea1892599308313849cbe5344b95366"
