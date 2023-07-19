@@ -22,7 +22,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
         architecture: x64
-    - run: pip install nox==2023.422
+    - run: pip install nox==2023.4.22
     - run: pip install nox-poetry==1.0.3
     - run: pip install poetry==1.5.1
     - name: Compute pre-commit cache key
