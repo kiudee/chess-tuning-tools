@@ -18,7 +18,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "~3.8"
 bask = ">=0.9.3"
 Click = ">=7.1.2,"
 numpy = ">=1.19.1,<1.24"
