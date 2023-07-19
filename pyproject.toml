@@ -42,7 +42,7 @@ docs = ["Sphinx", "sphinx-book-theme", "myst-nb"]
 [tool.poetry.dev-dependencies]
 pytest = ">=6.0.1,<8"
 pip = ">=21.1.2"
-wheel = ">=0.34.2,<0.37"
+wheel = ">=0.34.2,<0.39"
 flake8 = ">=3.8.3"
 Sphinx = ">=3"
 black = "~22"
