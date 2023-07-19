@@ -7,7 +7,7 @@ from nox_poetry import session
 
 locations = "tune", "noxfile.py"
 nox.options.sessions = ("pre-commit", "tests")
-python_versions = ["3.8"]
+python_versions = ["3.8", "3.9"]
 
 
 def activate_virtualenv_in_precommit_hooks(session):
@@ -67,7 +67,7 @@ def tests(session):
     session.run("pytest", *session.posargs)
 
 
-@session(python="3.8")
+@session(python="3.9")
 def black(session):
     """Run black code formatter."""
     args = session.posargs or locations
@@ -75,7 +75,7 @@ def black(session):
     session.run("black", *args)
 
 
-@session(name="pre-commit", python="3.8")
+@session(name="pre-commit", python="3.9")
 def precommit(session):
     args = session.posargs or ["run", "--all-files", "--show-diff-on-failure"]
     session.install(
