@@ -1,4 +1,5 @@
 """Top-level package for Chess Tuning Tools."""
+
 try:
     from importlib.metadata import version
 except ImportError:

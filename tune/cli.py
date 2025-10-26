@@ -1,4 +1,5 @@
 """Console script for chess_tuning_tools."""
+
 import json
 import logging
 import sys
@@ -465,9 +466,9 @@ def local(  # noqa: C901
         if len(extra_points) > 0:
             point, n_rounds = extra_points.pop(0)
             # Log that we are evaluating the extra point:
+            point_display = dict(zip(param_ranges.keys(), point, strict=True))
             root_logger.info(
-                f"Evaluating extra point {dict(zip(param_ranges.keys(), point, strict=True))} for "
-                f"{n_rounds} rounds."
+                "Evaluating extra point %s for %s rounds.", point_display, n_rounds
             )
             used_extra_point = True
         else:
@@ -477,7 +478,7 @@ def local(  # noqa: C901
         match_settings = settings.copy()
         match_settings["rounds"] = n_rounds
         point_dict = dict(zip(param_ranges.keys(), point, strict=True))
-        root_logger.info("Testing {}".format(point_dict))
+        root_logger.info("Testing %s", point_dict)
 
         # Prepare engines.json file for cutechess-cli:
         engine_json = prepare_engines_json(commands=commands, fixed_params=fixed_params)

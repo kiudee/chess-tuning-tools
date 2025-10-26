@@ -285,7 +285,7 @@ def test_update_model():
     points = [[0.0], [1.0], [0.5]]
     scores = [-1.0, 1.0, 0.0]
     variances = [0.3, 0.2, 0.4]
-    for p, s, v in zip(points, scores, variances):
+    for p, s, v in zip(points, scores, variances, strict=True):
         update_model(
             optimizer=opt,
             point=p,

@@ -8,13 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
+    - uses: astral-sh/setup-uv@v3
       with:
-        python-version: '3.13'
-        architecture: x64
-    - run: pip install nox==2023.4.22
-    - run: pip install nox-poetry==1.0.3
-    - run: pip install poetry==1.5.1
-    - run: nox -s tests-3.13
-    - run: poetry build
-    - run: poetry publish --username=__token__ --password=${{ secrets.PYPI_TOKEN }}
+        python-version: "3.13"
+    - run: uv run --locked --group dev nox -s tests-3.13
+    - run: uv build
+    - run: uv publish
+      env:
+        UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
