@@ -132,7 +132,7 @@ class TuningServer(object):
             prior_param_strings = re.findall(r"\((.*?)\)", s)[0].split(",")
             keys = [x.split("=")[0].strip() for x in prior_param_strings]
             vals = [make_numeric(x.split("=")[1].strip()) for x in prior_param_strings]
-            dim = getattr(skspace, prior_str)(**dict(zip(keys, vals)))
+            dim = getattr(skspace, prior_str)(**dict(zip(keys, vals, strict=True)))
             dimensions.append(dim)
         return dimensions
 
@@ -155,12 +155,12 @@ class TuningServer(object):
                 if prior_str == "roundflat":
                     prior = (
                         lambda x, keys=keys, vals=vals: roundflat(
-                            np.exp(x), **dict(zip(keys, vals))
+                            np.exp(x), **dict(zip(keys, vals, strict=True))
                         )
                         + x
                     )
                 else:
-                    dist = getattr(scipy.stats, prior_str)(**dict(zip(keys, vals)))
+                    dist = getattr(scipy.stats, prior_str)(**dict(zip(keys, vals, strict=True)))
                     if i == 0 or i == len(priors) - 1:
                         # The signal variance and the signal noise are in positive,
                         # sqrt domain
@@ -337,7 +337,7 @@ class TuningServer(object):
 
             result = SqlResult(job=job, time_control=sql_tc)
             session.add(result)
-        for k, v in zip(self.parameters, new_x):
+        for k, v in zip(self.parameters, new_x, strict=True):
             param = SqlUCIParam(key=k, value=str(v), job=job)
             session.add(param)
 
@@ -358,7 +358,7 @@ class TuningServer(object):
                 self.write_experiment_file()
                 new_x = self.opt.ask()
                 # Alter engine json using Initstrings
-                params = dict(zip(self.parameters, new_x))
+                params = dict(zip(self.parameters, new_x, strict=True))
                 self.change_engine_config(self.experiment["engine"], params)
                 self.insert_jobs(session, new_x)
                 self.logger.info("New jobs committed to database.")
@@ -378,7 +378,7 @@ class TuningServer(object):
                     self.logger.info("There are no datapoints yet, start first job")
                     new_x = self.opt.ask()
                     # Alter engine json using Initstrings
-                    params = dict(zip(self.parameters, new_x))
+                    params = dict(zip(self.parameters, new_x, strict=True))
                     self.change_engine_config(self.experiment["engine"], params)
                     self.insert_jobs(session, new_x)
                     self.logger.info("New jobs committed to database.")
@@ -420,7 +420,7 @@ class TuningServer(object):
             # Ask optimizer for new configuration and insert jobs:
             new_x = self.opt.ask()
             # Alter engine json using Initstrings
-            params = dict(zip(self.parameters, new_x))
+            params = dict(zip(self.parameters, new_x, strict=True))
             self.change_engine_config(self.experiment["engine"], params)
             with self.sessionmaker() as session:
                 self.insert_jobs(session, new_x)
@@ -438,7 +438,7 @@ class TuningServer(object):
                     opt_x, opt_y = expected_ucb(result_object)
                     self.logger.info(
                         f"Current optimum: "
-                        f"{dict(zip(self.parameters, np.around(opt_x,4)))}"
+                        f"{dict(zip(self.parameters, np.around(opt_x, 4), strict=True))}"
                     )
                 except ValueError:
                     self.logger.info(

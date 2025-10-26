@@ -466,7 +466,7 @@ def local(  # noqa: C901
             point, n_rounds = extra_points.pop(0)
             # Log that we are evaluating the extra point:
             root_logger.info(
-                f"Evaluating extra point {dict(zip(param_ranges.keys(), point))} for "
+                f"Evaluating extra point {dict(zip(param_ranges.keys(), point, strict=True))} for "
                 f"{n_rounds} rounds."
             )
             used_extra_point = True
@@ -476,7 +476,7 @@ def local(  # noqa: C901
             n_rounds = settings.get("rounds", 10)
         match_settings = settings.copy()
         match_settings["rounds"] = n_rounds
-        point_dict = dict(zip(param_ranges.keys(), point))
+        point_dict = dict(zip(param_ranges.keys(), point, strict=True))
         root_logger.info("Testing {}".format(point_dict))
 
         # Prepare engines.json file for cutechess-cli:

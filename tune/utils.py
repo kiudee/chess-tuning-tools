@@ -116,7 +116,7 @@ class TimeControlBag(object):
             for p in self.p:
                 out.append(_probabilistic_round(p * self.bag_size))
             tmp_bag = []
-            for o, tc in zip(out, self.tcs):
+            for o, tc in zip(out, self.tcs, strict=True):
                 tmp_bag.extend(itertools.product(_latin_1d(o), [tc]))
             sorted_bag = sorted(tmp_bag)
             self.bag = [x[1] for x in sorted_bag]
