@@ -1,4 +1,5 @@
 """The server worker, which reads results and schedules new jobs."""
+
 import json
 import logging
 import os
@@ -438,10 +439,10 @@ class TuningServer(object):
                 )
                 try:
                     opt_x, opt_y = expected_ucb(result_object)
-                    self.logger.info(
-                        f"Current optimum: "
-                        f"{dict(zip(self.parameters, np.around(opt_x, 4), strict=True))}"
+                    optimum = dict(
+                        zip(self.parameters, np.around(opt_x, 4), strict=True)
                     )
+                    self.logger.info("Current optimum: %s", optimum)
                 except ValueError:
                     self.logger.info(
                         "Current optimum: None (optimizer errored out :( )"

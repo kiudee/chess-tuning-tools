@@ -8,7 +8,7 @@ Installation
 Stable release
 --------------
 
-To install Chess Tuning Tools, first create a new Python environment with ``python>=3.7``,
+To install Chess Tuning Tools, first create a new Python environment with ``python>=3.10``,
 then run this command in your terminal:
 
 .. code-block:: console
@@ -65,14 +65,14 @@ Or download the `tarball`_:
 
     $ curl -OJL https://github.com/kiudee/chess-tuning-tools/tarball/master
 
-Once you have a copy of the source, you can install it using `poetry`_:
+Once you have a copy of the source, you can install it using `uv`_:
 
 .. code-block:: console
 
-    $ poetry install
+    $ uv sync --extra dist
 
 
 .. _Github repo: https://github.com/kiudee/chess-tuning-tools
 .. _tarball: https://github.com/kiudee/chess-tuning-tools/tarball/master
-.. _poetry: https://python-poetry.org/
+.. _uv: https://github.com/astral-sh/uv
 .. _PyPI: https://pypi.org/project/chess-tuning-tools/
