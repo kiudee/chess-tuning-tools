@@ -19,7 +19,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.14"
-bask = {git = "https://github.com/AlexisOlson/bayes-skopt.git", branch = "python-3.10-3.13"}
+bask = ">=0.11.0"
 Click = ">=7.1.2"
 numpy = ">=2.0.0"
 scipy = ">=1.5.2"
