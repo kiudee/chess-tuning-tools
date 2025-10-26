@@ -160,7 +160,9 @@ class TuningServer(object):
                         + x
                     )
                 else:
-                    dist = getattr(scipy.stats, prior_str)(**dict(zip(keys, vals, strict=True)))
+                    dist = getattr(scipy.stats, prior_str)(
+                        **dict(zip(keys, vals, strict=True))
+                    )
                     if i == 0 or i == len(priors) - 1:
                         # The signal variance and the signal noise are in positive,
                         # sqrt domain

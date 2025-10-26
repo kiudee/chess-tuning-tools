@@ -28,7 +28,8 @@ def test_command_line_interface():
     """Test the CLI."""
     runner = CliRunner()
     result = runner.invoke(cli.cli)
-    assert result.exit_code == 0
+    # Click groups return exit code 2 when called without a subcommand
+    assert result.exit_code == 2
     help_result = runner.invoke(cli.cli, ["--help"])
     assert help_result.exit_code == 0
     assert "--help  Show this message and exit." in help_result.output
