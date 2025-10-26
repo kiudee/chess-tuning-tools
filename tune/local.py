@@ -31,7 +31,12 @@ from scipy.stats import dirichlet
 from skopt.space import Categorical, Dimension, Integer, Real, Space
 from skopt.utils import normalize_dimensions
 
-from tune.plots import plot_objective, plot_objective_1d, plot_optima, plot_performance
+from tune.plots import (
+    plot_objective,
+    plot_objective_1d,
+    plot_optima,
+    plot_performance,
+)
 from tune.summary import confidence_intervals
 from tune.utils import TimeControl, confidence_to_mult, expected_ucb
 
@@ -247,7 +252,9 @@ def load_points_to_evaluate(
         rounds_column = np.full(len(df), rounds)
 
     # All points are within the bounds, add them to the list of points to evaluate:
-    return [(x, r) for x, r in zip(df.values.tolist(), rounds_column, strict=True)]
+    return [
+        (x, r) for x, r in zip(df.values.tolist(), rounds_column, strict=True)
+    ]
 
 
 def reduce_ranges(
@@ -354,8 +361,8 @@ def initialize_data(
                     f"Number of parameters ({len(X[0])}) are not matching "
                     f"the number of dimensions ({space.n_dims})."
                 )
-            reduction_needed, X_reduced, y_reduced, noise_reduced = reduce_ranges(
-                X, y, noise, space
+            reduction_needed, X_reduced, y_reduced, noise_reduced = (
+                reduce_ranges(X, y, noise, space)
             )
             if reduction_needed:
                 backup_path = path.parent / (
@@ -466,11 +473,11 @@ def initialize_optimizer(
     # Create random generator:
     random_state = setup_random_state(random_seed)
 
-    gp_kwargs = dict(
+    gp_kwargs = {
         # TODO: Due to a bug in scikit-learn 0.23.2, we set normalize_y=False:
-        normalize_y=True,
-        warp_inputs=warp_inputs,
-    )
+        "normalize_y": True,
+        "warp_inputs": warp_inputs,
+    }
     opt = Optimizer(
         dimensions=parameter_ranges,
         n_points=n_points,
@@ -479,7 +486,7 @@ def initialize_optimizer(
         gp_kwargs=gp_kwargs,
         gp_priors=gp_priors,
         acq_func=acq_function,
-        acq_func_kwargs=dict(alpha=1.96, n_thompson=500),
+        acq_func_kwargs={"alpha": 1.96, "n_thompson": 500},
         random_state=random_state,
     )
 
@@ -492,7 +499,9 @@ def initialize_optimizer(
         if path.exists():
             with open(model_path, mode="rb") as model_file:
                 old_opt = dill.load(model_file)
-                logger.info(f"Resuming from existing optimizer in {model_path}.")
+                logger.info(
+                    f"Resuming from existing optimizer in {model_path}."
+                )
             if opt.space == old_opt.space:
                 old_opt.acq_func = opt.acq_func
                 old_opt.acq_func_kwargs = opt.acq_func_kwargs
@@ -509,7 +518,8 @@ def initialize_optimizer(
 
     if reinitialize and len(X) > 0:
         logger.info(
-            f"Importing {len(X)} existing datapoints. " f"This could take a while..."
+            f"Importing {len(X)} existing datapoints. "
+            f"This could take a while..."
         )
         opt.tell(
             X,
@@ -639,7 +649,7 @@ def plot_results(
         current_iteration = len(optimizer.Xi)
 
     # First save the landscape:
-    save_params = dict()
+    save_params = {}
     if optimizer.space.n_dims == 1:
         fig, ax = plot_objective_1d(
             result=result_object,
@@ -658,11 +668,15 @@ def plot_results(
             for j in range(optimizer.space.n_dims):
                 ax[i, j].set_facecolor(dark_gray)
         fig.patch.set_facecolor(dark_gray)
-        plot_objective(result_object, dimensions=parameter_names, fig=fig, ax=ax)
+        plot_objective(
+            result_object, dimensions=parameter_names, fig=fig, ax=ax
+        )
     plotpath = pathlib.Path(plot_path)
     for subdir in ["landscapes", "elo", "optima"]:
         (plotpath / subdir).mkdir(parents=True, exist_ok=True)
-    full_plotpath = plotpath / f"landscapes/landscape-{timestr}-{current_iteration}.png"
+    full_plotpath = (
+        plotpath / f"landscapes/landscape-{timestr}-{current_iteration}.png"
+    )
     dpi = 150 if optimizer.space.n_dims == 1 else 300
     plt.savefig(full_plotpath, dpi=dpi, facecolor=dark_gray, **save_params)
     logger.info(f"Saving a plot to {full_plotpath}.")
@@ -675,13 +689,16 @@ def plot_results(
         space=optimizer.space,
         parameter_names=parameter_names,
     )
-    full_plotpath = plotpath / f"optima/optima-{timestr}-{current_iteration}.png"
+    full_plotpath = (
+        plotpath / f"optima/optima-{timestr}-{current_iteration}.png"
+    )
     fig.savefig(full_plotpath, dpi=150, facecolor=dark_gray)
     plt.close(fig)
 
     # Plot the predicted Elo performance of the optima:
     fig, ax = plot_performance(
-        performance=np.hstack([iterations[:, None], elos]), confidence=confidence
+        performance=np.hstack([iterations[:, None], elos]),
+        confidence=confidence,
     )
     full_plotpath = plotpath / f"elo/elo-{timestr}-{current_iteration}.png"
     fig.savefig(full_plotpath, dpi=150, facecolor=dark_gray)
@@ -824,7 +841,9 @@ def run_match(
         and engine2_st is None
         and engine2_depth is None
     ):
-        raise ValueError("A valid time control or nodes configuration is required.")
+        raise ValueError(
+            "A valid time control or nodes configuration is required."
+        )
     string_array.extend(
         _construct_engine_conf(
             id=1,
@@ -908,7 +927,10 @@ def run_match(
     string_array.extend(("-pgnout", "out.pgn"))
 
     with subprocess.Popen(
-        string_array, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        string_array,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
     ) as popen:
         if popen.stdout is not None:
             for line in iter(popen.stdout.readline, ""):
@@ -949,7 +971,6 @@ def check_log_for_errors(
     """
     logger = logging.getLogger(LOGGER)
     for line in cutechess_output:
-
         # Check for forwarded errors:
         pattern = r"[0-9]+ [<>].+: error (.+)"
         match = re.search(pattern=pattern, string=line)
@@ -973,7 +994,9 @@ def check_log_for_errors(
         )
         match = re.search(pattern=pattern, string=line)
         if match is not None:
-            engine = match.group(1) if match.group(3) == "White" else match.group(2)
+            engine = (
+                match.group(1) if match.group(3) == "White" else match.group(2)
+            )
             logger.warning(f"Engine {engine} lost on time as {match.group(3)}.")
             continue
 
@@ -984,7 +1007,9 @@ def check_log_for_errors(
         )
         match = re.search(pattern=pattern, string=line)
         if match is not None:
-            engine = match.group(1) if match.group(3) == "White" else match.group(2)
+            engine = (
+                match.group(1) if match.group(3) == "White" else match.group(2)
+            )
             logger.error(
                 f"{engine}'s connection stalled as {match.group(3)}. "
                 f"Game result is unreliable."
@@ -1044,9 +1069,14 @@ def parse_experiment_result(
     draw_rate : float
         Estimated draw rate of the match.
     """
-    wdl_strings = re.findall(r"Score of.*:\s*([0-9]+\s-\s[0-9]+\s-\s[0-9]+)", outstr)
+    wdl_strings = re.findall(
+        r"Score of.*:\s*([0-9]+\s-\s[0-9]+\s-\s[0-9]+)", outstr
+    )
     array = np.array(
-        [np.array([int(y) for y in re.findall(r"[0-9]+", x)]) for x in wdl_strings]
+        [
+            np.array([int(y) for y in re.findall(r"[0-9]+", x)])
+            for x in wdl_strings
+        ]
     )
     diffs = np.diff(array, axis=0, prepend=np.array([[0, 0, 0]]))
 

@@ -182,7 +182,9 @@ def latest_iterations(
         return (iterations, *arrays)
     else:
         # Compute the indices of the latest unique iterations:
-        indices = np.searchsorted(iterations, unique_iterations, side="right") - 1
+        indices = (
+            np.searchsorted(iterations, unique_iterations, side="right") - 1
+        )
         return (
             iterations[indices],
             *(a[indices] for a in arrays),

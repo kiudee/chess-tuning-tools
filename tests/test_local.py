@@ -132,7 +132,9 @@ def test_reduce_ranges():
     x = ((0.0, "a"), (1.01, "a"), (0.5, "d"), (1.0, "c"))
     y = (0.0, 1.0, 2.0, 3.0)
     noise = (0.1, 0.2, 0.3, 0.4)
-    reduction_needed, x_new, y_new, noise_new = reduce_ranges(x, y, noise, space)
+    reduction_needed, x_new, y_new, noise_new = reduce_ranges(
+        x, y, noise, space
+    )
     assert reduction_needed
     assert tuple(x_new) == ((0.0, "a"), (1.0, "c"))
     assert tuple(y_new) == (0.0, 3.0)
@@ -307,7 +309,10 @@ def test_update_model():
             True,
         ),
         ("2018 >lc0(1): ucinewgame", True),
-        ("Finished game 1 (engine1 vs engine2): 0-1 {White loses on time}", False),
+        (
+            "Finished game 1 (engine1 vs engine2): 0-1 {White loses on time}",
+            False,
+        ),
         ("Finished game 3287 <engine1(0): ", False),
         ("...      White vs Black: 0 - 1 - 0  [0.000] 1", False),
     ],
@@ -317,7 +322,6 @@ def test_is_debug_log(log_line, expected):
 
 
 def test_check_log_for_errors(caplog):
-
     # Test loss on time:
     teststr = """Started game 1 of 2 (SFDev vs Lc0.11198)
     Finished game 1 (SFDev vs Lc0.11198): 1-0 {Black loses on time}
@@ -348,14 +352,16 @@ def test_check_log_for_errors(caplog):
     16995 >lc0(1): quit"""
     check_log_for_errors(teststr.split("\n"))
     assert (
-        "lc0's connection stalled as White. Game result is unreliable." in caplog.text
+        "lc0's connection stalled as White. Game result is unreliable."
+        in caplog.text
     )
 
     # Test correct forward of error:
     teststr = "797 <lc0(0): error The cuda backend requires a network file."
     check_log_for_errors([teststr])
     assert (
-        "cutechess-cli error: The cuda backend requires a network file." in caplog.text
+        "cutechess-cli error: The cuda backend requires a network file."
+        in caplog.text
     )
 
     # Test unknown UCI option:

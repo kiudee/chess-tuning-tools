@@ -77,10 +77,11 @@ Ready to contribute? Here's how to set up `chess-tuning-tools` for local develop
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the
+5. When you're done making changes, check that your changes pass Ruff and the
    tests, including testing other Python versions with nox::
 
-       $ uv run --group dev flake8 chess-tuning-tools tests
+       $ uv run --group dev ruff format tune tests
+       $ uv run --group dev ruff check tune tests
        $ uv run --group dev pytest
        $ uv run --group dev nox
 

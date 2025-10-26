@@ -39,7 +39,9 @@ def cli():
 @click.option(
     "--verbose", "-v", is_flag=True, default=False, help="Turn on debug output."
 )
-@click.option("--logfile", default=None, help="Path to where the log is saved to.")
+@click.option(
+    "--logfile", default=None, help="Path to where the log is saved to."
+)
 @click.option(
     "--terminate-after", default=0, help="Terminate the client after x minutes."
 )
@@ -57,7 +59,9 @@ def cli():
     help="Skip calibrating the time control by running a benchmark.",
 )
 @click.option(
-    "--clientconfig", default=None, help="Path to the client configuration file."
+    "--clientconfig",
+    default=None,
+    help="Path to the client configuration file.",
 )
 @click.argument("dbconfig")
 def run_client(
@@ -96,7 +100,9 @@ def run_client(
 @click.option(
     "--verbose", "-v", is_flag=True, default=False, help="Turn on debug output."
 )
-@click.option("--logfile", default=None, help="Path to where the log is saved to.")
+@click.option(
+    "--logfile", default=None, help="Path to where the log is saved to."
+)
 @click.argument("command")
 @click.argument("experiment_file")
 @click.argument("dbconfig")
@@ -320,7 +326,9 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     type=click.Path(exists=False),
     show_default=True,
 )
-@click.option("--verbose", "-v", count=True, default=0, help="Turn on debug output.")
+@click.option(
+    "--verbose", "-v", count=True, default=0, help="Turn on debug output."
+)
 @click.option(
     "--warp-inputs/--no-warp-inputs",
     default=True,
@@ -362,7 +370,9 @@ def local(  # noqa: C901
     """
 
     json_dict = json.load(tuning_config)
-    settings, commands, fixed_params, param_ranges = load_tuning_config(json_dict)
+    settings, commands, fixed_params, param_ranges = load_tuning_config(
+        json_dict
+    )
     root_logger = setup_logger(
         verbose=verbose, logfile=settings.get("logfile", logfile)
     )
@@ -391,7 +401,9 @@ def local(  # noqa: C901
     # data/optimizer:
     gp_priors = create_priors(
         n_parameters=len(param_ranges),
-        signal_scale=settings.get("gp_signal_prior_scale", gp_signal_prior_scale),
+        signal_scale=settings.get(
+            "gp_signal_prior_scale", gp_signal_prior_scale
+        ),
         lengthscale_lower_bound=settings.get(
             "gp_lengthscale_prior_lb", gp_lengthscale_prior_lb
         ),
@@ -410,12 +422,16 @@ def local(  # noqa: C901
         n_points=settings.get("n_points", n_points),
         n_initial_points=settings.get("n_initial_points", n_initial_points),
         acq_function=settings.get("acq_function", acq_function),
-        acq_function_samples=settings.get("acq_function_samples", acq_function_samples),
+        acq_function_samples=settings.get(
+            "acq_function_samples", acq_function_samples
+        ),
         resume=resume,
         fast_resume=fast_resume,
         model_path=model_path,
         gp_initial_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
-        gp_initial_samples=settings.get("gp_initial_samples", gp_initial_samples),
+        gp_initial_samples=settings.get(
+            "gp_initial_samples", gp_initial_samples
+        ),
         gp_priors=gp_priors,
     )
     extra_points = load_points_to_evaluate(
@@ -433,18 +449,24 @@ def local(  # noqa: C901
 
         # If a model has been fit, print/plot results so far:
         if len(y) > 0 and opt.gp.chain_ is not None:
-            result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
+            result_object = create_result(
+                Xi=X, yi=y, space=opt.space, models=[opt.gp]
+            )
             result_every_n = settings.get("result_every", result_every)
             if result_every_n > 0 and iteration % result_every_n == 0:
                 try:
-                    current_optimum, estimated_elo, estimated_std = print_results(
-                        optimizer=opt,
-                        result_object=result_object,
-                        parameter_names=list(param_ranges.keys()),
-                        confidence=settings.get("confidence", confidence),
+                    current_optimum, estimated_elo, estimated_std = (
+                        print_results(
+                            optimizer=opt,
+                            result_object=result_object,
+                            parameter_names=list(param_ranges.keys()),
+                            confidence=settings.get("confidence", confidence),
+                        )
                     )
                     optima.append(current_optimum)
-                    performance.append((int(iteration), estimated_elo, estimated_std))
+                    performance.append(
+                        (int(iteration), estimated_elo, estimated_std)
+                    )
                 except ValueError:
                     pass
             plot_every_n = settings.get("plot_every", plot_every)
@@ -468,7 +490,9 @@ def local(  # noqa: C901
             # Log that we are evaluating the extra point:
             point_display = dict(zip(param_ranges.keys(), point, strict=True))
             root_logger.info(
-                "Evaluating extra point %s for %s rounds.", point_display, n_rounds
+                "Evaluating extra point %s for %s rounds.",
+                point_display,
+                n_rounds,
             )
             used_extra_point = True
         else:
@@ -481,7 +505,9 @@ def local(  # noqa: C901
         root_logger.info("Testing %s", point_dict)
 
         # Prepare engines.json file for cutechess-cli:
-        engine_json = prepare_engines_json(commands=commands, fixed_params=fixed_params)
+        engine_json = prepare_engines_json(
+            commands=commands, fixed_params=fixed_params
+        )
         root_logger.debug(f"engines.json is prepared:\n{engine_json}")
         write_engines_json(engine_json, point_dict)
 
@@ -505,9 +531,13 @@ def local(  # noqa: C901
         root_logger.info(f"Experiment finished ({difference}s elapsed).")
 
         # Parse cutechess-cli output and report results (Elo and standard deviation):
-        score, error_variance, draw_rate = parse_experiment_result(out_exp, **settings)
+        score, error_variance, draw_rate = parse_experiment_result(
+            out_exp, **settings
+        )
         root_logger.info(
-            "Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
+            "Got Elo: {} +- {}".format(
+                -score * 100, np.sqrt(error_variance) * 100
+            )
         )
         root_logger.info("Estimated draw rate: {:.2%}".format(draw_rate))
 
@@ -523,8 +553,12 @@ def local(  # noqa: C901
             ),
             gp_burnin=settings.get("gp_burnin", gp_burnin),
             gp_samples=settings.get("gp_samples", gp_samples),
-            gp_initial_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
-            gp_initial_samples=settings.get("gp_initial_samples", gp_initial_samples),
+            gp_initial_burnin=settings.get(
+                "gp_initial_burnin", gp_initial_burnin
+            ),
+            gp_initial_samples=settings.get(
+                "gp_initial_samples", gp_initial_samples
+            ),
         )
         # If we used an extra point, we need to reset n_initial_points of the optimizer:
         if used_extra_point:

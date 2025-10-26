@@ -69,7 +69,9 @@ try:
 
         tune_id = Column(Integer, ForeignKey(f"{SCHEMA}.tunes.id"))
         tune = relationship("SqlTune", back_populates="jobs")
-        params = relationship("SqlUCIParam", back_populates="job", cascade="all")
+        params = relationship(
+            "SqlUCIParam", back_populates="job", cascade="all"
+        )
         time_controls = relationship("SqlTimeControl", secondary=job_tc_table)
         results = relationship("SqlResult", back_populates="job")
 
@@ -107,10 +109,14 @@ try:
 
         def __repr__(self):
             engine1_inc = (
-                "" if self.engine1_increment is None else f"+{self.engine1_increment}"
+                ""
+                if self.engine1_increment is None
+                else f"+{self.engine1_increment}"
             )
             engine2_inc = (
-                "" if self.engine2_increment is None else f"+{self.engine2_increment}"
+                ""
+                if self.engine2_increment is None
+                else f"+{self.engine2_increment}"
             )
             return (
                 f"<TC (id={self.id}, engine1={self.engine1_time}{engine1_inc},"
@@ -129,7 +135,9 @@ try:
     class SqlResult(Base):
         __tablename__ = "results"
         __table_args__ = ({"schema": SCHEMA},)
-        job_id = Column(Integer, ForeignKey(f"{SCHEMA}.jobs.id"), primary_key=True)
+        job_id = Column(
+            Integer, ForeignKey(f"{SCHEMA}.jobs.id"), primary_key=True
+        )
         tc_id = Column(
             Integer, ForeignKey(f"{SCHEMA}.timecontrols.id"), primary_key=True
         )

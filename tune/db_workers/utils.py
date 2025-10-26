@@ -109,9 +109,9 @@ def compute_probabilities(elo, draw_elo, biases):
 
 def elo_to_bayeselo(elo, draw_elo, biases):
     def func(bayeselo):
-        return score_in_01(compute_probabilities(bayeselo, draw_elo, biases)) - expit(
-            ELO_CONSTANT * elo
-        )
+        return score_in_01(
+            compute_probabilities(bayeselo, draw_elo, biases)
+        ) - expit(ELO_CONSTANT * elo)
 
     return root_scalar(func, method="brentq", bracket=(-1000, 1000)).root
 

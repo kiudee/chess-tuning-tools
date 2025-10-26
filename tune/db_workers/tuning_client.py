@@ -55,7 +55,9 @@ class TuningClient(object):
                 self.logger.debug(f"Reading DB config:\n{config}")
                 self.connect_params = json.loads(config)
         else:
-            raise ValueError(f"No config file found at provided path:\n{dbconfig_path}")
+            raise ValueError(
+                f"No config file found at provided path:\n{dbconfig_path}"
+            )
 
         self.engine = create_sqlalchemy_engine(self.connect_params)
         Base.metadata.create_all(self.engine)
@@ -131,7 +133,9 @@ class TuningClient(object):
         err_string = results.stderr.decode("utf-8")
         error_occured = False
         if re.search("connection stalls", string):
-            self.logger.error("Connection stalled during match. Aborting client.")
+            self.logger.error(
+                "Connection stalled during match. Aborting client."
+            )
             error_occured = True
         elif re.search("Terminating process", string):
             self.logger.error("Engine was terminated. Aborting client.")
@@ -142,9 +146,11 @@ class TuningClient(object):
             sys.exit(1)
         self.logger.debug(f"Cutechess result string:\n{string}")
         self.logger.debug(f"Cutechess error string:\n{err_string}")
-        result = re.findall(r"Score of.*:\s*([0-9]+\s-\s[0-9]+\s-\s[0-9]+)", string)[-1]
-        w, l, d = [float(x) for x in re.findall("[0-9]", result)]
-        return MatchResult(wins=w, losses=l, draws=d)
+        result = re.findall(
+            r"Score of.*:\s*([0-9]+\s-\s[0-9]+\s-\s[0-9]+)", string
+        )[-1]
+        wins, losses, draws = [float(x) for x in re.findall("[0-9]", result)]
+        return MatchResult(wins=wins, losses=losses, draws=draws)
 
     def run_benchmark(self, config):
         def uci_to_cl(k, v):
@@ -294,7 +300,9 @@ class TuningClient(object):
     def run(self):
         while True:
             if self.interrupt_pressed:
-                self.logger.info("Shutting down after receiving shutdown signal.")
+                self.logger.info(
+                    "Shutting down after receiving shutdown signal."
+                )
                 sys.exit(0)
             if self.end_time is not None and self.end_time < time():
                 self.logger.info("Shutdown timer triggered. Closing")
@@ -304,7 +312,8 @@ class TuningClient(object):
                 rows = (
                     session.query(SqlJob, SqlResult)
                     .filter(
-                        SqlJob.id == SqlResult.job_id, SqlJob.active == True  # noqa
+                        SqlJob.id == SqlResult.job_id,
+                        SqlJob.active == True,  # noqa
                     )
                     .all()
                 )
@@ -316,7 +325,9 @@ class TuningClient(object):
                     continue
 
                 applicable_jobs = [
-                    row for row in rows if row[0].minimum_version <= CLIENT_VERSION
+                    row
+                    for row in rows
+                    if row[0].minimum_version <= CLIENT_VERSION
                 ]
                 if len(applicable_jobs) < len(rows):
                     self.logger.warning(
@@ -369,9 +380,12 @@ class TuningClient(object):
                     )
 
                 # 3. Run experiment (and block)
-                self.logger.info(f"Running match with time control\n{time_control}")
+                self.logger.info(
+                    f"Running match with time control\n{time_control}"
+                )
                 result = self.run_experiment(
-                    time_control=time_control, cutechess_options=config["cutechess"]
+                    time_control=time_control,
+                    cutechess_options=config["cutechess"],
                 )
                 self.logger.info(
                     f"Match result (WLD): {result.wins} - {result.losses} - "

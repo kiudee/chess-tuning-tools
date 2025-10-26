@@ -28,7 +28,9 @@ def test_penta():
 
 def test_ldw_probabilities():
     result = ldw_probabilities(elo=50, draw_elo=200, bias=200)
-    expected = np.array([0.06975828735890623, 0.35877859523271227, 0.5714631174083815])
+    expected = np.array(
+        [0.06975828735890623, 0.35877859523271227, 0.5714631174083815]
+    )
     assert_almost_equal(result, expected)
 
 
@@ -40,7 +42,9 @@ def test_draw_rate_to_elo():
 
 def test_compute_probabilities_for_bias():
     result = compute_probabilities_for_bias(elo=50, draw_elo=200, bias=200)
-    expected = np.array([0.029894, 0.18540627, 0.41591514, 0.30154527, 0.06723932])
+    expected = np.array(
+        [0.029894, 0.18540627, 0.41591514, 0.30154527, 0.06723932]
+    )
     assert_almost_equal(result, expected)
 
 
@@ -66,7 +70,9 @@ def test_elo_to_bayeselo():
 
 def test_penta_to_score():
     counts = np.array([1, 2, 3, 4, 5])
-    result = penta_to_score(draw_rate=0.5, counts=counts, prior_games=10, prior_elo=0)
+    result = penta_to_score(
+        draw_rate=0.5, counts=counts, prior_games=10, prior_elo=0
+    )
     expected = 0.4016368226279837
     assert_almost_equal(result, expected)
 
