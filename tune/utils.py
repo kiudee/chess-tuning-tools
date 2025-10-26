@@ -56,6 +56,8 @@ def expected_ucb(res, n_random_starts=100, alpha=1.96, random_state=None):
     best_fun = np.inf
 
     for x0 in xs:
+        # scipy>=1.11 keeps the dtype of the input array, so make sure we use float64.
+        x0 = np.asarray(x0, dtype=np.float64).ravel()
         r = minimize(func, x0=x0, bounds=[(0.0, 1.0)] * len(res.space.bounds))
 
         if r.fun < best_fun:

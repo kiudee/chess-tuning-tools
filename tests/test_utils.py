@@ -1,10 +1,12 @@
 """Test utility functions of the project."""
 
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-from tune.utils import latest_iterations
+from tune.utils import expected_ucb, latest_iterations
 
 
 def test_latest_iterations():
@@ -29,3 +31,48 @@ def test_latest_iterations():
     result = latest_iterations(iterations)
     assert len(result) == 1
     assert_allclose(result, (iterations,))
+
+
+def test_expected_ucb_uses_float64_for_minimize():
+    class DummyRegressor:
+        def __init__(self):
+            self.seen_dtypes = []
+
+        def predict(self, X, return_std=True):
+            self.seen_dtypes.append(X.dtype)
+            centered = X.astype(np.float32) - np.float32(0.2)
+            mu = (centered**2).sum(axis=1).astype(np.float32)
+            std = np.full_like(mu, 0.1, dtype=np.float32)
+            return mu, std
+
+    class DummySpace:
+        def __init__(self):
+            self.bounds = [(0.0, 1.0)]
+
+        def transform(self, X):
+            return np.asarray(X, dtype=np.float32)
+
+        def inverse_transform(self, X):
+            return X.astype(np.float64)
+
+        def rvs(self, n_random_starts, random_state=None):
+            rng = np.random.default_rng(random_state)
+            samples = rng.uniform(
+                0.0, 1.0, size=(n_random_starts, len(self.bounds))
+            ).astype(np.float32)
+            return samples
+
+    reg = DummyRegressor()
+    space = DummySpace()
+    res = SimpleNamespace(
+        models=[reg], space=space, x=np.array([0.5], dtype=np.float32)
+    )
+
+    x_opt, fun = expected_ucb(res, n_random_starts=0)
+
+    assert isinstance(x_opt, np.ndarray)
+    assert x_opt.shape == (1,)
+    assert x_opt.dtype == np.float64
+    assert np.isfinite(fun)
+    assert reg.seen_dtypes, "predict never called"
+    assert all(dtype == np.float64 for dtype in reg.seen_dtypes)
