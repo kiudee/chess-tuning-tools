@@ -55,10 +55,26 @@ def expected_ucb(res, n_random_starts=100, alpha=1.96, random_state=None):
     best_x = None
     best_fun = np.inf
 
+    raw_bounds = getattr(res.space, "bounds", None)
+    minimize_bounds = None
+
+    if raw_bounds is not None:
+        minimize_bounds = []
+        for bound in raw_bounds:
+            lower, upper = bound
+            lower_cast = None if lower is None else float(np.float64(lower))
+            upper_cast = None if upper is None else float(np.float64(upper))
+            minimize_bounds.append((lower_cast, upper_cast))
+        minimize_bounds = tuple(minimize_bounds)
+
     for x0 in xs:
         # scipy>=1.11 keeps the dtype of the input array, so make sure we use float64.
         x0 = np.asarray(x0, dtype=np.float64).ravel()
-        r = minimize(func, x0=x0, bounds=[(0.0, 1.0)] * len(res.space.bounds))
+        r = minimize(
+            func,
+            x0=x0,
+            bounds=minimize_bounds,
+        )
 
         if r.fun < best_fun:
             best_x = r.x

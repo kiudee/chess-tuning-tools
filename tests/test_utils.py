@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
+import tune.utils as utils_module
 from tune.utils import expected_ucb, latest_iterations
 
 
@@ -33,7 +34,7 @@ def test_latest_iterations():
     assert_allclose(result, (iterations,))
 
 
-def test_expected_ucb_uses_float64_for_minimize():
+def test_expected_ucb_uses_float64_for_minimize(monkeypatch):
     class DummyRegressor:
         def __init__(self):
             self.seen_dtypes = []
@@ -47,7 +48,9 @@ def test_expected_ucb_uses_float64_for_minimize():
 
     class DummySpace:
         def __init__(self):
-            self.bounds = [(0.0, 1.0)]
+            self.bounds = np.array(
+                [(np.float32(0.0), np.float32(1.0))], dtype=np.float32
+            )
 
         def transform(self, X):
             return np.asarray(X, dtype=np.float32)
@@ -68,6 +71,17 @@ def test_expected_ucb_uses_float64_for_minimize():
         models=[reg], space=space, x=np.array([0.5], dtype=np.float32)
     )
 
+    captured = {}
+
+    original_minimize = utils_module.minimize
+
+    def spy_minimize(func, x0, bounds=None, **kwargs):
+        captured["x0_dtype"] = np.asarray(x0).dtype
+        captured["bounds"] = bounds
+        return original_minimize(func, x0=x0, bounds=bounds, **kwargs)
+
+    monkeypatch.setattr(utils_module, "minimize", spy_minimize)
+
     x_opt, fun = expected_ucb(res, n_random_starts=0)
 
     assert isinstance(x_opt, np.ndarray)
@@ -76,3 +90,6 @@ def test_expected_ucb_uses_float64_for_minimize():
     assert np.isfinite(fun)
     assert reg.seen_dtypes, "predict never called"
     assert all(dtype == np.float64 for dtype in reg.seen_dtypes)
+    assert captured["x0_dtype"] == np.float64
+    assert captured["bounds"] is not None
+    assert np.asarray(captured["bounds"], dtype=np.float64).dtype == np.float64
