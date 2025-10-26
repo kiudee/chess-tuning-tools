@@ -18,12 +18,12 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.10"
-bask = ">=0.9.3"
+python = ">=3.10,<3.14"
+bask = ">=0.11.0"
 Click = ">=7.1.2"
-numpy = ">=1.19.1,<1.24"
+numpy = ">=2.0.0"
 scipy = ">=1.5.2"
-scikit-optimize = "^0.9"
+scikit-optimize = ">=0.10.2"
 atomicwrites = ">=1.4.0"
 scikit-learn = "^1"
 dill = ">=0.3.4"
@@ -40,9 +40,9 @@ dist = ["joblib", "psycopg2", "sqlalchemy", "pandas"]
 docs = ["Sphinx", "sphinx-book-theme", "myst-nb"]
 
 [tool.poetry.dev-dependencies]
-pytest = ">=6.0.1,<8"
+pytest = ">=6.0.1"
 pip = ">=21.1.2"
-wheel = ">=0.34.2,<0.39"
+wheel = ">=0.34.2"
 flake8 = ">=3.8.3"
 Sphinx = ">=3"
 black = "~22"

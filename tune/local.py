@@ -247,7 +247,7 @@ def load_points_to_evaluate(
         rounds_column = np.full(len(df), rounds)
 
     # All points are within the bounds, add them to the list of points to evaluate:
-    return [(x, r) for x, r in zip(df.values.tolist(), rounds_column)]
+    return [(x, r) for x, r in zip(df.values.tolist(), rounds_column, strict=True)]
 
 
 def reduce_ranges(
@@ -276,9 +276,9 @@ def reduce_ranges(
     y_new = []
     noise_new = []
     reduction_needed = False
-    for row, yval, nval in zip(X, y, noise):
+    for row, yval, nval in zip(X, y, noise, strict=True):
         include_row = True
-        for dim, value in zip(space.dimensions, row):
+        for dim, value in zip(space.dimensions, row, strict=True):
             if isinstance(dim, Integer) or isinstance(dim, Real):
                 lb, ub = dim.bounds
                 if value < lb or value > ub:
@@ -551,7 +551,7 @@ def print_results(
     logger = logging.getLogger(LOGGER)
     try:
         best_point, best_value = expected_ucb(result_object, alpha=0.0)
-        best_point_dict = dict(zip(parameter_names, best_point))
+        best_point_dict = dict(zip(parameter_names, best_point, strict=True))
         with optimizer.gp.noise_set_to_zero():
             _, best_std = optimizer.gp.predict(
                 optimizer.space.transform([best_point]), return_std=True

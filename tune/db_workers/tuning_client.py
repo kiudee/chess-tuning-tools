@@ -278,7 +278,7 @@ class TuningClient(object):
         ]
         engines = config["engine"]
         for i, e in enumerate(engines):
-            engine_str = f"engine{i+1}"
+            engine_str = f"engine{i + 1}"
             if engine_str in self.client_config:
                 init_strings = InitStrings(e["initStrings"])
                 for k, v in self.client_config[engine_str].items():

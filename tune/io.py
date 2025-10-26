@@ -155,7 +155,7 @@ def parse_ranges(s):
                     "or list.".format(param_str)
                 )
 
-    return dict(zip(j.keys(), dimensions))
+    return dict(zip(j.keys(), dimensions, strict=True))
 
 
 def load_tuning_config(json_dict):
@@ -205,13 +205,13 @@ def prepare_engines_json(commands, fixed_params):
     result_list = [
         {
             "command": c,
-            "name": f"engine{i+1}",
+            "name": f"engine{i + 1}",
             "initStrings": ["uci"],
             "protocol": "uci",
         }
         for i, c in enumerate(commands)
     ]
-    for r, fp in zip(result_list, fixed_params):
+    for r, fp in zip(result_list, fixed_params, strict=True):
         uci = InitStrings(r["initStrings"])
         uci.update(fp)
     return result_list

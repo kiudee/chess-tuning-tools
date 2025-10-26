@@ -73,7 +73,7 @@ def confidence_intervals(
         "Parameter", max_param_length, "Lower bound", max_lb, "Upper bound", max_ub
     )
     output += "{:-^{}}\n".format("", max_param_length + max_lb + max_ub + 4)
-    for sub, name in zip(rounded, param_names):
+    for sub, name in zip(rounded, param_names, strict=True):
         for i, interval in enumerate(sub):
             if i == 0:
                 name_out = name

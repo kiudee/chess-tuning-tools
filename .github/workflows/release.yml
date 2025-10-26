@@ -7,14 +7,14 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2.3.4
-    - uses: actions/setup-python@v2.2.1
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.13'
         architecture: x64
     - run: pip install nox==2023.4.22
     - run: pip install nox-poetry==1.0.3
     - run: pip install poetry==1.5.1
-    - run: nox -s tests-3.9
+    - run: nox -s tests-3.13
     - run: poetry build
     - run: poetry publish --username=__token__ --password=${{ secrets.PYPI_TOKEN }}
