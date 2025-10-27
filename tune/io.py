@@ -22,7 +22,9 @@ __all__ = [
 # TODO: Backup file to restore it, should there be an error
 def uci_tuple(uci_string):
     try:
-        name, value = re.findall(r"name\s+(\S.*?)\s+value\s+(.*?)\s*$", uci_string)[0]
+        name, value = re.findall(
+            r"name\s+(\S.*?)\s+value\s+(.*?)\s*$", uci_string
+        )[0]
     except IndexError:
         print(f"Error parsing UCI tuples:\n{uci_string}")
         sys.exit(1)
@@ -120,7 +122,7 @@ def parse_ranges(s):
         # First check, if the string is a list/tuple or a function call:
         param_str = re.findall(r"(\w+)\(", s)
         if len(param_str) > 0:  # Function
-            args, kwargs = [], dict()
+            args, kwargs = [], {}
             # TODO: this split does not always work
             #  (example Categorical(["a", "b", "c"]))
             prior_param_strings = re.findall(r"\((.*?)\)", s)[0].split(",")
@@ -140,7 +142,9 @@ def parse_ranges(s):
             if hasattr(skspace, param_str[0]):
                 dim = getattr(skspace, param_str[0])(*args, **kwargs)
             else:
-                raise ValueError("Dimension {} does not exist.".format(param_str))
+                raise ValueError(
+                    "Dimension {} does not exist.".format(param_str)
+                )
             dimensions.append(dim)
         else:  # Tuple or list
             # We assume that the contents of the collection should be used as is and
@@ -186,15 +190,19 @@ def load_tuning_config(json_dict):
     engines = json_dict["engines"]
     for e in engines:
         if "command" not in e:
-            raise ValueError("Tuning config contains an engine without command.")
+            raise ValueError(
+                "Tuning config contains an engine without command."
+            )
         commands.append(e["command"])
         if "fixed_parameters" not in e:
-            fixed_params.append(dict())
+            fixed_params.append({})
         else:
             fixed_params.append(e["fixed_parameters"])
     del json_dict["engines"]
     if "parameter_ranges" not in json_dict:
-        raise ValueError("There are no parameter ranges defined in the config file.")
+        raise ValueError(
+            "There are no parameter ranges defined in the config file."
+        )
     param_ranges = parse_ranges(json_dict["parameter_ranges"])
     del json_dict["parameter_ranges"]
     # All remaining settings will be returned as is:
@@ -245,8 +253,8 @@ def combine_nested_parameters(d: dict) -> dict:
     {'UCIParameter1': 'composite(sub-parameter1=0.0,sub-parameter2=1.0)'}
     """
     re_pattern = r"(\S+|\S.*\S)=(.+)\((.+)\)"
-    result = dict()
-    nested_params = dict()
+    result = {}
+    nested_params = {}
     for k, v in d.items():
         match = re.search(pattern=re_pattern, string=k)
         if match is None:
@@ -254,7 +262,7 @@ def combine_nested_parameters(d: dict) -> dict:
         else:
             name, value, sub_param = match.groups()
             if name not in nested_params:
-                nested_params[name] = (value, dict())
+                nested_params[name] = (value, {})
             else:
                 existing_value = nested_params[name][0]
                 if existing_value != value:

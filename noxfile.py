@@ -1,12 +1,11 @@
 """Nox sessions."""
 
+import nox
+from nox_uv import session
 from pathlib import Path
 from textwrap import dedent
 
-import nox
-from nox_uv import session
-
-locations = "tune", "noxfile.py"
+locations = ("tune", "tests", "noxfile.py")
 nox.options.sessions = ("pre-commit", "tests")
 python_versions = ["3.10", "3.11", "3.12", "3.13"]
 
@@ -37,7 +36,9 @@ def activate_virtualenv_in_precommit_hooks(session):
         text = hook.read_text()
         bindir = repr(session.bin)[1:-1]  # strip quotes
         if not (
-            Path("A") == Path("a") and bindir.lower() in text.lower() or bindir in text
+            Path("A") == Path("a")
+            and bindir.lower() in text.lower()
+            or bindir in text
         ):
             continue
 
@@ -68,11 +69,12 @@ def tests(session):
 
 
 @session(python="3.13", venv_backend="uv")
-def black(session):
-    """Run black code formatter."""
+def ruff(session):
+    """Run Ruff formatter and linter."""
     args = session.posargs or locations
-    session.install("black")
-    session.run("black", *args)
+    session.install("ruff==0.14.2")
+    session.run("ruff", "format", *args)
+    session.run("ruff", "check", *args)
 
 
 @session(name="pre-commit", python="3.13", venv_backend="uv")
@@ -80,10 +82,8 @@ def precommit(session):
     args = session.posargs or ["run", "--all-files", "--show-diff-on-failure"]
     session.install(
         "pre-commit",
-        "black",
+        "ruff==0.14.2",
         "click",
-        "flake8",
-        "isort",
     )
     session.run("pre-commit", *args)
     if args and args[0] == "install":

@@ -15,7 +15,7 @@
 
 ## Coding Style & Naming Conventions
 - Follow the existing code patterns: 4-space indentation, snake_case for variables and functions, PascalCase for classes.
-- Run `black`, `isort`, and `flake8` via `uv run --group dev nox -s pre-commit` or the individual tools before committing.
+- Run `ruff format` and `ruff check` via `uv run --group dev nox -s pre-commit` or the individual tools before committing.
 - Keep log messages short; prefer structured logging (e.g., `logger.info("Testing %s", value)`).
 
 ## Testing Guidelines

@@ -78,9 +78,12 @@ class TuningServer(object):
         else:
             raise ValueError("No experiment config file found at provided path")
         self.time_controls = [
-            TimeControl.from_strings(*x) for x in self.experiment["time_controls"]
+            TimeControl.from_strings(*x)
+            for x in self.experiment["time_controls"]
         ]
-        self.rng = np.random.RandomState(self.experiment.get("random_seed", 123))
+        self.rng = np.random.RandomState(
+            self.experiment.get("random_seed", 123)
+        )
         self.setup_tuner()
 
         try:
@@ -132,8 +135,13 @@ class TuningServer(object):
             prior_str = re.findall(r"(\w+)\(", s)[0]
             prior_param_strings = re.findall(r"\((.*?)\)", s)[0].split(",")
             keys = [x.split("=")[0].strip() for x in prior_param_strings]
-            vals = [make_numeric(x.split("=")[1].strip()) for x in prior_param_strings]
-            dim = getattr(skspace, prior_str)(**dict(zip(keys, vals, strict=True)))
+            vals = [
+                make_numeric(x.split("=")[1].strip())
+                for x in prior_param_strings
+            ]
+            dim = getattr(skspace, prior_str)(
+                **dict(zip(keys, vals, strict=True))
+            )
             dimensions.append(dim)
         return dimensions
 
@@ -152,14 +160,21 @@ class TuningServer(object):
                 prior_str = re.findall(r"(\w+)\(", p)[0]
                 prior_param_strings = re.findall(r"\((.*?)\)", p)[0].split(",")
                 keys = [x.split("=")[0].strip() for x in prior_param_strings]
-                vals = [float(x.split("=")[1].strip()) for x in prior_param_strings]
+                vals = [
+                    float(x.split("=")[1].strip()) for x in prior_param_strings
+                ]
                 if prior_str == "roundflat":
-                    prior = (
-                        lambda x, keys=keys, vals=vals: roundflat(
-                            np.exp(x), **dict(zip(keys, vals, strict=True))
+
+                    def roundflat_prior(x, keys=keys, vals=vals):
+                        return (
+                            roundflat(
+                                np.exp(x),
+                                **dict(zip(keys, vals, strict=True)),
+                            )
+                            + x
                         )
-                        + x
-                    )
+
+                    prior = roundflat_prior
                 else:
                     dist = getattr(scipy.stats, prior_str)(
                         **dict(zip(keys, vals, strict=True))
@@ -167,16 +182,20 @@ class TuningServer(object):
                     if i == 0 or i == len(priors) - 1:
                         # The signal variance and the signal noise are in positive,
                         # sqrt domain
-                        prior = (
-                            lambda x, dist=dist: dist.logpdf(np.sqrt(np.exp(x)))
-                            + x / 2.0
-                            - np.log(2.0)
-                        )
+                        def boundary_prior(x, dist=dist):
+                            return (
+                                dist.logpdf(np.sqrt(np.exp(x)))
+                                + x / 2.0
+                                - np.log(2.0)
+                            )
+
+                        prior = boundary_prior
                     else:
                         # The lengthscale(s) are in positive domain
-                        prior = (
-                            lambda x, dist=dist: dist.logpdf(np.exp(x)) + x
-                        )  # noqa: E731
+                        def lengthscale_prior(x, dist=dist):
+                            return dist.logpdf(np.exp(x)) + x
+
+                        prior = lengthscale_prior
                 result.append(prior)
         return result
 
@@ -206,9 +225,10 @@ class TuningServer(object):
                 "n_initial_points", 5 * len(self.dimensions)
             ),
             gp_kernel=self.kernel,
-            gp_kwargs=dict(
-                normalize_y=True, warp_inputs=self.tunecfg.get("warp_inputs", True)
-            ),
+            gp_kwargs={
+                "normalize_y": True,
+                "warp_inputs": self.tunecfg.get("warp_inputs", True),
+            },
             gp_priors=self.priors,
             acq_func=self.tunecfg.get("acq_func", "ts"),
             acq_func_kwargs=self.tunecfg.get(
@@ -234,15 +254,23 @@ class TuningServer(object):
             .all()
         ).squeeze()
         samplesize_reached = False
-        if np.all(sample_sizes >= self.experiment.get("minimum_samplesize", 16)):
+        if np.all(
+            sample_sizes >= self.experiment.get("minimum_samplesize", 16)
+        ):
             samplesize_reached = True
 
-        q = session.query(SqlJob).filter(SqlJob.tune_id == tune_id).order_by(SqlJob.id)
+        q = (
+            session.query(SqlJob)
+            .filter(SqlJob.tune_id == tune_id)
+            .order_by(SqlJob.id)
+        )
         if not include_active:
             q = q.filter(SqlJob.active == False)  # noqa
         jobs = q.all()
         query = (
-            session.query(SqlUCIParam.job_id, SqlUCIParam.key, SqlUCIParam.value)
+            session.query(
+                SqlUCIParam.job_id, SqlUCIParam.key, SqlUCIParam.value
+            )
             .join(SqlJob)
             .filter(SqlJob.tune_id == tune_id)
         )
@@ -296,9 +324,7 @@ class TuningServer(object):
         session.query(SqlJob).filter(
             SqlJob.active == True,  # noqa: E712
             SqlJob.tune_id == self.experiment["tune_id"],  # noqa: E712
-        ).update(
-            {"active": False}
-        )  # noqa
+        ).update({"active": False})  # noqa
 
         # Insert new job:
         job_dict = {
@@ -378,7 +404,9 @@ class TuningServer(object):
                     f"{X[-5:]}\n{y[-5:]}"
                 )
                 if len(X) == 0:
-                    self.logger.info("There are no datapoints yet, start first job")
+                    self.logger.info(
+                        "There are no datapoints yet, start first job"
+                    )
                     new_x = self.opt.ask()
                     # Alter engine json using Initstrings
                     params = dict(zip(self.parameters, new_x, strict=True))

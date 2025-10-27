@@ -62,7 +62,7 @@ def make_invgamma_prior(
         raise ValueError("The bounds cannot be equal to or smaller than 0.")
     if lower_bound >= upper_bound:
         raise ValueError(
-            "Lower bound needs to be strictly smaller than the upper " "bound."
+            "Lower bound needs to be strictly smaller than the upper bound."
         )
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -122,7 +122,11 @@ def create_priors(
     )
     noise_prior = halfnorm(scale=noise_scale)
 
-    priors = [lambda x: signal_prior.logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)]
+    priors = [
+        lambda x: signal_prior.logpdf(np.sqrt(np.exp(x)))
+        + x / 2.0
+        - np.log(2.0)
+    ]
     for _ in range(n_parameters):
         priors.append(lambda x: lengthscale_prior.logpdf(np.exp(x)) + x)
     priors.append(
